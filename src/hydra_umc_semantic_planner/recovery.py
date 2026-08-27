@@ -6,9 +6,8 @@
 """Real, rule-based semantic error recovery over structured failure codes.
 
 The error codes here (INVALID_STATE, OUT_OF_RANGE, ESTOP_ACTIVE,
-TOOL_INCOMPATIBLE, TIMEOUT, UNSUPPORTED) are the real MCU adapter error
-vocabulary documented in SONNET/BIBLIA HYDRA-UMC's own architecture
-manual (section D.4) - this module's job is the "reasons about the cause
+TOOL_INCOMPATIBLE, TIMEOUT, UNSUPPORTED) are the MCU adapter error
+vocabulary. This module's job is the "reasons about the cause
 and decides whether to increase pressure, try again, or swap tools" the
 README's own Key Features describe, expressed as a real, explicit lookup
 table rather than a local LLM (which isn't wired to anything yet).
