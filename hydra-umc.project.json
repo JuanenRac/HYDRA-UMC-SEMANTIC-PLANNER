@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "ecosystem": "HYDRA-UMC",
+  "name": "HYDRA-UMC-SEMANTIC-PLANNER",
+  "version": "0.0.4",
+  "role": "service",
+  "stack": "python",
+  "technologies": [
+    "Python",
+    "local LLM (Llama-3 class)"
+  ],
+  "deployment_target": "cm5",
+  "maturity": "functional",
+  "family": "Cognitive AI Node",
+  "parent": "HYDRA-UMC-COGNITIVE-NODE",
+  "build": "",
+  "notes": "Real v0 rule-based task decomposition (`decompose` subcommand, small known goal vocabulary) and real rule-based semantic recovery over structured MCU error codes (`recover` subcommand). Honestly template-based, not the local LLM the README describes - that and context-aware multi-step reasoning are future work.",
+  "native_version": {
+    "file": "pyproject.toml",
+    "pattern": "^version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
+  }
+}

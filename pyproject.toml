@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hydra-umc-semantic-planner"
+version = "0.0.4"
+description = "LLM-based mission planner and semantic error-recovery system that decomposes high-level goals into robotic primitives on Hailo-10."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE.md" }
+authors = [
+    { name = "JuanenRac (Electro Hobby 3D)", email = "electrohobby3d@gmail.com" },
+]
+keywords = ["hydra-umc", "hailo-10", "llm", "planner", "robotics", "edge-ai"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.urls]
+Homepage = "https://github.com/JuanenRac/HYDRA-UMC-SEMANTIC-PLANNER"
+
+[project.scripts]
+hydra-umc-semantic-planner = "hydra_umc_semantic_planner.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
