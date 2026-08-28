@@ -28,6 +28,8 @@ LLM（大语言模型）将复杂目标分解为可执行的机器人操作单�
 ### 关键特性：
 * 🧩 **任务分解（v0）：** 对一个已知的小型目标词汇表进行真实的、基于规则的分解（例如"组装 PCB"），得到顺序的机器人指令。*（已实现为真实的模板规则——尚非 LLM；见下方"构建与运行"）*
 * 🛡️ **语义恢复（v0）：** 从结构化的 MCU 错误代码到恢复动作的真实的、基于规则的查找。*（已实现为基于已知代码词汇表的真实显式表格；未知代码始终上报给人类）*
+* ✅ **前置条件验证：** 每个分解后的计划在交付之前都会对照每个真实原语真正需要的内容进行检查 —— 失败的计划会被拒绝，而不会被静静地当作可执行状态放行。*（已实现）*
+* 🎲 **确定性 + 属性测试：** `decompose_goal()` 已被证明具有确定性（相同目标始终得到相同计划），并针对数百个随机/无效目标进行了 fuzz 测试 —— 从不崩溃，也从不返回格式错误的计划。*（已实现）*
 * 🤖 **代理式工作流：** 作为本地代理运行，能够查询系统状态和工具。*（计划中）*
 * ⚡ **Hailo-10 优化：** 利用 40 TOPS 算力实现快速的多步推理。*（计划中——需要真实的本地 LLM）*
 * 👨‍👩‍👧 **认知 AI 节点子项目：** 作为
@@ -64,6 +66,8 @@ flowchart TB
 * **为何 `decompose.py` 是真实的正则规则，而非本地 LLM。** 一个小型真实的目标词汇表（组装/取放/检查）如今已被规则完全且诚实地覆盖——这与兄弟项目 HYDRA-UMC-DOCS-QA 使用真实 TF-IDF 索引而非嵌入模型的理由相同：一个真实的、可测试的内核，未来基于 LLM 的规划器可以在同一个 `decompose_goal()` 契约背后替换它。
 * **为何 `recovery.py` 的错误代码与 BIBLIA 架构手册中记录的 MCU 适配器词汇表相匹配。** `INVALID_STATE`/`OUT_OF_RANGE`/`ESTOP_ACTIVE`/`TOOL_INCOMPATIBLE`/`TIMEOUT`/`UNSUPPORTED` 是该适配器设计要返回的真实结构化错误——今天针对这个真实词汇表构建的恢复逻辑，在适配器本身存在之后依然有效，而不必事后再去调和一套并行发明的错误分类。
 * **为何 `ESTOP_ACTIVE`/`UNSUPPORTED`/未知代码始终上报给人类。** 与整个生态系统的安全规则一致：IA、UI 和云层永远不能凌驾于物理安全条件之上——本规划器只提出恢复动作，绝不会自行解除 E-STOP，也不会对它无法识别的错误进行猜测。
+* **为何 `validation.py` 依然存在，即使 `decompose.py` 的真实模板从未真正产生过无效计划。** 固定的模板可以在构造上保证参数格式良好 —— 未来基于 LLM 的规划器则不能。`validate_plan()` 是那个规划器将必须满足的真实、显式契约，在此处、现在就针对当前唯一存在的规划器进行了验证，以便在更难的东西需要满足它之前，契约本身就已被证明正确。
+* **为何 `decompose_goal()` 使用固定的随机种子进行 fuzz 测试，而不是使用 `hypothesis`。** 本项目（与生态系统的其余部分一样）仅依赖标准库 —— 一个对数百个合成目标可重现、带种子的 `random.Random` 循环，在不引入新依赖的情况下，获得了同样的真实属性（从不崩溃，从不返回格式错误的计划）。
 
 ---
 
@@ -75,8 +79,9 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── primitives.py                  # 真实的、封闭的机器人命令原语词汇表
 │   ├── decompose.py                    # 真实的、基于规则的任务分解
 │   ├── recovery.py                      # 真实的、基于规则的语义错误恢复
+│   ├── validation.py                    # 对已分解 Plan 的真实前置条件验证
 │   └── main.py                            # 入口点 + 真实的 `decompose`/`recover` 子命令
-├── tests/                            # 真实测试：分解、恢复、端到端 CLI
+├── tests/                            # 真实测试：分解、恢复、验证、属性测试、端到端 CLI
 ├── docs/                             # 文档与知识库
 ├── images/                           # 媒体与图表
 ├── scripts/                          # 实用脚本
@@ -127,6 +132,13 @@ Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitive
 # Windows
 run.bat decompose "组装 pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
+```
+
+每个真实的分解后计划在打印之前都会对照 `validation.py` 的真实前置条件进行检查。`decompose.py` 自身的模板总是能通过验证；而一个失败的计划则会被拒绝：
+
+```text
+Plan for: "broken" FAILED precondition validation:
+  step 1 (GRIP): missing required param 'target'
 ```
 
 ### 🩺 故障排查

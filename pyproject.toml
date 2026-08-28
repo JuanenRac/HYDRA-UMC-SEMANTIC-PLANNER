@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hydra-umc-semantic-planner"
-version = "0.0.4"
+version = "0.0.5"
 description = "LLM-based mission planner and semantic error-recovery system that decomposes high-level goals into robotic primitives on Hailo-10."
 readme = "README.md"
 requires-python = ">=3.10"

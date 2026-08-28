@@ -25,6 +25,8 @@ Er handhabt hochgradige Ambiguität und bietet eine semantische Fehlerbehebung: 
 ### Hauptmerkmale:
 * 🧩 **Aufgabenzerlegung (v0):** Echte, regelbasierte Zerlegung eines kleinen bekannten Zielvokabulars (z. B. "Leiterplatte montieren") in sequentielle Roboterbefehle. *(implementiert als echte Vorlagenregeln, noch kein LLM - siehe BUILD UND AUSFÜHRUNG unten)*
 * 🛡️ **Semantische Wiederherstellung (v0):** Echtes, regelbasiertes Nachschlagen von strukturierten MCU-Fehlercodes zu einer Wiederherstellungsaktion. *(implementiert als echte, explizite Tabelle über ein bekanntes Codevokabular; unbekannte Codes eskalieren immer an einen Menschen)*
+* ✅ **Präconditions-Validierung:** Jeder zerlegte Plan wird gegen das geprüft, was jede echte Primitive tatsächlich benötigt, bevor er weitergegeben wird - ein fehlgeschlagener Plan wird abgelehnt und niemals stillschweigend als ausführungsbereit durchgereicht. *(implementiert)*
+* 🎲 **Deterministisch und Property-getestet:** `decompose_goal()` ist nachweislich deterministisch (gleiches Ziel, gleicher Plan, immer) und wird per Fuzzing gegen Hunderte zufälliger/ungültiger Ziele getestet - stürzt nie ab, liefert nie einen fehlerhaft geformten Plan. *(implementiert)*
 * 🤖 **Agentischer Workflow:** Agiert als lokaler Agent, der den Systemstatus und die Werkzeuge abfragen kann. *(geplant)*
 * ⚡ **Hailo-10 optimiert:** Nutzt 40 TOPS für schnelles mehrstufiges Denken. *(geplant - benötigt das echte lokale LLM)*
 * 👨‍👩‍👧 **Kind des Cognitive AI Node:** Läuft als einer von vier
@@ -103,6 +105,21 @@ neben seinen drei Geschwistern (VLA-Engine, Voice-UI, Docs-QA) ein:
   Sicherheitsbedingung außer Kraft setzen - dieser Planer schlägt eine
   Wiederherstellungsaktion vor, er hebt niemals einen E-STOP auf und rät
   nicht bei einem Fehler, den er nicht erkennt.
+* **Warum `validation.py` existiert, obwohl die echten Vorlagen von
+  `decompose.py` nie tatsächlich einen ungültigen Plan erzeugen.**
+  Eine feste Vorlage kann wohlgeformte Parameter allein durch ihre
+  Konstruktion garantieren - ein künftiger LLM-basierter Planer kann
+  das nicht. `validate_plan()` ist der echte, explizite Vertrag, den
+  dieser Planer erfüllen müsste, hier und heute gegen den einzigen
+  existierenden Planer geprüft, damit der Vertrag selbst als korrekt
+  erwiesen ist, bevor etwas Schwierigeres ihn je erfüllen muss.
+* **Warum `decompose_goal()` mit einem festen Zufalls-Seed statt mit
+  `hypothesis` gefuzzt wird.** Dieses Projekt bleibt (wie der Rest des
+  Ökosystems) ausschließlich bei der Standardbibliothek - eine
+  reproduzierbare, mit Seed versehene `random.Random`-Schleife über
+  Hunderte synthetischer Ziele liefert dieselbe echte Eigenschaft
+  (stürzt nie ab, liefert nie einen fehlerhaft geformten Plan), ohne
+  eine neue Abhängigkeit hinzuzufügen.
 
 ---
 
@@ -114,8 +131,9 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── primitives.py                  # Echtes geschlossenes Vokabular von Roboter-Befehlsprimitiven
 │   ├── decompose.py                    # Echte regelbasierte Aufgabenzerlegung
 │   ├── recovery.py                      # Echte regelbasierte semantische Fehlerwiederherstellung
+│   ├── validation.py                    # Echte Präconditions-Validierung über einen zerlegten Plan
 │   └── main.py                            # Einstiegspunkt + echte Subcommands `decompose`/`recover`
-├── tests/                            # Echte Tests: Zerlegung, Wiederherstellung, End-to-End-CLI
+├── tests/                            # Echte Tests: Zerlegung, Wiederherstellung, Validierung, Property-Tests, End-to-End-CLI
 ├── docs/                             # Dokumentation und Wissensdatenbank
 ├── images/                           # Medien und Diagramme
 ├── scripts/                          # Utility-Skripte
@@ -169,6 +187,16 @@ Wiederherstellung vor:
 # Windows
 run.bat decompose "die pcb montieren"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
+```
+
+Jeder echte zerlegte Plan wird vor der Ausgabe gegen die echten
+Präconditions von `validation.py` geprüft. Die eigenen Vorlagen von
+`decompose.py` bestehen immer; ein fehlgeschlagener Plan würde
+stattdessen abgelehnt:
+
+```text
+Plan for: "broken" FAILED precondition validation:
+  step 1 (GRIP): missing required param 'target'
 ```
 
 ### 🩺 Fehlerbehebung

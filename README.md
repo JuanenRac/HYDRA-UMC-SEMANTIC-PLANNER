@@ -25,6 +25,8 @@ It handles high-level ambiguity and provides semantic error recovery: if a task 
 ### Key Features:
 * 🧩 **Task Decomposition (v0):** Real rule-based breakdown of a small known goal vocabulary (e.g., "assemble PCB") into sequential robot commands. *(implemented as real template rules, not yet an LLM - see BUILD & RUN below)*
 * 🛡️ **Semantic Recovery (v0):** Real rule-based lookup from structured MCU error codes to a recovery action. *(implemented as a real, explicit table over a known code vocabulary; unknown codes always escalate to a human)*
+* ✅ **Precondition Validation:** Every decomposed plan is checked against what each real primitive genuinely needs before being handed off - a plan that fails is refused, never silently passed on as execution-ready. *(implemented)*
+* 🎲 **Deterministic + Property-Tested:** `decompose_goal()` is proven deterministic (same goal, same plan, always) and fuzz-tested against hundreds of random/invalid goals - never crashes, never returns a malformed plan. *(implemented)*
 * 🤖 **Agentic Workflow:** Operates as a local agent capable of querying system state and tools. *(planned)*
 * ⚡ **Hailo-10 Optimized:** Leverages 40 TOPS for fast multi-step reasoning. *(planned - needs the real local LLM)*
 * 👨‍👩‍👧 **Cognitive AI Node Child:** Runs as one of four sibling services
@@ -96,6 +98,19 @@ service into `docker-compose.yml` alongside its three siblings
   layers never override a physical safety condition - this planner
   proposes a recovery action, it never clears an E-STOP or guesses at an
   error it doesn't recognize.
+* **Why `validation.py` exists even though `decompose.py`'s real
+  templates never actually produce an invalid plan.** A fixed template
+  can guarantee well-formed params by construction - a future LLM-based
+  planner cannot. `validate_plan()` is the real, explicit contract that
+  planner would have to satisfy, checked here and now against the only
+  planner that exists today so the contract itself is proven correct
+  before anything harder ever has to meet it.
+* **Why `decompose_goal()` is fuzz-tested with a fixed random seed
+  instead of `hypothesis`.** This project (like the rest of the
+  ecosystem) stays stdlib-only - a reproducible, seeded `random.Random`
+  loop over hundreds of synthetic goals gets the same real property
+  (never crashes, never returns a malformed plan) without a new
+  dependency.
 
 ---
 
@@ -107,8 +122,9 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── primitives.py                  # Real closed vocabulary of robot command primitives
 │   ├── decompose.py                    # Real rule-based task decomposition
 │   ├── recovery.py                      # Real rule-based semantic error recovery
+│   ├── validation.py                    # Real precondition validation over a decomposed Plan
 │   └── main.py                            # Entry point + real `decompose`/`recover` subcommands
-├── tests/                            # Real tests: decomposition, recovery, end-to-end CLI
+├── tests/                            # Real tests: decomposition, recovery, validation, property tests, end-to-end CLI
 ├── docs/                             # Documentation and knowledge base
 ├── images/                           # Media and diagrams
 ├── scripts/                          # Utility scripts
@@ -160,6 +176,15 @@ The real subcommands decompose a goal or propose a recovery:
 # Windows
 run.bat decompose "assemble the pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
+```
+
+Every real decomposed plan is checked against `validation.py`'s real
+preconditions before being printed. `decompose.py`'s own templates
+always pass; a plan that failed would be refused instead:
+
+```text
+Plan for: "broken" FAILED precondition validation:
+  step 1 (GRIP): missing required param 'target'
 ```
 
 ### 🩺 Troubleshooting

@@ -25,6 +25,8 @@ Maneja la ambigüedad de alto nivel y proporciona recuperación semántica de er
 ### Características Clave:
 * 🧩 **Descomposición de Tareas (v0):** División real basada en reglas de un pequeño vocabulario de objetivos conocidos (ej. "ensamblar PCB") en comandos secuenciales de robot. *(implementado como reglas de plantilla reales, todavía no un LLM - ver BUILD Y EJECUCIÓN abajo)*
 * 🛡️ **Recuperación Semántica (v0):** Búsqueda real basada en reglas desde códigos de error estructurados del MCU a una acción de recuperación. *(implementado como una tabla explícita real sobre un vocabulario de códigos conocido; los códigos desconocidos siempre escalan a un humano)*
+* ✅ **Validación de Precondiciones:** Cada plan descompuesto se valida contra lo que cada primitiva real realmente necesita antes de entregarlo - un plan que falla es rechazado, nunca se pasa silenciosamente como listo para ejecutar. *(implementado)*
+* 🎲 **Determinista y Testeado por Propiedades:** `decompose_goal()` está probado como determinista (mismo objetivo, mismo plan, siempre) y testeado mediante fuzzing contra cientos de objetivos aleatorios/inválidos - nunca falla, nunca devuelve un plan mal formado. *(implementado)*
 * 🤖 **Flujo Agéntico:** Funciona como un agente local capaz de consultar el estado del sistema y herramientas. *(planeado)*
 * ⚡ **Optimizado para Hailo-10:** Aprovecha 40 TOPS para un razonamiento multi-paso rápido. *(planeado - necesita el LLM local real)*
 * 👨‍👩‍👧 **Hijo del Cognitive AI Node:** Corre como uno de los cuatro
@@ -103,6 +105,22 @@ hermanos (VLA-Engine, Voice-UI, Docs-QA):
   condición de seguridad física - este planificador propone una acción
   de recuperación, nunca despeja un E-STOP ni adivina ante un error que
   no reconoce.
+* **Por qué existe `validation.py` aunque las plantillas reales de
+  `decompose.py` nunca produzcan realmente un plan inválido.** Una
+  plantilla fija puede garantizar parámetros bien formados por
+  construcción - un futuro planificador basado en LLM no puede.
+  `validate_plan()` es el contrato real y explícito que ese
+  planificador tendría que cumplir, comprobado aquí y ahora contra el
+  único planificador que existe hoy, de modo que el propio contrato
+  quede probado como correcto antes de que algo más difícil tenga que
+  cumplirlo.
+* **Por qué `decompose_goal()` se testea mediante fuzzing con una
+  semilla aleatoria fija en lugar de `hypothesis`.** Este proyecto
+  (como el resto del ecosistema) se mantiene solo con la librería
+  estándar - un bucle reproducible y con semilla de `random.Random`
+  sobre cientos de objetivos sintéticos obtiene la misma propiedad
+  real (nunca falla, nunca devuelve un plan mal formado) sin añadir
+  una nueva dependencia.
 
 ---
 
@@ -114,8 +132,9 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── primitives.py                  # Vocabulario cerrado real de primitivas de comando del robot
 │   ├── decompose.py                    # Descomposición real de tareas basada en reglas
 │   ├── recovery.py                      # Recuperación semántica real de errores basada en reglas
+│   ├── validation.py                    # Validación real de precondiciones sobre un Plan descompuesto
 │   └── main.py                            # Punto de entrada + subcomandos reales `decompose`/`recover`
-├── tests/                            # Tests reales: descomposición, recuperación, CLI end-to-end
+├── tests/                            # Tests reales: descomposición, recuperación, validación, tests de propiedades, CLI end-to-end
 ├── docs/                             # Documentación y base de conocimientos
 ├── images/                           # Medios y diagramas
 ├── scripts/                          # Scripts de utilidad
@@ -167,6 +186,16 @@ Los subcomandos reales descomponen un objetivo o proponen una recuperación:
 # Windows
 run.bat decompose "ensamblar la pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
+```
+
+Cada plan real descompuesto se valida contra las precondiciones reales
+de `validation.py` antes de imprimirse. Las propias plantillas de
+`decompose.py` siempre pasan; un plan que fallara sería rechazado en
+su lugar:
+
+```text
+Plan for: "broken" FAILED precondition validation:
+  step 1 (GRIP): missing required param 'target'
 ```
 
 ### 🩺 Solución de problemas

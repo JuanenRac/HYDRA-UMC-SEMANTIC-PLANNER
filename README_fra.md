@@ -25,6 +25,8 @@ Il gère l'ambiguïté de haut niveau et permet la récupération d'erreurs sém
 ### Caractéristiques principales :
 * 🧩 **Décomposition des tâches (v0) :** Décomposition réelle à base de règles d'un petit vocabulaire d'objectifs connus (ex : « assembler un circuit imprimé ») en commandes robotiques séquentielles. *(implémenté comme de vraies règles de modèle - pas encore un LLM ; voir BUILD ET EXÉCUTION ci-dessous)*
 * 🛡️ **Récupération sémantique (v0) :** Recherche réelle à base de règles depuis des codes d'erreur MCU structurés vers une action de récupération. *(implémenté comme une véritable table explicite sur un vocabulaire de codes connu ; les codes inconnus escaladent toujours vers un humain)*
+* ✅ **Validation des préconditions :** Chaque plan décomposé est vérifié par rapport à ce dont chaque primitive réelle a réellement besoin avant d'être transmis - un plan qui échoue est refusé, jamais transmis silencieusement comme prêt à l'exécution. *(implémenté)*
+* 🎲 **Déterministe et testé par propriétés :** `decompose_goal()` est prouvé déterministe (même objectif, même plan, toujours) et testé par fuzzing contre des centaines d'objectifs aléatoires/invalides - ne plante jamais, ne renvoie jamais de plan malformé. *(implémenté)*
 * 🤖 **Flux de travail agentique :** Fonctionne comme un agent local capable d'interroger l'état du système et les outils. *(prévu)*
 * ⚡ **Optimisé pour Hailo-10 :** Exploite 40 TOPS pour un raisonnement rapide en plusieurs étapes. *(prévu - nécessite le vrai LLM local)*
 * 👨‍👩‍👧 **Enfant du Cognitive AI Node :** Fonctionne comme l'un des
@@ -104,6 +106,22 @@ frères (VLA-Engine, Voice-UI, Docs-QA) :
   jamais une condition de sécurité physique - ce planificateur propose
   une action de récupération, il ne lève jamais un E-STOP ni ne devine
   face à une erreur qu'il ne reconnaît pas.
+* **Pourquoi `validation.py` existe alors que les vrais modèles de
+  `decompose.py` ne produisent jamais réellement de plan invalide.**
+  Un modèle fixe peut garantir des paramètres bien formés par
+  construction - un futur planificateur basé sur LLM ne le peut pas.
+  `validate_plan()` est le contrat réel et explicite que ce
+  planificateur devrait respecter, vérifié ici et maintenant contre le
+  seul planificateur qui existe aujourd'hui, afin que le contrat
+  lui-même soit prouvé correct avant que quelque chose de plus
+  difficile n'ait à le respecter.
+* **Pourquoi `decompose_goal()` est testé par fuzzing avec une graine
+  aléatoire fixe plutôt qu'avec `hypothesis`.** Ce projet (comme le
+  reste de l'écosystème) reste exclusivement basé sur la bibliothèque
+  standard - une boucle reproductible et à graine fixe de
+  `random.Random` sur des centaines d'objectifs synthétiques obtient
+  la même propriété réelle (ne plante jamais, ne renvoie jamais de
+  plan malformé) sans ajouter de nouvelle dépendance.
 
 ---
 
@@ -115,8 +133,9 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── primitives.py                  # Vrai vocabulaire fermé de primitives de commande robot
 │   ├── decompose.py                    # Décomposition réelle de tâches à base de règles
 │   ├── recovery.py                      # Récupération sémantique réelle d'erreurs à base de règles
+│   ├── validation.py                    # Validation réelle des préconditions sur un Plan décomposé
 │   └── main.py                            # Point d'entrée + sous-commandes réelles `decompose`/`recover`
-├── tests/                            # Tests réels : décomposition, récupération, CLI de bout en bout
+├── tests/                            # Tests réels : décomposition, récupération, validation, tests de propriétés, CLI de bout en bout
 ├── docs/                             # Documentation et base de connaissances
 ├── images/                           # Médias et diagrammes
 ├── scripts/                          # Scripts utilitaires
@@ -171,6 +190,16 @@ récupération :
 # Windows
 run.bat decompose "assembler la pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
+```
+
+Chaque plan réel décomposé est vérifié par rapport aux vraies
+préconditions de `validation.py` avant d'être affiché. Les modèles
+propres à `decompose.py` réussissent toujours ; un plan en échec
+serait refusé à la place :
+
+```text
+Plan for: "broken" FAILED precondition validation:
+  step 1 (GRIP): missing required param 'target'
 ```
 
 ### 🩺 Dépannage

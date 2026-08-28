@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import pytest
 
+from hydra_umc_semantic_planner import main as main_module
 from hydra_umc_semantic_planner.main import main
+from hydra_umc_semantic_planner.primitives import GRIP, MOVE_TO, Plan, Step
 
 
 def test_bare_invocation_prints_identity(capsys: pytest.CaptureFixture[str]) -> None:
@@ -34,6 +36,25 @@ def test_decompose_unmatched_goal(capsys: pytest.CaptureFixture[str]) -> None:
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "No matching task template" in captured.out
+
+
+def test_decompose_refuses_a_plan_that_fails_precondition_validation(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # decompose.py's own real templates never produce an invalid plan
+    # (see test_validation.py's own regression test for that) - this
+    # proves the CLI's real refusal path itself, by injecting a
+    # deliberately malformed plan the way a future non-template planner
+    # could genuinely produce one.
+    broken_plan = Plan(goal="broken", steps=(Step(MOVE_TO, {"location": "pickup"}), Step(GRIP, {})))
+    monkeypatch.setattr(main_module, "decompose_goal", lambda goal: broken_plan)
+
+    exit_code = main(["decompose", "anything"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "FAILED precondition validation" in captured.out
+    assert "missing required param 'target'" in captured.out
 
 
 def test_recover_known_error_code(capsys: pytest.CaptureFixture[str]) -> None:

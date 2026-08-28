@@ -25,6 +25,8 @@ Gestisce l'ambiguità di alto livello e fornisce il recupero semantico degli err
 ### Caratteristiche principali:
 * 🧩 **Decomposizione dei compiti (v0):** Scomposizione reale basata su regole di un piccolo vocabolario di obiettivi noti (es. «assemblare PCB») in comandi robotici sequenziali. *(implementato come vere regole a modello - non ancora un LLM; vedi BUILD ED ESECUZIONE sotto)*
 * 🛡️ **Recupero semantico (v0):** Ricerca reale basata su regole da codici di errore MCU strutturati a un'azione di recupero. *(implementato come una vera tabella esplicita su un vocabolario di codici noto; i codici sconosciuti passano sempre a un umano)*
+* ✅ **Validazione delle precondizioni:** Ogni piano decomposto viene verificato rispetto a ciò di cui ogni primitiva reale ha realmente bisogno prima di essere consegnato - un piano che fallisce viene rifiutato, mai passato silenziosamente come pronto per l'esecuzione. *(implementato)*
+* 🎲 **Deterministico e testato per proprietà:** `decompose_goal()` è dimostrato deterministico (stesso obiettivo, stesso piano, sempre) ed è testato tramite fuzzing su centinaia di obiettivi casuali/non validi - non va mai in crash, non restituisce mai un piano malformato. *(implementato)*
 * 🤖 **Workflow agenziale:** Opera come un agente locale in grado di interrogare lo stato del sistema e gli strumenti. *(pianificato)*
 * ⚡ **Ottimizzato per Hailo-10:** Sfrutta 40 TOPS per un ragionamento rapido in più passaggi. *(pianificato - richiede il vero LLM locale)*
 * 👨‍👩‍👧 **Figlio del Cognitive AI Node:** Gira come uno dei quattro
@@ -103,6 +105,22 @@ fratelli (VLA-Engine, Voice-UI, Docs-QA):
   una condizione di sicurezza fisica - questo pianificatore propone
   un'azione di recupero, non annulla mai un E-STOP né indovina di
   fronte a un errore che non riconosce.
+* **Perché `validation.py` esiste anche se i veri modelli di
+  `decompose.py` non producono mai realmente un piano non valido.**
+  Un modello fisso può garantire parametri ben formati per
+  costruzione - un futuro pianificatore basato su LLM non può farlo.
+  `validate_plan()` è il contratto reale ed esplicito che quel
+  pianificatore dovrebbe soddisfare, verificato qui e ora contro
+  l'unico pianificatore che esiste oggi, così che il contratto stesso
+  sia dimostrato corretto prima che qualcosa di più difficile debba
+  soddisfarlo.
+* **Perché `decompose_goal()` viene testato tramite fuzzing con un
+  seed casuale fisso invece che con `hypothesis`.** Questo progetto
+  (come il resto dell'ecosistema) rimane basato esclusivamente sulla
+  libreria standard - un ciclo riproducibile e con seed di
+  `random.Random` su centinaia di obiettivi sintetici ottiene la
+  stessa proprietà reale (non va mai in crash, non restituisce mai un
+  piano malformato) senza aggiungere una nuova dipendenza.
 
 ---
 
@@ -114,8 +132,9 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── primitives.py                  # Vero vocabolario chiuso di primitive di comando del robot
 │   ├── decompose.py                    # Decomposizione reale dei compiti basata su regole
 │   ├── recovery.py                      # Recupero semantico reale degli errori basato su regole
+│   ├── validation.py                    # Validazione reale delle precondizioni su un Plan decomposto
 │   └── main.py                            # Punto di ingresso + sottocomandi reali `decompose`/`recover`
-├── tests/                            # Test reali: decomposizione, recupero, CLI end-to-end
+├── tests/                            # Test reali: decomposizione, recupero, validazione, test di proprietà, CLI end-to-end
 ├── docs/                             # Documentazione e base di conoscenza
 ├── images/                           # Media e diagrammi
 ├── scripts/                          # Script di utilità
@@ -168,6 +187,16 @@ I sottocomandi reali scompongono un obiettivo o propongono un recupero:
 # Windows
 run.bat decompose "assembla la pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
+```
+
+Ogni piano reale decomposto viene verificato rispetto alle vere
+precondizioni di `validation.py` prima di essere stampato. I modelli
+propri di `decompose.py` passano sempre; un piano che fallisse
+verrebbe invece rifiutato:
+
+```text
+Plan for: "broken" FAILED precondition validation:
+  step 1 (GRIP): missing required param 'target'
 ```
 
 ### 🩺 Risoluzione dei problemi

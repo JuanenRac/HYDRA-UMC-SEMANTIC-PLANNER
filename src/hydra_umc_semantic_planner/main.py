@@ -19,6 +19,7 @@ import sys
 from . import __version__
 from .decompose import decompose_goal
 from .recovery import FailureContext, propose_recovery
+from .validation import validate_plan
 
 PROJECT_NAME = "HYDRA-UMC-SEMANTIC-PLANNER"
 ROLE = (
@@ -38,6 +39,20 @@ def _run_decompose(goal: str) -> int:
         print(f'No matching task template for: "{goal}"')
         print("(v0 is a real rule-based planner over a small template vocabulary - an honest miss, not a guess.)")
         return 0
+
+    issues = validate_plan(plan)
+    if issues:
+        # A real, honest refusal: never hand off a plan that fails its
+        # own preconditions as if it were execution-ready. decompose_goal()
+        # never actually produces one of these today (its templates
+        # always fill the right params) - this is the contract a future
+        # LLM-based planner (this project's own roadmap) would have to
+        # satisfy, since it cannot guarantee well-formed params the way a
+        # fixed template can.
+        print(f'Plan for: "{goal}" FAILED precondition validation:')
+        for issue in issues:
+            print(f"  step {issue.step_index} ({issue.primitive}): {issue.issue}")
+        return 1
 
     print(f'Plan for: "{goal}"')
     for index, step in enumerate(plan.steps, start=1):

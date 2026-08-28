@@ -5,6 +5,13 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.0.5] - Deterministic-plan guarantees, precondition validation, property tests
+
+- **Real precondition validation** (`validation.py`, new) - `REQUIRED_PARAMS` defines what each real primitive genuinely needs (`MOVE_TO` needs `location`; `GRIP`/`RELEASE`/`INSPECT` need `target`; `WAIT` needs nothing), and `validate_plan()`/`validate_step()`/`is_plan_valid()` check every step of a `Plan` against it. Wired into the `decompose` subcommand: a plan that fails its own preconditions is now refused (exit 1, every issue listed) instead of being handed off as execution-ready. `decompose.py`'s real templates never actually trigger this today - a regression test proves it - but it is the real contract a future LLM-based planner (this project's own roadmap) would have to satisfy, since it can't guarantee well-formed params the way a fixed template can.
+- **Real property tests for `decompose_goal()`** - a determinism property (the same goal decomposed twice always produces the identical plan), a fuzz property (500 random strings, fixed seed for reproducibility, over 0-40 characters: never crashes, and any plan it does return always passes its own precondition check), and a fixed corpus of real invalid-goal edge cases (empty/whitespace-only, punctuation noise, and near-miss words that contain a known keyword only as a substring of a longer word, verified directly against the real compiled patterns rather than assumed).
+- 13 new tests (`test_validation.py` new, plus additions to `test_decompose.py`/`test_cli.py`) = 27 total.
+- Real verification: ran `decompose` live against a real goal (passes validation unchanged) and an unmatched goal (unchanged honest miss).
+
 ## [0.0.4] - Real v0 rule-based decomposition and recovery
 ### Added
 - `primitives.py` - a real, closed vocabulary of robotic command primitives (`MOVE_TO`/`GRIP`/`RELEASE`/`INSPECT`/`WAIT`) a `Plan` is made of.
