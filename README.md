@@ -131,7 +131,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 ├── images/                           # Media and diagrams
 ├── scripts/                          # Utility scripts
 ├── build/                            # Local build output (git-ignored)
-├── pyproject.toml                    # Package metadata (version 0.0.4, odometer-bumped)
+├── pyproject.toml                    # Package metadata (version odometer-bumped on every real build)
 ├── bump_version.py                   # Odometer-style version bump (used by build.sh/.bat)
 ├── build.sh / build.bat              # Create venv, install (with dev extras), run tests, verify import
 └── run.sh / run.bat                  # Run the entry point (forwards args, e.g. `decompose`)
