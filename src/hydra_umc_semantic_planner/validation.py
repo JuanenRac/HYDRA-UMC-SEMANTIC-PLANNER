@@ -52,6 +52,8 @@ def validate_step(step: Step) -> list[str]:
         value = step.params.get(param)
         if value is None:
             issues.append(f"missing required param {param!r}")
+        elif not isinstance(value, str):
+            issues.append(f"required param {param!r} must be text")
         elif not value.strip():
             issues.append(f"required param {param!r} is empty")
     return issues
@@ -61,6 +63,8 @@ def validate_plan(plan: Plan) -> list[PlanIssue]:
     """Real precondition validation over every step in `plan`, in order.
     An empty result means every step is genuinely executable as-is."""
     issues: list[PlanIssue] = []
+    if not plan.steps:
+        return [PlanIssue(step_index=-1, primitive="", issue="plan has no steps")]
     for index, step in enumerate(plan.steps):
         for issue in validate_step(step):
             issues.append(PlanIssue(step_index=index, primitive=step.primitive, issue=issue))

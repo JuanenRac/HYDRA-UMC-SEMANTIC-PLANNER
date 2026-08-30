@@ -5,6 +5,12 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [Unreleased] - stricter untrusted plan validation
+
+- Required primitive parameters must now be text; invalid external plan data
+  is reported as a `PlanIssue` rather than raising while calling `.strip()`.
+- Empty plans are explicitly invalid and cannot be presented as executable.
+
 ## [0.0.6] - Removed a private-document reference from public source/README
 
 - **`recovery.py`/`README.md`** - both named a private internal design

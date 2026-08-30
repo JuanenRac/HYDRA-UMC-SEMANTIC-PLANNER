@@ -26,6 +26,12 @@ def test_empty_required_param_is_a_real_issue() -> None:
     assert issues == ["required param 'target' is empty"]
 
 
+def test_non_text_required_param_is_a_real_issue_not_an_exception() -> None:
+    issues = validate_step(Step(GRIP, {"target": 42}))
+
+    assert issues == ["required param 'target' must be text"]
+
+
 def test_unknown_primitive_is_a_real_issue() -> None:
     issues = validate_step(Step("TELEPORT", {}))
 
@@ -65,6 +71,13 @@ def test_is_plan_valid_false_for_a_malformed_plan() -> None:
     plan = Plan(goal="test", steps=(Step(INSPECT, {}),))
 
     assert is_plan_valid(plan) is False
+
+
+def test_empty_plan_is_not_execution_ready() -> None:
+    issues = validate_plan(Plan(goal="empty", steps=()))
+
+    assert issues[0].step_index == -1
+    assert issues[0].issue == "plan has no steps"
 
 
 def test_every_real_decompose_goal_template_passes_its_own_precondition_check() -> None:
