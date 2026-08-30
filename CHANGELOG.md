@@ -5,6 +5,23 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.0.6] - Removed a private-document reference from public source/README
+
+- **`recovery.py`/`README.md`** - both named a private internal design
+  document (section D.4) as the source of the recovery error-code
+  vocabulary. New `docs/RECOVERY_CONTRACT.md` makes that vocabulary
+  public and self-contained instead - no private document is needed to
+  encode or interpret a recovery request.
+- **`tools/ci_validate.py`** - the public/private documentation boundary
+  check only ever looked for one private marker; extended to also reject
+  the private design document's own name, so this class of leak is
+  caught automatically going forward. New `validate_local_markdown_links()`
+  also rejects a relative Markdown link whose target file doesn't exist.
+  `CI_VALIDATION=PASS`.
+- 27/27 tests passing.
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
+
 ## [0.0.5] - Deterministic-plan guarantees, precondition validation, property tests
 
 - **Real precondition validation** (`validation.py`, new) - `REQUIRED_PARAMS` defines what each real primitive genuinely needs (`MOVE_TO` needs `location`; `GRIP`/`RELEASE`/`INSPECT` need `target`; `WAIT` needs nothing), and `validate_plan()`/`validate_step()`/`is_plan_valid()` check every step of a `Plan` against it. Wired into the `decompose` subcommand: a plan that fails its own preconditions is now refused (exit 1, every issue listed) instead of being handed off as execution-ready. `decompose.py`'s real templates never actually trigger this today - a regression test proves it - but it is the real contract a future LLM-based planner (this project's own roadmap) would have to satisfy, since it can't guarantee well-formed params the way a fixed template can.

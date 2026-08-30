@@ -86,8 +86,8 @@ service into `docker-compose.yml` alongside its three siblings
   sibling HYDRA-UMC-DOCS-QA's real TF-IDF index instead of an embedding
   model: a real, testable kernel now that a future LLM-based planner can
   replace behind the same `decompose_goal()` contract.
-* **Why `recovery.py`'s error codes match the MCU adapter vocabulary
-  documented in the BIBLIA architecture manual.** `INVALID_STATE`/
+* **Why `recovery.py`'s error codes match the public recovery contract.**
+  `INVALID_STATE`/
   `OUT_OF_RANGE`/`ESTOP_ACTIVE`/`TOOL_INCOMPATIBLE`/`TIMEOUT`/
   `UNSUPPORTED` are the real structured errors that adapter is designed
   to return - recovery logic built against that real vocabulary today
@@ -126,6 +126,8 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   └── main.py                            # Entry point + real `decompose`/`recover` subcommands
 ├── tests/                            # Real tests: decomposition, recovery, validation, property tests, end-to-end CLI
 ├── docs/                             # Documentation and knowledge base
+│   ├── CLI_REFERENCE.md               # Public command-line contract
+│   └── RECOVERY_CONTRACT.md           # Public error/recovery vocabulary
 ├── images/                           # Media and diagrams
 ├── scripts/                          # Utility scripts
 ├── build/                            # Local build output (git-ignored)

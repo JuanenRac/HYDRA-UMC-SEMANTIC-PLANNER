@@ -91,8 +91,8 @@ neben seinen drei Geschwistern (VLA-Engine, Voice-UI, Docs-QA) ein:
   HYDRA-UMC-DOCS-QA anstelle eines Embedding-Modells: ein echter,
   testbarer Kern jetzt, den ein künftiger LLM-basierter Planer hinter
   demselben `decompose_goal()`-Vertrag ersetzen kann.
-* **Warum die Fehlercodes von `recovery.py` dem im BIBLIA-
-  Architekturhandbuch dokumentierten MCU-Adapter-Vokabular entsprechen.**
+* **Warum die Fehlercodes von `recovery.py` dem öffentlichen
+  Wiederherstellungsvertrag entsprechen.**
   `INVALID_STATE`/`OUT_OF_RANGE`/`ESTOP_ACTIVE`/`TOOL_INCOMPATIBLE`/
   `TIMEOUT`/`UNSUPPORTED` sind die echten strukturierten Fehler, die
   dieser Adapter zurückgeben soll - eine schon heute gegen dieses echte
@@ -135,6 +135,8 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   └── main.py                            # Einstiegspunkt + echte Subcommands `decompose`/`recover`
 ├── tests/                            # Echte Tests: Zerlegung, Wiederherstellung, Validierung, Property-Tests, End-to-End-CLI
 ├── docs/                             # Dokumentation und Wissensdatenbank
+│   ├── CLI_REFERENCE.md               # Öffentlicher Befehlszeilenvertrag
+│   └── RECOVERY_CONTRACT.md           # Öffentliches Wiederherstellungsvokabular
 ├── images/                           # Medien und Diagramme
 ├── scripts/                          # Utility-Skripte
 ├── build/                            # Lokale Build-Ausgabe (von git ignoriert)

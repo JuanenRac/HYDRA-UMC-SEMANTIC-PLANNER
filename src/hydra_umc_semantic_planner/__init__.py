@@ -14,4 +14,4 @@ HYDRA-UMC-COGNITIVE-NODE in the Cognitive AI Node category.
 # pyproject.toml's own `version =` field by bump_version.py on every real
 # build, so main.py can print a version even if the package was never
 # installed (e.g. run straight from src/).
-__version__ = "0.0.5"
+__version__ = "0.0.6"

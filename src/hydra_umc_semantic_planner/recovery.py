@@ -22,8 +22,8 @@ SWAP_TOOL = "SWAP_TOOL"
 ABORT = "ABORT"
 ESCALATE_TO_OPERATOR = "ESCALATE_TO_OPERATOR"
 
-# Real MCU adapter error codes (see BIBLIA D.4) plus one domain-specific
-# gripper failure mode, matching the README's own worked example.
+# Public recovery-contract error codes plus one domain-specific gripper failure
+# mode. See docs/RECOVERY_CONTRACT.md; no private design document is required.
 INVALID_STATE = "INVALID_STATE"
 OUT_OF_RANGE = "OUT_OF_RANGE"
 ESTOP_ACTIVE = "ESTOP_ACTIVE"
