@@ -11,6 +11,22 @@ bumped manually only. See `bump_version.py`.
   is reported as a `PlanIssue` rather than raising while calling `.strip()`.
 - Empty plans are explicitly invalid and cannot be presented as executable.
 
+## [0.0.7] - Real v0: JSON/HTTP server mode, plus CM5 deployment
+
+- **`api.py`** (new) - `POST /decompose` and `POST /recover` reach the
+  exact same `decompose_goal()`/`validate_plan()`/`propose_recovery()`
+  functions the CLI's own subcommands already run. Real gap this closes:
+  this project's own rule-based decomposition/recovery logic was only
+  ever reachable as a one-shot CLI.
+- **`main.py`** - new `serve` subcommand (`--addr`/`--port`, default
+  `127.0.0.1:8109`).
+- **`systemd/hydra-umc-semantic-planner.service`** (new) - loopback-only
+  unit for `HYDRA-UMC-OS/provisioning/install_semantic_planner.sh` (new,
+  that repo), same stdlib "copy src/ + PYTHONPATH" shape as
+  `install_datalake.sh`.
+- 7 new tests (`tests/test_api.py`, real end-to-end HTTP, reusing this
+  repo's own `tests/test_cli.py` fixture shapes) - 36 total.
+
 ## [0.0.6] - Removed a private-document reference from public source/README
 
 - **`recovery.py`/`README.md`** - both named a private internal design

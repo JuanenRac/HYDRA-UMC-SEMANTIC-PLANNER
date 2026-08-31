@@ -17,6 +17,7 @@ import argparse
 import sys
 
 from . import __version__
+from .api import SemanticPlannerServer
 from .decompose import decompose_goal
 from .recovery import FailureContext, propose_recovery
 from .validation import validate_plan
@@ -69,6 +70,20 @@ def _run_recover(component: str, error_code: str, detail: str) -> int:
     return 0
 
 
+def _run_serve(addr: str, port: int) -> int:
+    server = SemanticPlannerServer((addr, port), ROLE)
+    print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
+    print("[semantic-planner] POST /decompose, POST /recover, GET /stats")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+        print("[semantic-planner] shutting down")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="hydra-umc-semantic-planner", description=ROLE)
     subparsers = parser.add_subparsers(dest="command")
@@ -85,6 +100,14 @@ def build_parser() -> argparse.ArgumentParser:
     recover_parser.add_argument("--error-code", required=True, help="Structured error code (e.g. TIMEOUT).")
     recover_parser.add_argument("--detail", default="", help="Optional human-readable detail.")
 
+    serve_parser = subparsers.add_parser(
+        "serve",
+        help="Run decompose/recover as a JSON/HTTP API (POST /decompose, POST /recover) "
+             "- the exact same functions the CLI subcommands above already run.",
+    )
+    serve_parser.add_argument("--addr", default="127.0.0.1", help="address to bind the HTTP API to")
+    serve_parser.add_argument("--port", type=int, default=8109, help="port for the HTTP API")
+
     return parser
 
 
@@ -96,6 +119,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_decompose(args.goal)
     if args.command == "recover":
         return _run_recover(args.component, args.error_code, args.detail)
+    if args.command == "serve":
+        return _run_serve(args.addr, args.port)
 
     _print_identity()
     return 0
