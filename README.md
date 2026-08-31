@@ -146,7 +146,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 
 ---
 
-## ⚙️ BUILD & RUN
+## ⚙️ BUILD & RUN GUIDE
 
 Requires Python >= 3.10.
 
