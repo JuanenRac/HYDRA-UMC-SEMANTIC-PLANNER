@@ -170,6 +170,15 @@ Plan for: "broken" FAILED precondition validation:
 ファームウェア、制御ソフトウェア、AI ノード、フリート管理ツールにまたがる、
 より大きなロボティクスエコシステムの一部です。
 
+### ファミリー
+
+**親:** **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** —— このプランナーの共有 HydraOS イメージ/重みを所有し、認知ワークフローに組み込む統合ハブ。
+
+**兄弟:**
+- **[HYDRA-UMC-VOICE-UI](https://github.com/JuanenRac/HYDRA-UMC-VOICE-UI)** —— STT/TTS ゲートウェイ。このプランナーに音声/テキスト入力を供給します。
+- **[HYDRA-UMC-VLA-ENGINE](https://github.com/JuanenRac/HYDRA-UMC-VLA-ENGINE)** —— ビジョンデータを、このプランナーが消費するアクショントークンに変換します。
+- **[HYDRA-UMC-DOCS-QA](https://github.com/JuanenRac/HYDRA-UMC-DOCS-QA)** —— このプランナーの判断を技術マニュアルに基づかせる RAG アシスタント。
+
 ### 本プランナーに直接関連
 
 - **[HYDRA-UMC-ORCHESTRATOR](https://github.com/JuanenRac/HYDRA-UMC-ORCHESTRATOR)** —— 本プランナーのミッション決定を受け取ります。

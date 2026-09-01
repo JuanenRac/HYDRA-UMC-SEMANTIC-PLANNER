@@ -165,6 +165,15 @@ Plan for: "broken" FAILED precondition validation:
 本项目是同一作者（JuanenRac / Electro Hobby 3D）打造的更大规模机器人生态
 系统的一部分，涵盖固件、控制软件、AI 节点和车队工具。
 
+### 家族
+
+**父级：** **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** —— 拥有该规划器共享的 HydraOS 镜像/权重并将其接入认知工作流的集成中心。
+
+**兄弟服务：**
+- **[HYDRA-UMC-VOICE-UI](https://github.com/JuanenRac/HYDRA-UMC-VOICE-UI)** —— STT/TTS 网关；为该规划器提供语音/文本输入。
+- **[HYDRA-UMC-VLA-ENGINE](https://github.com/JuanenRac/HYDRA-UMC-VLA-ENGINE)** —— 将视觉数据转换为该规划器所消费的动作令牌。
+- **[HYDRA-UMC-DOCS-QA](https://github.com/JuanenRac/HYDRA-UMC-DOCS-QA)** —— 将该规划器的决策建立在技术手册基础上的 RAG 助手。
+
 ### 与本规划器直接相关
 
 - **[HYDRA-UMC-ORCHESTRATOR](https://github.com/JuanenRac/HYDRA-UMC-ORCHESTRATOR)** —— 接收本规划器的任务决策。

@@ -237,6 +237,15 @@ Plan for: "broken" FAILED precondition validation:
 
 Ce projet fait partie d'un écosystème robotique plus large du même auteur (JuanenRac / Electro Hobby 3D), couvrant firmware, logiciel de contrôle, nœuds IA et outillage de flotte.
 
+### Famille
+
+**Parent :** **[HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)** — le Hub d'Intégration qui possède l'image/les poids HydraOS partagés de ce planificateur et le relie au flux cognitif.
+
+**Frères :**
+- **[HYDRA-UMC-VOICE-UI](https://github.com/JuanenRac/HYDRA-UMC-VOICE-UI)** — passerelle STT/TTS ; alimente ce planificateur avec son entrée vocale/texte.
+- **[HYDRA-UMC-VLA-ENGINE](https://github.com/JuanenRac/HYDRA-UMC-VLA-ENGINE)** — transforme les données de vision en tokens d'action que consomme ce planificateur.
+- **[HYDRA-UMC-DOCS-QA](https://github.com/JuanenRac/HYDRA-UMC-DOCS-QA)** — assistant RAG qui ancre les décisions de ce planificateur dans les manuels techniques.
+
 ### Directement liés à ce planificateur
 
 - **[HYDRA-UMC-ORCHESTRATOR](https://github.com/JuanenRac/HYDRA-UMC-ORCHESTRATOR)** — reçoit les décisions de mission de ce planificateur.
