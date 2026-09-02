@@ -132,15 +132,21 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── decompose.py                    # Echte regelbasierte Aufgabenzerlegung
 │   ├── recovery.py                      # Echte regelbasierte semantische Fehlerwiederherstellung
 │   ├── validation.py                    # Echte Präconditions-Validierung über einen zerlegten Plan
+│   ├── api.py                             # Einfache JSON/HTTP-Oberfläche (stdlib http.server) über decompose/recover
 │   └── main.py                            # Einstiegspunkt + echte Subcommands `decompose`/`recover`
-├── tests/                            # Echte Tests: Zerlegung, Wiederherstellung, Validierung, Property-Tests, End-to-End-CLI
+├── tests/                            # Echte Tests: Zerlegung, Wiederherstellung, Validierung, api, Property-Tests, End-to-End-CLI
 ├── docs/                             # Dokumentation und Wissensdatenbank
 │   ├── CLI_REFERENCE.md               # Öffentlicher Befehlszeilenvertrag
 │   └── RECOVERY_CONTRACT.md           # Öffentliches Wiederherstellungsvokabular
 ├── images/                           # Medien und Diagramme
-├── scripts/                          # Utility-Skripte
+├── systemd/
+│   └── hydra-umc-semantic-planner.service # systemd-Unit der lokalen CM5-decompose/recover-API
+├── tools/
+│   ├── build_test.py                 # Nicht-versionierender Build-Check
+│   └── ci_validate.py                # Manifest/CHANGELOG/Docs-Validierung, von CI genutzt
 ├── build/                            # Lokale Build-Ausgabe (von git ignoriert)
-├── pyproject.toml                    # Paket-Metadaten (Version 0.0.7, Kilometerzähler-Inkrement)
+├── pyproject.toml                    # Paket-Metadaten (Version per Kilometerzähler-Inkrement)
+├── bump_manifest_version.py          # Synchronisiert die Version von hydra-umc.project.json mit der nativen (--sync)
 ├── bump_version.py                   # Versionserhöhung im Kilometerzähler-Stil (von build.sh/.bat verwendet)
 ├── build.sh / build.bat              # Erstellt das venv, installiert (mit Dev-Extras), führt Tests aus, prüft den Import
 └── run.sh / run.bat                  # Führt den Einstiegspunkt aus (leitet Argumente weiter, z. B. `decompose`)

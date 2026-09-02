@@ -123,16 +123,22 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── decompose.py                    # Real rule-based task decomposition
 │   ├── recovery.py                      # Real rule-based semantic error recovery
 │   ├── validation.py                    # Real precondition validation over a decomposed Plan
+│   ├── api.py                             # Plain JSON/HTTP surface (stdlib http.server) over decompose/recover
 │   └── main.py                            # Entry point + real `decompose`/`recover` subcommands
-├── tests/                            # Real tests: decomposition, recovery, validation, property tests, end-to-end CLI
+├── tests/                            # Real tests: decomposition, recovery, validation, api, property tests, end-to-end CLI
 ├── docs/                             # Documentation and knowledge base
 │   ├── CLI_REFERENCE.md               # Public command-line contract
 │   └── RECOVERY_CONTRACT.md           # Public error/recovery vocabulary
 ├── images/                           # Media and diagrams
-├── scripts/                          # Utility scripts
+├── systemd/
+│   └── hydra-umc-semantic-planner.service # Local CM5 decompose/recover API systemd unit
+├── tools/
+│   ├── build_test.py                 # Non-versioning build/compile check
+│   └── ci_validate.py                # Manifest/CHANGELOG/docs validation used by CI
 ├── build/                            # Local build output (git-ignored)
 ├── pyproject.toml                    # Package metadata (version odometer-bumped on every real build)
-├── bump_version.py                   # Odometer-style version bump (used by build.sh/.bat)
+├── bump_version.py                   # Odometer-style native version bump (used by build.sh/.bat)
+├── bump_manifest_version.py          # Syncs hydra-umc.project.json's version to the native one (--sync)
 ├── build.sh / build.bat              # Create venv, install (with dev extras), run tests, verify import
 └── run.sh / run.bat                  # Run the entry point (forwards args, e.g. `decompose`)
 ```

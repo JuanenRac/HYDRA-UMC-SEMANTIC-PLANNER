@@ -132,15 +132,21 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── decompose.py                    # Decomposizione reale dei compiti basata su regole
 │   ├── recovery.py                      # Recupero semantico reale degli errori basato su regole
 │   ├── validation.py                    # Validazione reale delle precondizioni su un Plan decomposto
+│   ├── api.py                             # Superficie JSON/HTTP semplice (http.server di stdlib) su decompose/recover
 │   └── main.py                            # Punto di ingresso + sottocomandi reali `decompose`/`recover`
-├── tests/                            # Test reali: decomposizione, recupero, validazione, test di proprietà, CLI end-to-end
+├── tests/                            # Test reali: decomposizione, recupero, validazione, api, test di proprietà, CLI end-to-end
 ├── docs/                             # Documentazione e base di conoscenza
 │   ├── CLI_REFERENCE.md               # Contratto pubblico da riga di comando
 │   └── RECOVERY_CONTRACT.md           # Vocabolario pubblico di recupero
 ├── images/                           # Media e diagrammi
-├── scripts/                          # Script di utilità
+├── systemd/
+│   └── hydra-umc-semantic-planner.service # Unità systemd della API locale decompose/recover sulla CM5
+├── tools/
+│   ├── build_test.py                 # Controllo build senza versionamento
+│   └── ci_validate.py                # Validazione manifest/CHANGELOG/docs usata dalla CI
 ├── build/                            # Output di build locale (ignorato da git)
-├── pyproject.toml                    # Metadati del pacchetto (versione 0.0.7, incremento stile contachilometri)
+├── pyproject.toml                    # Metadati del pacchetto (versione a incremento contachilometri)
+├── bump_manifest_version.py          # Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)
 ├── bump_version.py                   # Incremento versione stile contachilometri (usato da build.sh/.bat)
 ├── build.sh / build.bat              # Crea il venv, installa (con extra dev), esegue i test, verifica l'import
 └── run.sh / run.bat                  # Esegue il punto di ingresso (inoltra gli argomenti, es. `decompose`)

@@ -83,16 +83,21 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── decompose.py                    # 実際の、ルールベースのタスク分解
 │   ├── recovery.py                      # 実際の、ルールベースの意味的エラー復旧
 │   ├── validation.py                    # 分解された Plan に対する実際の前提条件検証
+│   ├── api.py                             # シンプルなJSON/HTTPサーフェス(stdlibのhttp.server)。decompose/recoverを橋渡し
 │   └── main.py                            # エントリポイント + 実際の `decompose`/`recover` サブコマンド
-├── tests/                            # 実際のテスト：分解、復旧、検証、プロパティテスト、エンドツーエンド CLI
+├── tests/                            # 実際のテスト：分解、復旧、検証、api、プロパティテスト、エンドツーエンド CLI
 ├── docs/                             # ドキュメントとナレッジベース
 │   ├── CLI_REFERENCE.md               # 公開コマンドライン契約
 │   └── RECOVERY_CONTRACT.md           # 公開エラー/復旧語彙
 ├── images/                           # メディアと図表
-├── scripts/                          # ユーティリティスクリプト
+├── systemd/
+│   └── hydra-umc-semantic-planner.service # ローカルCM5 decompose/recover APIのsystemdユニット
+├── tools/
+│   ├── build_test.py                 # バージョンを増やさないビルドチェック
+│   └── ci_validate.py                # CI が使用するマニフェスト/CHANGELOG/ドキュメント検証
 ├── build/                            # ローカルビルド出力（git 管理外）
-├── pyproject.toml                    # パッケージメタデータ（バージョン 0.0.7、オドメーター式増加）
-├── bump_version.py                   # オドメーター式バージョンインクリメント（build.sh/.bat が使用）
+├── pyproject.toml                    # パッケージメタデータ（オドメーター式バージョン増加）
+├── bump_manifest_version.py          # hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
 ├── build.sh / build.bat              # venv 作成、インストール（dev エクストラ付き）、テスト実行、インポート検証
 └── run.sh / run.bat                  # エントリポイントを実行（引数を転送、例：`decompose`）
 ```

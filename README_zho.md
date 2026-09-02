@@ -80,16 +80,21 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── decompose.py                    # 真实的、基于规则的任务分解
 │   ├── recovery.py                      # 真实的、基于规则的语义错误恢复
 │   ├── validation.py                    # 对已分解 Plan 的真实前置条件验证
+│   ├── api.py                             # 简洁的 JSON/HTTP 接口(基于 stdlib http.server),桥接 decompose/recover
 │   └── main.py                            # 入口点 + 真实的 `decompose`/`recover` 子命令
-├── tests/                            # 真实测试：分解、恢复、验证、属性测试、端到端 CLI
+├── tests/                            # 真实测试：分解、恢复、验证、api、属性测试、端到端 CLI
 ├── docs/                             # 文档与知识库
 │   ├── CLI_REFERENCE.md               # 公开命令行契约
 │   └── RECOVERY_CONTRACT.md           # 公开错误/恢复词汇表
 ├── images/                           # 媒体与图表
-├── scripts/                          # 实用脚本
+├── systemd/
+│   └── hydra-umc-semantic-planner.service # 本地 CM5 decompose/recover API 的 systemd 单元
+├── tools/
+│   ├── build_test.py                 # 不递增版本号的构建检查
+│   └── ci_validate.py                # CI 使用的清单/CHANGELOG/文档校验
 ├── build/                            # 本地构建输出（已被 git 忽略）
-├── pyproject.toml                    # 包元数据（版本 0.0.7，里程表式递增）
-├── bump_version.py                   # 里程表式版本递增（由 build.sh/.bat 使用）
+├── pyproject.toml                    # 包元数据（里程表式递增版本号）
+├── bump_manifest_version.py          # 将 hydra-umc.project.json 的版本与原生版本同步(--sync)
 ├── build.sh / build.bat              # 创建 venv、安装（含 dev 附加依赖）、运行测试、验证导入
 └── run.sh / run.bat                  # 运行入口点（转发参数，例如 `decompose`）
 ```

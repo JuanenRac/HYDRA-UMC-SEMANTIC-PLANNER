@@ -133,15 +133,21 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── decompose.py                    # Décomposition réelle de tâches à base de règles
 │   ├── recovery.py                      # Récupération sémantique réelle d'erreurs à base de règles
 │   ├── validation.py                    # Validation réelle des préconditions sur un Plan décomposé
+│   ├── api.py                             # Surface JSON/HTTP simple (http.server de stdlib) sur decompose/recover
 │   └── main.py                            # Point d'entrée + sous-commandes réelles `decompose`/`recover`
-├── tests/                            # Tests réels : décomposition, récupération, validation, tests de propriétés, CLI de bout en bout
+├── tests/                            # Tests réels : décomposition, récupération, validation, api, tests de propriétés, CLI de bout en bout
 ├── docs/                             # Documentation et base de connaissances
 │   ├── CLI_REFERENCE.md               # Contrat public de ligne de commande
 │   └── RECOVERY_CONTRACT.md           # Vocabulaire public de récupération
 ├── images/                           # Médias et diagrammes
-├── scripts/                          # Scripts utilitaires
+├── systemd/
+│   └── hydra-umc-semantic-planner.service # Unité systemd de l'API locale decompose/recover sur la CM5
+├── tools/
+│   ├── build_test.py                 # Vérification de build sans versionnage
+│   └── ci_validate.py                # Validation manifeste/CHANGELOG/docs utilisée par CI
 ├── build/                            # Sortie de build locale (ignorée par git)
-├── pyproject.toml                    # Métadonnées du paquet (version 0.0.7, incrément type compteur kilométrique)
+├── pyproject.toml                    # Métadonnées du paquet (version à incrément type compteur kilométrique)
+├── bump_manifest_version.py          # Synchronise la version de hydra-umc.project.json avec la version native (--sync)
 ├── bump_version.py                   # Incrément de version type compteur kilométrique (utilisé par build.sh/.bat)
 ├── build.sh / build.bat              # Crée le venv, installe (avec extras dev), exécute les tests, vérifie l'import
 └── run.sh / run.bat                  # Exécute le point d'entrée (transmet les arguments, ex. `decompose`)
