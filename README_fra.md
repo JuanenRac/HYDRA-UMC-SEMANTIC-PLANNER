@@ -141,7 +141,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 ├── images/                           # Médias et diagrammes
 ├── scripts/                          # Scripts utilitaires
 ├── build/                            # Sortie de build locale (ignorée par git)
-├── pyproject.toml                    # Métadonnées du paquet (version 0.0.4, incrément type compteur kilométrique)
+├── pyproject.toml                    # Métadonnées du paquet (version 0.0.7, incrément type compteur kilométrique)
 ├── bump_version.py                   # Incrément de version type compteur kilométrique (utilisé par build.sh/.bat)
 ├── build.sh / build.bat              # Crée le venv, installe (avec extras dev), exécute les tests, vérifie l'import
 └── run.sh / run.bat                  # Exécute le point d'entrée (transmet les arguments, ex. `decompose`)
@@ -177,7 +177,7 @@ exécutent la vraie suite de tests (`pytest tests/`). Sortie attendue
 d'un `run.sh` sans argument :
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.4
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

@@ -165,7 +165,7 @@ run.bat
 (`pytest tests/`). Expected output of a bare `run.sh`:
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.4
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

@@ -91,7 +91,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 ├── images/                           # メディアと図表
 ├── scripts/                          # ユーティリティスクリプト
 ├── build/                            # ローカルビルド出力（git 管理外）
-├── pyproject.toml                    # パッケージメタデータ（バージョン 0.0.4、オドメーター式増加）
+├── pyproject.toml                    # パッケージメタデータ（バージョン 0.0.7、オドメーター式増加）
 ├── bump_version.py                   # オドメーター式バージョンインクリメント（build.sh/.bat が使用）
 ├── build.sh / build.bat              # venv 作成、インストール（dev エクストラ付き）、テスト実行、インポート検証
 └── run.sh / run.bat                  # エントリポイントを実行（引数を転送、例：`decompose`）
@@ -125,7 +125,7 @@ run.bat
 実行します（`pytest tests/`）。引数なしの `run.sh` の予期される出力：
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.4
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

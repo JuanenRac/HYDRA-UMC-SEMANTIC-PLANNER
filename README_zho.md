@@ -88,7 +88,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 ├── images/                           # 媒体与图表
 ├── scripts/                          # 实用脚本
 ├── build/                            # 本地构建输出（已被 git 忽略）
-├── pyproject.toml                    # 包元数据（版本 0.0.4，里程表式递增）
+├── pyproject.toml                    # 包元数据（版本 0.0.7，里程表式递增）
 ├── bump_version.py                   # 里程表式版本递增（由 build.sh/.bat 使用）
 ├── build.sh / build.bat              # 创建 venv、安装（含 dev 附加依赖）、运行测试、验证导入
 └── run.sh / run.bat                  # 运行入口点（转发参数，例如 `decompose`）
@@ -121,7 +121,7 @@ run.bat
 `run.sh` 的预期输出：
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.4
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
