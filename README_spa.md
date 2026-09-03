@@ -26,6 +26,7 @@ Maneja la ambigüedad de alto nivel y proporciona recuperación semántica de er
 * 🧩 **Descomposición de Tareas (v0):** División real basada en reglas de un pequeño vocabulario de objetivos conocidos (ej. "ensamblar PCB") en comandos secuenciales de robot. *(implementado como reglas de plantilla reales, todavía no un LLM - ver BUILD Y EJECUCIÓN abajo)*
 * 🛡️ **Recuperación Semántica (v0):** Búsqueda real basada en reglas desde códigos de error estructurados del MCU a una acción de recuperación. *(implementado como una tabla explícita real sobre un vocabulario de códigos conocido; los códigos desconocidos siempre escalan a un humano)*
 * ✅ **Validación de Precondiciones:** Cada plan descompuesto se valida contra lo que cada primitiva real realmente necesita antes de entregarlo - un plan que falla es rechazado, nunca se pasa silenciosamente como listo para ejecutar. *(implementado)*
+* 🌐 **API JSON/HTTP (v0.0.7):** el subcomando `serve` expone la misma lógica exacta de `decompose`/`recover` sobre un `http.server` de la stdlib (`POST /decompose`, `POST /recover`, `GET /stats`) para clientes que no son la CLI - solo loopback por defecto, igual que la unidad `systemd/hydra-umc-semantic-planner.service`. Ver [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) para cada comando, flag y código de salida real, y [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) para el vocabulario público completo de códigos de error.
 * 🎲 **Determinista y Testeado por Propiedades:** `decompose_goal()` está probado como determinista (mismo objetivo, mismo plan, siempre) y testeado mediante fuzzing contra cientos de objetivos aleatorios/inválidos - nunca falla, nunca devuelve un plan mal formado. *(implementado)*
 * 🤖 **Flujo Agéntico:** Funciona como un agente local capaz de consultar el estado del sistema y herramientas. *(planeado)*
 * ⚡ **Optimizado para Hailo-10:** Aprovecha 40 TOPS para un razonamiento multi-paso rápido. *(planeado - necesita el LLM local real)*
@@ -204,6 +205,16 @@ su lugar:
 Plan for: "broken" FAILED precondition validation:
   step 1 (GRIP): missing required param 'target'
 ```
+
+La misma lógica de `decompose`/`recover` también es accesible por HTTP, para clientes que no son la CLI:
+
+```bash
+./run.sh serve --addr 127.0.0.1 --port 8109
+# en otra terminal:
+curl -s -X POST http://127.0.0.1:8109/decompose -d '{"goal": "assemble the pcb"}'
+```
+
+Ver [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) para la referencia completa de comandos, flags y códigos de salida, y [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) para el vocabulario público de códigos de error de recuperación.
 
 ### 🩺 Solución de problemas
 

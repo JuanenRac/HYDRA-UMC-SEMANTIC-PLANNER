@@ -29,6 +29,7 @@ LLM（大语言模型）将复杂目标分解为可执行的机器人操作单�
 * 🧩 **任务分解（v0）：** 对一个已知的小型目标词汇表进行真实的、基于规则的分解（例如"组装 PCB"），得到顺序的机器人指令。*（已实现为真实的模板规则——尚非 LLM；见下方"构建与运行"）*
 * 🛡️ **语义恢复（v0）：** 从结构化的 MCU 错误代码到恢复动作的真实的、基于规则的查找。*（已实现为基于已知代码词汇表的真实显式表格；未知代码始终上报给人类）*
 * ✅ **前置条件验证：** 每个分解后的计划在交付之前都会对照每个真实原语真正需要的内容进行检查 —— 失败的计划会被拒绝，而不会被静静地当作可执行状态放行。*（已实现）*
+* 🌐 **JSON/HTTP API(v0.0.7):** `serve` 子命令通过 stdlib 的 `http.server`(`POST /decompose`、`POST /recover`、`GET /stats`)对外暴露与 `decompose`/`recover` 完全相同的逻辑,供非 CLI 调用方使用——默认仅限本地回环,与 `systemd/hydra-umc-semantic-planner.service` 单元一致。完整的真实命令、参数和退出码请见 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md),完整的公开错误码词汇表请见 [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md)。
 * 🎲 **确定性 + 属性测试：** `decompose_goal()` 已被证明具有确定性（相同目标始终得到相同计划），并针对数百个随机/无效目标进行了 fuzz 测试 —— 从不崩溃，也从不返回格式错误的计划。*（已实现）*
 * 🤖 **代理式工作流：** 作为本地代理运行，能够查询系统状态和工具。*（计划中）*
 * ⚡ **Hailo-10 优化：** 利用 40 TOPS 算力实现快速的多步推理。*（计划中——需要真实的本地 LLM）*
@@ -147,6 +148,16 @@ run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum
 Plan for: "broken" FAILED precondition validation:
   step 1 (GRIP): missing required param 'target'
 ```
+
+同样的 `decompose`/`recover` 逻辑也可以通过 HTTP 访问,供非 CLI 调用方使用:
+
+```bash
+./run.sh serve --addr 127.0.0.1 --port 8109
+# 在另一个终端:
+curl -s -X POST http://127.0.0.1:8109/decompose -d '{"goal": "assemble the pcb"}'
+```
+
+完整的命令、参数和退出码参考请见 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md),完整的公开恢复错误码词汇表请见 [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md)。
 
 ### 🩺 故障排查
 

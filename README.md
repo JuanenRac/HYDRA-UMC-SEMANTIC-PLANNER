@@ -26,6 +26,7 @@ It handles high-level ambiguity and provides semantic error recovery: if a task 
 * 🧩 **Task Decomposition (v0):** Real rule-based breakdown of a small known goal vocabulary (e.g., "assemble PCB") into sequential robot commands. *(implemented as real template rules, not yet an LLM - see BUILD & RUN below)*
 * 🛡️ **Semantic Recovery (v0):** Real rule-based lookup from structured MCU error codes to a recovery action. *(implemented as a real, explicit table over a known code vocabulary; unknown codes always escalate to a human)*
 * ✅ **Precondition Validation:** Every decomposed plan is checked against what each real primitive genuinely needs before being handed off - a plan that fails is refused, never silently passed on as execution-ready. *(implemented)*
+* 🌐 **JSON/HTTP API (v0.0.7):** the `serve` subcommand exposes `decompose`/`recover`'s exact same logic over a plain stdlib `http.server` (`POST /decompose`, `POST /recover`, `GET /stats`) for callers that aren't the CLI itself - loopback-only by default, matching the `systemd/hydra-umc-semantic-planner.service` unit. See [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for every real command, flag and exit code, and [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) for the full public error-code vocabulary.
 * 🎲 **Deterministic + Property-Tested:** `decompose_goal()` is proven deterministic (same goal, same plan, always) and fuzz-tested against hundreds of random/invalid goals - never crashes, never returns a malformed plan. *(implemented)*
 * 🤖 **Agentic Workflow:** Operates as a local agent capable of querying system state and tools. *(planned)*
 * ⚡ **Hailo-10 Optimized:** Leverages 40 TOPS for fast multi-step reasoning. *(planned - needs the real local LLM)*
@@ -194,6 +195,17 @@ always pass; a plan that failed would be refused instead:
 Plan for: "broken" FAILED precondition validation:
   step 1 (GRIP): missing required param 'target'
 ```
+
+The same `decompose`/`recover` logic is also reachable over HTTP, for
+callers that aren't the CLI itself:
+
+```bash
+./run.sh serve --addr 127.0.0.1 --port 8109
+# in another terminal:
+curl -s -X POST http://127.0.0.1:8109/decompose -d '{"goal": "assemble the pcb"}'
+```
+
+See [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for the full command/flag/exit-code reference, and [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) for the public recovery error-code vocabulary.
 
 ### 🩺 Troubleshooting
 

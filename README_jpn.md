@@ -30,7 +30,8 @@
 ### 主な機能：
 * 🧩 **タスク分解（v0）：** 既知の小さな目標語彙に対する実際のルールベース分解（例：「PCB を組み立てる」）により、順序立ったロボットコマンドを生成します。*（実際のテンプレートルールとして実装済み——まだ LLM ではありません。下記の「ビルドと実行」を参照）*
 * 🛡️ **意味的復旧（v0）：** 構造化された MCU エラーコードから復旧アクションへの、実際のルールベースの参照。*（既知のコード語彙に対する実際の明示的なテーブルとして実装済み。未知のコードは常に人間にエスカレーションされます）*
-* ✅ **前提条件の検証：** 分解された各プランは、渡される前に、各実際のプリミティブが本当に必要とするものに照らしてチェックされます —— 失敗したプランは拒否され、実行可能として黙って次に渡されることはありません。*（実装済み）*
+* ✅ **前提条件の検証：** 分解された各プランは、渡される前に、各実際のプリミティブが本当に必要とするものに照らしてチェックされます —— 失敗したプランは拒否され、実行可能として黙って次に渡されることはありません。*(実装済み)*
+* 🌐 **JSON/HTTP API(v0.0.7):** `serve` サブコマンドは `decompose`/`recover` とまったく同じロジックを、stdlib の `http.server`(`POST /decompose`、`POST /recover`、`GET /stats`)経由でCLI以外の呼び出し元にも公開します。デフォルトはループバックのみで、`systemd/hydra-umc-semantic-planner.service` ユニットと同じです。すべての実コマンド・フラグ・終了コードは [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) を、公開エラーコード語彙の全体は [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) を参照してください。
 * 🎲 **決定論的でプロパティテスト済み：** `decompose_goal()` は決定論的であること（同じ目標には常に同じプラン）が証明されており、数百のランダム/無効な目標に対してファジングテストされています —— クラッシュすることはなく、形式不正なプランを返すこともありません。*（実装済み）*
 * 🤖 **エージェント型ワークフロー：** システム状態やツールを照会できるローカルエージェントとして動作します。*（計画中）*
 * ⚡ **Hailo-10 最適化：** 40 TOPS を活用した高速な多段階推論。*（計画中——実際のローカル LLM が必要です）*
@@ -151,6 +152,16 @@ run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum
 Plan for: "broken" FAILED precondition validation:
   step 1 (GRIP): missing required param 'target'
 ```
+
+同じ `decompose`/`recover` ロジックは、CLI以外の呼び出し元向けにHTTP経由でも利用できます:
+
+```bash
+./run.sh serve --addr 127.0.0.1 --port 8109
+# 別のターミナルで:
+curl -s -X POST http://127.0.0.1:8109/decompose -d '{"goal": "assemble the pcb"}'
+```
+
+実際のコマンド・フラグ・終了コードの完全なリファレンスは [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) を、公開リカバリーエラーコード語彙は [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) を参照してください。
 
 ### 🩺 トラブルシューティング
 

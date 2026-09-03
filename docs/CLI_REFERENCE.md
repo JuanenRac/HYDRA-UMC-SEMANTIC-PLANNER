@@ -16,17 +16,20 @@ run of the installed CLI — not written from memory.
 
 ```
 $ hydra-umc-semantic-planner -h
-usage: hydra-umc-semantic-planner [-h] {decompose,recover} ...
+usage: hydra-umc-semantic-planner [-h] {decompose,recover,serve} ...
 
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic
 primitives and recovers from execution failures.
 
 positional arguments:
-  {decompose,recover}
+  {decompose,recover,serve}
     decompose          Real rule-based task decomposition into robotic
                        primitives.
     recover            Real rule-based semantic recovery for a structured
                        failure code.
+    serve              Run 'decompose'/'recover' as a JSON/HTTP API - the
+                       exact same decompose_goal()/validate_plan()/
+                       propose_recovery() functions the CLI already runs.
 
 options:
   -h, --help           show this help message and exit
@@ -36,7 +39,7 @@ Bare invocation (no subcommand) prints identity/version/role and exits `0`:
 
 ```
 $ hydra-umc-semantic-planner
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.4
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
@@ -171,6 +174,47 @@ hydra-umc-semantic-planner recover: error: the following arguments are required:
 $ echo $?
 2
 ```
+
+### `serve [--addr ADDR] [--port PORT]`
+
+```
+$ hydra-umc-semantic-planner serve -h
+usage: hydra-umc-semantic-planner serve [-h] [--addr ADDR] [--port PORT]
+
+options:
+  -h, --help   show this help message and exit
+  --addr ADDR  address to bind the HTTP API to (default: 127.0.0.1)
+  --port PORT  port for the HTTP API (default: 8109)
+```
+
+Runs the exact same `decompose_goal()`/`validate_plan()`/
+`propose_recovery()` functions as `decompose`/`recover`, over a plain
+stdlib `http.server` JSON API. Binds to loopback (`127.0.0.1:8109`) by
+default, matching the `systemd/hydra-umc-semantic-planner.service` unit.
+
+* **`GET /stats`** — `{"role": "..."}`, a liveness/identity check.
+* **`POST /decompose`** — body `{"goal": "..."}`. Responds `200` with
+  `{"matched", "goal", "steps", "issues", "valid"}` — `matched: false`
+  for an honest miss (same as the CLI's own "no matching task template"
+  case), never a `4xx`.
+* **`POST /recover`** — body `{"component": "...", "error_code": "...",
+  "detail": "..."}` (`detail` optional). Responds `200` with the real
+  `RecoveryStrategy`. Either route responds `400` with
+  `{"error": "..."}` for a malformed JSON body or a missing required
+  field.
+
+## Validation contract
+
+`validate_plan()`/`validate_step()` fail closed on malformed input, not
+just on a well-formed-but-incomplete plan: a required param that isn't
+text (e.g. `null`, a number) is reported as `required param 'X' must be
+text` rather than raising while calling `.strip()` on it, and a plan with
+zero steps is always reported invalid (`plan has no steps`) rather than
+being treated as trivially valid. This matters for any caller other than
+`decompose_goal()` itself feeding `validate_plan()` a hand-built or
+externally-sourced `Plan` — `decompose.py`'s own templates never produce
+either case, so this is defensive robustness at the library boundary, not
+a behavior change visible from the CLI/HTTP examples above.
 
 ## Exit codes
 
