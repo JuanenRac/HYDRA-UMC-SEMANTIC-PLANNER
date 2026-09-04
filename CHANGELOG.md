@@ -10,6 +10,12 @@ bumped manually only. See `bump_version.py`.
 - Required primitive parameters must now be text; invalid external plan data
   is reported as a `PlanIssue` rather than raising while calling `.strip()`.
 - Empty plans are explicitly invalid and cannot be presented as executable.
+- **`.github/workflows/ci.yml`** - the real `tests/` pytest suite is now
+  actually installed and run in CI. The baseline workflow's Python
+  handling previously only compile-checked (`py_compile`) every `.py`
+  file and validated the manifest/docs - it never ran `pytest`, so a
+  regression in `tests/` could be merged without CI ever failing.
+  CI-only fix, no runtime code changed, no version bump.
 
 ## [0.0.7] - Real v0: JSON/HTTP server mode, plus CM5 deployment
 
