@@ -109,3 +109,27 @@ def test_not_found() -> None:
     with running_server() as base:
         status, body = _get(f"{base}/nope")
         assert status == 404
+
+
+def test_oversized_json_request_is_rejected_before_parsing() -> None:
+    # Found in an ecosystem-wide software-improvements audit: this
+    # endpoint used to read Content-Length bytes with no upper bound
+    # before parsing - an oversized/malformed header let a caller force
+    # unbounded memory buffering. Confirmed real against a live server,
+    # not just the helper function in isolation.
+    from hydra_umc_semantic_planner.api import MAX_BODY_BYTES
+
+    with running_server() as base:
+        raw = b"{" + b"x" * MAX_BODY_BYTES
+        request = urllib.request.Request(
+            f"{base}/decompose",
+            data=raw,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            urllib.request.urlopen(request, timeout=5)
+            raise AssertionError("expected an HTTPError for an oversized body")
+        except urllib.error.HTTPError as error:
+            assert error.code == 400
+            assert str(MAX_BODY_BYTES) in json.loads(error.read())["error"]

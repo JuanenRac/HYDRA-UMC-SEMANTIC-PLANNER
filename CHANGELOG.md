@@ -7,6 +7,16 @@ bumped manually only. See `bump_version.py`.
 
 ## [Unreleased] - stricter untrusted plan validation
 
+- **`api.py`'s `_read_json_body()` now caps request bodies** (`MAX_BODY_BYTES`,
+  1 MiB) - found in an ecosystem-wide software-improvements audit: this
+  endpoint used to read `Content-Length` bytes with no upper bound before
+  parsing, so a malformed or oversized header let a caller force unbounded
+  memory buffering. An over-limit request is drained (up to `DRAIN_CAP_BYTES`)
+  before the clean 400 is sent, avoiding a real `ConnectionAbortedError` race
+  where the client's own send() is still in flight when the handler closes
+  the connection - same root cause and same fix already shipped for this
+  exact gap in HYDRA-UMC-ANOMALY-DETECTOR. New end-to-end regression test
+  against a live server, not just the helper function in isolation.
 - Required primitive parameters must now be text; invalid external plan data
   is reported as a `PlanIssue` rather than raising while calling `.strip()`.
 - Empty plans are explicitly invalid and cannot be presented as executable.
