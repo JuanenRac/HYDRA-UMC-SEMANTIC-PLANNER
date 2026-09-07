@@ -1,0 +1,32 @@
+# =============================================================================
+# HYDRA-UMC-SEMANTIC-PLANNER - Local CM5 goal-decomposition API systemd unit
+# Copyright (C) 2026 JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+# GPL-3.0-or-later - see LICENSE
+# =============================================================================
+# Loopback-only, same as every other internal-only API on this CM5 - this
+# real rule-based decomposition/recovery logic returns a plan/strategy
+# for a caller to act on, it never actuates anything itself, but it
+# still has no authentication of its own.
+[Unit]
+Description=HYDRA-UMC-SEMANTIC-PLANNER real goal-decomposition/recovery API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hydra-umc-semantic-planner
+Group=hydra-umc-semantic-planner
+WorkingDirectory=/opt/hydra-umc/semantic-planner
+Environment=PYTHONPATH=/opt/hydra-umc/semantic-planner/src
+ExecStart=/usr/bin/python3 -m hydra_umc_semantic_planner.main serve --addr 127.0.0.1 --port 8109
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target
