@@ -18,7 +18,7 @@ bumped manually only. See `bump_version.py`.
   Non-root. Not build-tested (no Docker runtime on this dev machine) -
   every path/flag matches the one already verified live on the real CM5.
 - **`api.py`'s `_read_json_body()` now caps request bodies** (`MAX_BODY_BYTES`,
-  1 MiB) - found in an ecosystem-wide software-improvements audit: this
+  1 MiB) - found while auditing the code: this
   endpoint used to read `Content-Length` bytes with no upper bound before
   parsing, so a malformed or oversized header let a caller force unbounded
   memory buffering. An over-limit request is drained (up to `DRAIN_CAP_BYTES`)
