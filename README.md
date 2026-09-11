@@ -16,6 +16,10 @@
 
 ---
 
+**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (37 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
+
+---
+
 ## 1. 🛠️ TECHNICAL OVERVIEW
 
 **HYDRA-UMC-SEMANTIC-PLANNER** is the "Logic Orchestrator" of the Cognitive AI Node. It uses local LLMs (Large Language Models) to decompose complex goals into actionable robotic primitives.
@@ -71,11 +75,15 @@ service into `docker-compose.yml` alongside its three siblings
   (`hydra_umc_semantic_planner`) separate from repo-root tooling
   (`bump_version.py`), matching the layout used by every other Python
   project across the ecosystem.
-* **Why the entry point only prints identity/version/role today.** This
-  is the andamiaje (scaffolding) stage: proving the package installs,
-  compiles and imports cleanly - on the actual target Python version - is
-  a prerequisite for adding real LLM-based planning/recovery logic later,
-  and keeps that later work isolated from packaging concerns.
+* **Why the entry point started out only printing identity/version/role.**
+  The andamiaje (scaffolding) stage proved the package installs, compiles
+  and imports cleanly - on the actual target Python version - before any
+  real LLM-based planning/recovery logic was added, keeping that later
+  work isolated from packaging concerns. `main.py` has since grown real
+  `decompose`/`recover`/`serve` subcommands (see BUILD & RUN below) - the
+  bare `run.sh` with no arguments still only prints identity/version/role,
+  which is intentional (a quick "did the package install correctly"
+  smoke check), not a sign the CLI itself is still a stub.
 * **How this fits the rest of the ecosystem.** This planner is the
   decision-making core of the Cognitive AI Node: it consumes intent from
   its sibling HYDRA-UMC-VOICE-UI and action tokens from its sibling
