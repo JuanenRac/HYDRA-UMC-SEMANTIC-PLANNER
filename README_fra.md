@@ -16,6 +16,10 @@
 
 ---
 
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** le vocabulaire fermé de primitives (`primitives.py`), la décomposition de tâches à base de règles (`decompose.py`), la récupération sémantique d'erreurs à base de règles sur une table fixe de codes d'erreur MCU (`recovery.py`), le validateur de préconditions qui refuse un plan mal formé plutôt que de le laisser passer (`validation.py`), et la surface JSON/HTTP `http.server` de la stdlib exposant cette même logique (`api.py` : `POST /decompose`, `POST /recover`, `GET /stats`) sont réels et testés (37 tests, `pytest`), y compris un test de fuzzing qui exécute `decompose_goal()` contre des centaines d'objectifs aléatoires/invalides avec une graine fixe et vérifie qu'il ne plante jamais ni ne renvoie de plan mal formé. Ce qui n'est PAS encore réel : il n'y a aucun LLM local nulle part dans ce code - `decompose.py` est de la correspondance de motifs/gabarits regex sur un petit vocabulaire d'objectifs fixe (assembler/pick-and-place/inspecter), pas de la compréhension du langage, et cela n'a jamais tourné contre un véritable module Hailo-10 (cet environnement n'en possède pas). Les puces « Agentic Workflow » et « Hailo-10 Optimized » ci-dessous sont explicitement marquées `(planned)` dans ce même README - elles décrivent le remplacement éventuel du noyau actuel à base de règles de `decompose_goal()`, pas quelque chose qui existe aujourd'hui. Voir `CHANGELOG.md` pour ce qui a déjà été livré exactement, et la FEUILLE DE ROUTE ci-dessous pour ce qui reste ouvert.
+
+---
+
 ## 1. 🛠️ APERÇU TECHNIQUE
 
 **HYDRA-UMC-SEMANTIC-PLANNER** est l'« orchestrateur logique » du nœud Cognitive AI. Il utilise des LLM locaux (Large Language Models) pour décomposer des objectifs complexes en primitives robotiques exploitables.
@@ -73,12 +77,17 @@ frères (VLA-Engine, Voice-UI, Docs-QA) :
   (`hydra_umc_semantic_planner`) de l'outillage à la racine du dépôt
   (`bump_version.py`), conformément au reste des projets Python de
   l'écosystème.
-* **Pourquoi le point d'entrée se contente d'afficher
-  identité/version/rôle aujourd'hui.** C'est l'étape d'échafaudage :
-  prouver que le paquet s'installe, se compile et s'importe correctement
-  - sur la version Python cible réelle - est un prérequis avant d'ajouter
-  une vraie logique de planification/récupération basée sur LLM, et
-  isole ce travail ultérieur des préoccupations d'empaquetage.
+* **Pourquoi le point d'entrée se contentait au départ d'afficher
+  identité/version/rôle.** L'étape d'échafaudage a prouvé que le paquet
+  s'installe, se compile et s'importe correctement - sur la version
+  Python cible réelle - avant l'ajout d'une vraie logique de
+  planification/récupération basée sur LLM, isolant ce travail ultérieur
+  des préoccupations d'empaquetage. `main.py` s'est depuis enrichi de
+  vraies sous-commandes `decompose`/`recover`/`serve` (voir COMPILATION
+  ET EXÉCUTION ci-dessous) - que `run.sh` sans argument continue de
+  n'afficher qu'identité/version/rôle est intentionnel (une vérification
+  rapide « le paquet s'est-il bien installé »), pas le signe que la CLI
+  elle-même serait toujours une coquille vide.
 * **Comment cela s'intègre dans le reste de l'écosystème.** Ce
   planificateur est le cœur décisionnel du Cognitive AI Node : il
   consomme l'intention de son frère HYDRA-UMC-VOICE-UI et les jetons

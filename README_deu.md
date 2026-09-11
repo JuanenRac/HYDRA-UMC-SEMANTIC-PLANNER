@@ -16,6 +16,10 @@
 
 ---
 
+**Ehrlichkeitscheck - was heute wirklich läuft:** das geschlossene Primitiven-Vokabular (`primitives.py`), die regelbasierte Aufgabenzerlegung (`decompose.py`), die regelbasierte semantische Fehlerbehebung über eine feste MCU-Fehlercode-Tabelle (`recovery.py`), der Vorbedingungs-Validator, der einen fehlerhaft geformten Plan ablehnt statt ihn durchzulassen (`validation.py`), und die einfache JSON/HTTP-Oberfläche über `http.server` aus der Standardbibliothek über dieselbe Logik (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) sind real und getestet (37 Tests, `pytest`), einschließlich eines Fuzz-Tests, der `decompose_goal()` gegen Hunderte zufällige/ungültige Ziele mit festem Seed laufen lässt und sicherstellt, dass es nie abstürzt oder einen fehlerhaft geformten Plan zurückgibt. Was NOCH NICHT real ist: Es gibt nirgendwo in diesem Code ein lokales LLM - `decompose.py` ist Muster-/Template-Abgleich per Regex über ein kleines, festes Zielvokabular (Zusammenbauen/Pick-and-Place/Inspizieren), kein Sprachverständnis, und es lief noch nie gegen ein echtes Hailo-10-Modul (diese Umgebung besitzt keines). Die Punkte "Agentic Workflow" und "Hailo-10 Optimized" weiter unten sind in diesem selben README ausdrücklich als `(planned)` markiert - sie beschreiben den eventuellen Ersatz für den heutigen regelbasierten Kern von `decompose_goal()`, nicht etwas, das heute existiert. Siehe `CHANGELOG.md` für genau das, was bisher ausgeliefert wurde, und die ROADMAP weiter unten für das, was noch offen ist.
+
+---
+
 ## 1. 🛠️ TECHNISCHER ÜBERBLICK
 
 **HYDRA-UMC-SEMANTIC-PLANNER** ist der "Logik-Orchestrator" des Cognitive AI Node. Er nutzt lokale LLMs (Large Language Models), um komplexe Ziele in ausführbare Roboter-Primitive zu zerlegen.
@@ -73,12 +77,17 @@ neben seinen drei Geschwistern (VLA-Engine, Voice-UI, Docs-QA) ein:
   (`hydra_umc_semantic_planner`) vom Tooling im Repo-Root
   (`bump_version.py`) und entspricht dem Layout aller anderen
   Python-Projekte im Ökosystem.
-* **Warum der Einstiegspunkt heute nur Identität/Version/Rolle
-  ausgibt.** Dies ist die Andamiaje- (Gerüst-) Phase: zu beweisen, dass
-  sich das Paket auf der tatsächlichen Ziel-Python-Version sauber
-  installieren, kompilieren und importieren lässt, ist Voraussetzung,
-  bevor echte LLM-basierte Planungs-/Wiederherstellungslogik hinzugefügt
-  wird, und hält diese spätere Arbeit von Packaging-Fragen getrennt.
+* **Warum der Einstiegspunkt anfangs nur Identität/Version/Rolle
+  ausgab.** Die Andamiaje- (Gerüst-) Phase bewies, dass sich das Paket
+  auf der tatsächlichen Ziel-Python-Version sauber installieren,
+  kompilieren und importieren lässt, bevor überhaupt echte LLM-basierte
+  Planungs-/Wiederherstellungslogik hinzugefügt wurde, und hielt diese
+  spätere Arbeit von Packaging-Fragen getrennt. `main.py` hat seitdem
+  echte Unterbefehle `decompose`/`recover`/`serve` bekommen (siehe
+  ERSTELLEN UND AUSFÜHREN weiter unten) - dass `run.sh` ohne Argumente
+  weiterhin nur Identität/Version/Rolle ausgibt, ist beabsichtigt (ein
+  schneller "wurde das Paket korrekt installiert"-Check), kein Zeichen
+  dafür, dass die CLI selbst noch ein Gerüst wäre.
 * **Wie sich das in den Rest des Ökosystems einfügt.** Dieser Planer ist
   der Entscheidungskern des Cognitive AI Node: Er verarbeitet die
   Absicht seines Geschwisters HYDRA-UMC-VOICE-UI und die Aktions-Token
