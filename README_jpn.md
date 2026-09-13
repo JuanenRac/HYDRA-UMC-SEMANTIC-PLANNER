@@ -142,11 +142,11 @@ Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitive
 実際のサブコマンドは、目標を分解するか、復旧策を提案します：
 
 ```bash
-./run.sh decompose "pcb を組み立てる"
+./run.sh decompose "assemble the pcb"
 ./run.sh recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
 
 # Windows
-run.bat decompose "pcb を組み立てる"
+run.bat decompose "assemble the pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
 ```
 

@@ -198,11 +198,11 @@ Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitive
 I sottocomandi reali scompongono un obiettivo o propongono un recupero:
 
 ```bash
-./run.sh decompose "assembla la pcb"
+./run.sh decompose "assemble the pcb"
 ./run.sh recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
 
 # Windows
-run.bat decompose "assembla la pcb"
+run.bat decompose "assemble the pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
 ```
 

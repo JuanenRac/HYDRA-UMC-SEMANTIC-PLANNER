@@ -199,11 +199,11 @@ Die echten Subcommands zerlegen ein Ziel oder schlagen eine
 Wiederherstellung vor:
 
 ```bash
-./run.sh decompose "die pcb montieren"
+./run.sh decompose "assemble the pcb"
 ./run.sh recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
 
 # Windows
-run.bat decompose "die pcb montieren"
+run.bat decompose "assemble the pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
 ```
 
