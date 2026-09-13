@@ -201,11 +201,11 @@ Les vraies sous-commandes décomposent un objectif ou proposent une
 récupération :
 
 ```bash
-./run.sh decompose "assembler la pcb"
+./run.sh decompose "assemble the pcb"
 ./run.sh recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
 
 # Windows
-run.bat decompose "assembler la pcb"
+run.bat decompose "assemble the pcb"
 run.bat recover --component gripper --error-code GRIP_LOST_SEAL --detail "vacuum gripper lost seal"
 ```
 
