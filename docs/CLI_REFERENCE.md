@@ -193,10 +193,17 @@ stdlib `http.server` JSON API. Binds to loopback (`127.0.0.1:8109`) by
 default, matching the `systemd/hydra-umc-semantic-planner.service` unit.
 
 * **`GET /stats`** — `{"role": "..."}`, a liveness/identity check.
-* **`POST /decompose`** — body `{"goal": "..."}`. Responds `200` with
-  `{"matched", "goal", "steps", "issues", "valid"}` — `matched: false`
-  for an honest miss (same as the CLI's own "no matching task template"
-  case), never a `4xx`.
+* **`POST /decompose`** — body `{"goal": "...", "capabilities"?: ["..."]}`.
+  Responds `200` with `{"matched", "goal", "steps", "issues", "valid"}` —
+  `matched: false` for an honest miss (same as the CLI's own "no matching
+  task template" case), never a `4xx`. The optional `capabilities` array
+  (primitive names, e.g. `["MOVE_TO", "GRIP"]`) is the target robot/cell's
+  own declared capability catalog — when supplied, a step whose primitive
+  isn't in it is a real, distinct `issues` entry (`"primitive 'GRIP' is
+  not in this robot/cell's declared capabilities"`), same as a missing
+  param. Omitted (the default) validates exactly as before this field
+  existed — params only, no capability check. A malformed `capabilities`
+  (not a list of strings) responds `400`.
 * **`POST /recover`** — body `{"component": "...", "error_code": "...",
   "detail": "..."}` (`detail` optional). Responds `200` with the real
   `RecoveryStrategy`. Either route responds `400` with
@@ -215,6 +222,18 @@ being treated as trivially valid. This matters for any caller other than
 externally-sourced `Plan` — `decompose.py`'s own templates never produce
 either case, so this is defensive robustness at the library boundary, not
 a behavior change visible from the CLI/HTTP examples above.
+
+Both functions also take an optional `capabilities: frozenset[str] | None`
+— a real, declared capability catalog for the specific robot/cell a Plan
+would run on. A step whose primitive isn't in it is reported the same way
+a missing param is, alongside any param issues on that same step. `None`
+(the default, and every pre-existing caller) validates params only, exactly
+as before this parameter existed. This is deliberately the bounded half of
+"is this plan actually executable" this project can answer *before*
+execution — real POSTcondition verification (did `GRIP` actually end up
+holding its target) needs live feedback from a real executor
+(HYDRA-UMC-ORCHESTRATOR) this project doesn't have yet, so it is not
+attempted here.
 
 ## Exit codes
 

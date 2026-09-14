@@ -16,7 +16,7 @@
 
 ---
 
-**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (37 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
+**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (47 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
 
 ---
 
@@ -29,8 +29,8 @@ It handles high-level ambiguity and provides semantic error recovery: if a task 
 ### Key Features:
 * 🧩 **Task Decomposition (v0):** Real rule-based breakdown of a small known goal vocabulary (e.g., "assemble PCB") into sequential robot commands. *(implemented as real template rules, not yet an LLM - see BUILD & RUN below)*
 * 🛡️ **Semantic Recovery (v0):** Real rule-based lookup from structured MCU error codes to a recovery action. *(implemented as a real, explicit table over a known code vocabulary; unknown codes always escalate to a human)*
-* ✅ **Precondition Validation:** Every decomposed plan is checked against what each real primitive genuinely needs before being handed off - a plan that fails is refused, never silently passed on as execution-ready. *(implemented)*
-* 🌐 **JSON/HTTP API (v0.0.7):** the `serve` subcommand exposes `decompose`/`recover`'s exact same logic over a plain stdlib `http.server` (`POST /decompose`, `POST /recover`, `GET /stats`) for callers that aren't the CLI itself - loopback-only by default, matching the `systemd/hydra-umc-semantic-planner.service` unit. See [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for every real command, flag and exit code, and [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) for the full public error-code vocabulary.
+* ✅ **Precondition Validation:** Every decomposed plan is checked against what each real primitive genuinely needs before being handed off - a plan that fails is refused, never silently passed on as execution-ready. An optional, real declared-capability catalog for the target robot/cell (`capabilities` in `validate_plan()`/`POST /decompose`) also catches a well-formed step for a primitive that robot never declared support for. *(implemented)*
+* 🌐 **JSON/HTTP API (v0.0.8):** the `serve` subcommand exposes `decompose`/`recover`'s exact same logic over a plain stdlib `http.server` (`POST /decompose`, `POST /recover`, `GET /stats`) for callers that aren't the CLI itself - loopback-only by default, matching the `systemd/hydra-umc-semantic-planner.service` unit. See [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for every real command, flag and exit code, and [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) for the full public error-code vocabulary.
 * 🎲 **Deterministic + Property-Tested:** `decompose_goal()` is proven deterministic (same goal, same plan, always) and fuzz-tested against hundreds of random/invalid goals - never crashes, never returns a malformed plan. *(implemented)*
 * 🤖 **Agentic Workflow:** Operates as a local agent capable of querying system state and tools. *(planned)*
 * ⚡ **Hailo-10 Optimized:** Leverages 40 TOPS for fast multi-step reasoning. *(planned - needs the real local LLM)*
@@ -113,7 +113,12 @@ service into `docker-compose.yml` alongside its three siblings
   planner cannot. `validate_plan()` is the real, explicit contract that
   planner would have to satisfy, checked here and now against the only
   planner that exists today so the contract itself is proven correct
-  before anything harder ever has to meet it.
+  before anything harder ever has to meet it. Its optional `capabilities`
+  argument is deliberately the bounded half of "is this plan actually
+  executable" answerable *before* execution - real POSTcondition
+  verification (did `GRIP` actually end up holding its target) needs
+  live feedback from a real executor (HYDRA-UMC-ORCHESTRATOR) this
+  project doesn't have yet, so it isn't attempted here.
 * **Why `decompose_goal()` is fuzz-tested with a fixed random seed
   instead of `hypothesis`.** This project (like the rest of the
   ecosystem) stays stdlib-only - a reproducible, seeded `random.Random`
@@ -180,7 +185,7 @@ run.bat
 (`pytest tests/`). Expected output of a bare `run.sh`:
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.8
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
