@@ -37,6 +37,33 @@ bumped manually only. See `bump_version.py`.
   regression in `tests/` could be merged without CI ever failing.
   CI-only fix, no runtime code changed, no version bump.
 
+## [0.0.8]
+
+- **I38: an optional, real declared-capability catalog reaches
+  `validate_plan()`/`validate_step()`/`POST /decompose`.** A well-formed
+  step (right params) was never enough on its own - a fixed template
+  producing a real `GRIP` step doesn't know whether the robot that would
+  actually run it ever declared it has a gripper at all. New optional
+  `capabilities: frozenset[str] | None` parameter (`"capabilities"` in
+  the `POST /decompose` JSON body, a list of primitive names): when
+  supplied, a step whose primitive isn't declared is a real, distinct
+  issue (`"primitive 'X' is not in this robot/cell's declared
+  capabilities"`), reported alongside any param issues on that same
+  step. Omitted (the default, and every pre-existing caller) validates
+  params only, exactly as before this parameter existed.
+
+  Deliberately NOT attempted here: real POSTcondition verification (did
+  `GRIP` actually end up holding its target) - that needs live feedback
+  from a real executor (HYDRA-UMC-ORCHESTRATOR) this project doesn't
+  have yet; fabricating a postcondition schema nobody could verify would
+  be worse than not having one. See `validation.py`'s own updated header
+  comment.
+
+  10 new tests (6 in `test_validation.py`, 4 real end-to-end HTTP tests
+  in `test_api.py`), 47 total. Confirmed via a real git-stash-based
+  regression check that they fail against the pre-fix source.
+  `docs/CLI_REFERENCE.md` updated with the new field's real contract.
+
 ## [0.0.7] - Real v0: JSON/HTTP server mode, plus CM5 deployment
 
 - **`api.py`** (new) - `POST /decompose` and `POST /recover` reach the

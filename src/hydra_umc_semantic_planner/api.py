@@ -94,11 +94,22 @@ class Handler(BaseHTTPRequestHandler):
         except KeyError as e:
             _write_error(self, 400, f"missing required field: {e}")
             return
+        # I38: an optional real declared-capability catalog for the
+        # target robot/cell - omitted (the default, and every existing
+        # caller) means "no catalog supplied", validating exactly as
+        # before this field existed. See validation.py's own header.
+        capabilities: frozenset[str] | None = None
+        if "capabilities" in body:
+            raw = body["capabilities"]
+            if not isinstance(raw, list) or not all(isinstance(item, str) for item in raw):
+                _write_error(self, 400, "capabilities must be a list of strings")
+                return
+            capabilities = frozenset(raw)
         plan = decompose_goal(goal)
         if plan is None:
             _write_json(self, 200, {"matched": False, "goal": goal, "steps": [], "issues": []})
             return
-        issues = validate_plan(plan)
+        issues = validate_plan(plan, capabilities)
         _write_json(self, 200, {
             "matched": True,
             "goal": plan.goal,

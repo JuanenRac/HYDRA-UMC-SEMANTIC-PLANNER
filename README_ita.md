@@ -29,8 +29,8 @@ Gestisce l'ambiguità di alto livello e fornisce il recupero semantico degli err
 ### Caratteristiche principali:
 * 🧩 **Decomposizione dei compiti (v0):** Scomposizione reale basata su regole di un piccolo vocabolario di obiettivi noti (es. «assemblare PCB») in comandi robotici sequenziali. *(implementato come vere regole a modello - non ancora un LLM; vedi BUILD ED ESECUZIONE sotto)*
 * 🛡️ **Recupero semantico (v0):** Ricerca reale basata su regole da codici di errore MCU strutturati a un'azione di recupero. *(implementato come una vera tabella esplicita su un vocabolario di codici noto; i codici sconosciuti passano sempre a un umano)*
-* ✅ **Validazione delle precondizioni:** Ogni piano decomposto viene verificato rispetto a ciò di cui ogni primitiva reale ha realmente bisogno prima di essere consegnato - un piano che fallisce viene rifiutato, mai passato silenziosamente come pronto per l'esecuzione. *(implementato)*
-* 🌐 **API JSON/HTTP (v0.0.7):** il sottocomando `serve` espone la stessa identica logica di `decompose`/`recover` su un `http.server` della stdlib (`POST /decompose`, `POST /recover`, `GET /stats`) per chi non usa la CLI - solo loopback di default, come l'unità `systemd/hydra-umc-semantic-planner.service`. Vedi [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) per ogni comando, flag e codice di uscita reale, e [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) per il vocabolario pubblico completo dei codici di errore.
+* ✅ **Validazione delle precondizioni:** Ogni piano decomposto viene verificato rispetto a ciò di cui ogni primitiva reale ha realmente bisogno prima di essere consegnato - un piano che fallisce viene rifiutato, mai passato silenziosamente come pronto per l'esecuzione. Un catalogo opzionale e reale di capacità dichiarate per il robot/cella target (`capabilities` in `validate_plan()`/`POST /decompose`) rileva anche uno step ben formato per una primitiva che quel robot non ha mai dichiarato di supportare. *(implementato)*
+* 🌐 **API JSON/HTTP (v0.0.8):** il sottocomando `serve` espone la stessa identica logica di `decompose`/`recover` su un `http.server` della stdlib (`POST /decompose`, `POST /recover`, `GET /stats`) per chi non usa la CLI - solo loopback di default, come l'unità `systemd/hydra-umc-semantic-planner.service`. Vedi [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) per ogni comando, flag e codice di uscita reale, e [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md) per il vocabolario pubblico completo dei codici di errore.
 * 🎲 **Deterministico e testato per proprietà:** `decompose_goal()` è dimostrato deterministico (stesso obiettivo, stesso piano, sempre) ed è testato tramite fuzzing su centinaia di obiettivi casuali/non validi - non va mai in crash, non restituisce mai un piano malformato. *(implementato)*
 * 🤖 **Workflow agenziale:** Opera come un agente locale in grado di interrogare lo stato del sistema e gli strumenti. *(pianificato)*
 * ⚡ **Ottimizzato per Hailo-10:** Sfrutta 40 TOPS per un ragionamento rapido in più passaggi. *(pianificato - richiede il vero LLM locale)*
@@ -191,7 +191,7 @@ suite di test (`pytest tests/`). Output atteso di un `run.sh` senza
 argomenti:
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.8
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

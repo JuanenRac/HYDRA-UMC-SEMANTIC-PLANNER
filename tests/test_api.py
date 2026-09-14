@@ -62,6 +62,45 @@ def test_decompose_real_goal() -> None:
         assert body["valid"] is True
 
 
+# I38: a real, declared capability catalog reaches all the way through
+# the HTTP API, not just the internal validate_plan() call.
+def test_decompose_reports_a_real_capability_gap() -> None:
+    with running_server() as base:
+        status, body = _post(
+            f"{base}/decompose",
+            {"goal": "assemble the housing", "capabilities": ["MOVE_TO", "RELEASE"]},
+        )
+        assert status == 200
+        assert body["matched"] is True
+        assert body["valid"] is False
+        gap_issues = [i["issue"] for i in body["issues"] if i["primitive"] == "GRIP"]
+        assert any("declared capabilities" in issue for issue in gap_issues)
+
+
+def test_decompose_with_a_full_capability_catalog_stays_valid() -> None:
+    with running_server() as base:
+        status, body = _post(
+            f"{base}/decompose",
+            {"goal": "assemble the housing", "capabilities": ["MOVE_TO", "GRIP", "RELEASE", "INSPECT", "WAIT"]},
+        )
+        assert status == 200
+        assert body["valid"] is True
+
+
+def test_decompose_rejects_a_malformed_capabilities_field() -> None:
+    with running_server() as base:
+        status, body = _post(f"{base}/decompose", {"goal": "assemble the housing", "capabilities": "GRIP"})
+        assert status == 400
+        assert "capabilities" in body["error"]
+
+
+def test_decompose_without_capabilities_behaves_exactly_as_before_the_field_existed() -> None:
+    with running_server() as base:
+        status, body = _post(f"{base}/decompose", {"goal": "assemble the housing"})
+        assert status == 200
+        assert body["valid"] is True
+
+
 def test_decompose_unmatched_goal() -> None:
     with running_server() as base:
         status, body = _post(f"{base}/decompose", {"goal": "write a poem"})

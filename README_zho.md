@@ -16,7 +16,7 @@
 
 ---
 
-**诚实核查——今天真正能跑起来的部分：** 封闭的原语词汇表（`primitives.py`）、基于规则的任务分解（`decompose.py`）、基于固定 MCU 错误代码表的基于规则的语义错误恢复（`recovery.py`）、拒绝把畸形计划放行而不是直接通过的前置条件校验器（`validation.py`），以及在同一套逻辑之上暴露出来的、基于标准库 `http.server` 的简单 JSON/HTTP 接口（`api.py`：`POST /decompose`、`POST /recover`、`GET /stats`）都是真实且经过测试的（37 个测试，`pytest`），其中包括一个模糊测试：用固定随机种子对数百个随机/无效目标运行 `decompose_goal()`，并断言它永远不会崩溃或返回畸形计划。目前还不真实的部分：这段代码里完全没有任何本地 LLM——`decompose.py` 是针对一个小而固定的目标词汇表（装配/取放/检查）的正则/模板匹配，不是语言理解，而且从未针对真实的 Hailo-10 模块运行过（本环境没有这种模块）。下面的"Agentic Workflow"和"Hailo-10 Optimized"两条特性在同一份 README 中被明确标注为 `(planned)`——它们描述的是 `decompose_goal()` 当前基于规则的内核未来可能被替换成的样子，不是今天已经存在的东西。已交付的具体内容见 `CHANGELOG.md`，尚未完成的部分见下面的路线图。
+**诚实核查——今天真正能跑起来的部分：** 封闭的原语词汇表（`primitives.py`）、基于规则的任务分解（`decompose.py`）、基于固定 MCU 错误代码表的基于规则的语义错误恢复（`recovery.py`）、拒绝把畸形计划放行而不是直接通过的前置条件校验器（`validation.py`），以及在同一套逻辑之上暴露出来的、基于标准库 `http.server` 的简单 JSON/HTTP 接口（`api.py`：`POST /decompose`、`POST /recover`、`GET /stats`）都是真实且经过测试的（47 个测试，`pytest`），其中包括一个模糊测试：用固定随机种子对数百个随机/无效目标运行 `decompose_goal()`，并断言它永远不会崩溃或返回畸形计划。目前还不真实的部分：这段代码里完全没有任何本地 LLM——`decompose.py` 是针对一个小而固定的目标词汇表（装配/取放/检查）的正则/模板匹配，不是语言理解，而且从未针对真实的 Hailo-10 模块运行过（本环境没有这种模块）。下面的"Agentic Workflow"和"Hailo-10 Optimized"两条特性在同一份 README 中被明确标注为 `(planned)`——它们描述的是 `decompose_goal()` 当前基于规则的内核未来可能被替换成的样子，不是今天已经存在的东西。已交付的具体内容见 `CHANGELOG.md`，尚未完成的部分见下面的路线图。
 
 ---
 
@@ -32,8 +32,8 @@ LLM（大语言模型）将复杂目标分解为可执行的机器人操作单�
 ### 关键特性：
 * 🧩 **任务分解（v0）：** 对一个已知的小型目标词汇表进行真实的、基于规则的分解（例如"组装 PCB"），得到顺序的机器人指令。*（已实现为真实的模板规则——尚非 LLM；见下方"构建与运行"）*
 * 🛡️ **语义恢复（v0）：** 从结构化的 MCU 错误代码到恢复动作的真实的、基于规则的查找。*（已实现为基于已知代码词汇表的真实显式表格；未知代码始终上报给人类）*
-* ✅ **前置条件验证：** 每个分解后的计划在交付之前都会对照每个真实原语真正需要的内容进行检查 —— 失败的计划会被拒绝，而不会被静静地当作可执行状态放行。*（已实现）*
-* 🌐 **JSON/HTTP API(v0.0.7):** `serve` 子命令通过 stdlib 的 `http.server`(`POST /decompose`、`POST /recover`、`GET /stats`)对外暴露与 `decompose`/`recover` 完全相同的逻辑,供非 CLI 调用方使用——默认仅限本地回环,与 `systemd/hydra-umc-semantic-planner.service` 单元一致。完整的真实命令、参数和退出码请见 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md),完整的公开错误码词汇表请见 [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md)。
+* ✅ **前置条件验证：** 每个分解后的计划在交付之前都会对照每个真实原语真正需要的内容进行检查 —— 失败的计划会被拒绝，而不会被静静地当作可执行状态放行。一个可选的、真实的目标机器人/单元声明能力清单（`validate_plan()`/`POST /decompose` 中的 `capabilities`）还能检测出一个形式上正确、但该机器人从未声明支持的原语步骤。*（已实现）*
+* 🌐 **JSON/HTTP API(v0.0.8):** `serve` 子命令通过 stdlib 的 `http.server`(`POST /decompose`、`POST /recover`、`GET /stats`)对外暴露与 `decompose`/`recover` 完全相同的逻辑,供非 CLI 调用方使用——默认仅限本地回环,与 `systemd/hydra-umc-semantic-planner.service` 单元一致。完整的真实命令、参数和退出码请见 [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md),完整的公开错误码词汇表请见 [`docs/RECOVERY_CONTRACT.md`](docs/RECOVERY_CONTRACT.md)。
 * 🎲 **确定性 + 属性测试：** `decompose_goal()` 已被证明具有确定性（相同目标始终得到相同计划），并针对数百个随机/无效目标进行了 fuzz 测试 —— 从不崩溃，也从不返回格式错误的计划。*（已实现）*
 * 🤖 **代理式工作流：** 作为本地代理运行，能够查询系统状态和工具。*（计划中）*
 * ⚡ **Hailo-10 优化：** 利用 40 TOPS 算力实现快速的多步推理。*（计划中——需要真实的本地 LLM）*
@@ -131,7 +131,7 @@ run.bat
 `run.sh` 的预期输出：
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.8
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
