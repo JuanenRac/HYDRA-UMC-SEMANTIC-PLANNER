@@ -131,7 +131,7 @@ run.bat
 `run.sh` 的预期输出：
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.8
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.9
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

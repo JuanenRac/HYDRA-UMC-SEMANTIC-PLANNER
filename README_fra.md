@@ -193,7 +193,7 @@ exécutent la vraie suite de tests (`pytest tests/`). Sortie attendue
 d'un `run.sh` sans argument :
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.8
+HYDRA-UMC-SEMANTIC-PLANNER v0.0.9
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
