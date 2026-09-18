@@ -5,7 +5,7 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
-## [Unreleased] - stricter untrusted plan validation
+## [0.0.9] - stricter untrusted plan validation
 
 - **New `Dockerfile`**, closing the real gap HYDRA-UMC-COGNITIVE-NODE's
   own `docker-compose.yml` named ("do not have published Dockerfiles
