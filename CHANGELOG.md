@@ -39,7 +39,7 @@ bumped manually only. See `bump_version.py`.
 
 ## [0.0.8]
 
-- **I38: an optional, real declared-capability catalog reaches
+- **An optional, real declared-capability catalog reaches
   `validate_plan()`/`validate_step()`/`POST /decompose`.** A well-formed
   step (right params) was never enough on its own - a fixed template
   producing a real `GRIP` step doesn't know whether the robot that would
