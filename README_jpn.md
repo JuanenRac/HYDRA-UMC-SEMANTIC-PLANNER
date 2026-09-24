@@ -135,7 +135,7 @@ run.bat
 実行します（`pytest tests/`）。引数なしの `run.sh` の予期される出力：
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.9
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.0
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
