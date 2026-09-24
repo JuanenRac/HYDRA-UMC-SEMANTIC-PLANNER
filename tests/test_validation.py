@@ -80,7 +80,7 @@ def test_empty_plan_is_not_execution_ready() -> None:
     assert issues[0].issue == "plan has no steps"
 
 
-# I38: a real, declared capability catalog for the target robot/cell -
+# a real, declared capability catalog for the target robot/cell -
 # a well-formed step (right params) is not enough if the robot that
 # would run it never declared it can even do that primitive.
 def test_a_primitive_outside_the_declared_capabilities_is_a_real_issue() -> None:

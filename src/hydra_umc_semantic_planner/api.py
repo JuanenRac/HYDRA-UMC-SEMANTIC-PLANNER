@@ -94,7 +94,7 @@ class Handler(BaseHTTPRequestHandler):
         except KeyError as e:
             _write_error(self, 400, f"missing required field: {e}")
             return
-        # I38: an optional real declared-capability catalog for the
+        # an optional real declared-capability catalog for the
         # target robot/cell - omitted (the default, and every existing
         # caller) means "no catalog supplied", validating exactly as
         # before this field existed. See validation.py's own header.
