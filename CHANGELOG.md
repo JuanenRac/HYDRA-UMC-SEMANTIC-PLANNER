@@ -5,6 +5,14 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.1.0] - Approval, cost limits and explanation before execution
+
+- `approval.py`: `propose()` turns a plan into a proposal with a stable fingerprint, a
+  step-by-step explanation and an estimated cost. `release_for_execution()` releases it only
+  when the plan validates, has an explanation, is within the step and cost limits and carries
+  an approval by a named person for *that exact plan* (the approval holds the fingerprint, so
+  it cannot release another plan and a tampered proposal is detected). Ten new tests.
+
 ## [0.0.9] - stricter untrusted plan validation
 
 - **New `Dockerfile`**, closing the real gap HYDRA-UMC-COGNITIVE-NODE's

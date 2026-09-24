@@ -191,7 +191,7 @@ suite di test (`pytest tests/`). Output atteso di un `run.sh` senza
 argomenti:
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.9
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.0
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
