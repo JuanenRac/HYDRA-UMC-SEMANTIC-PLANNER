@@ -15,7 +15,7 @@ real contract a future LLM-based planner (this project's own stated
 roadmap) would have to satisfy - it cannot guarantee well-formed params
 the way a fixed template can.
 
-I38: `capabilities` (see `validate_step`/`validate_plan`) is the real,
+`capabilities` (see `validate_step`/`validate_plan`) is the real,
 bounded half of this idea this module can honestly close today - a
 static, pre-execution check against a declared robot/cell capability
 catalog, no live executor needed. The idea's other half, POSTcondition
@@ -56,7 +56,7 @@ def validate_step(step: Step, capabilities: frozenset[str] | None = None) -> lis
     well-formed. A primitive outside REQUIRED_PARAMS is itself a real
     issue (an executor would not know what it even is).
 
-    I38: `capabilities` is an optional, real declared-capability catalog
+    `capabilities` is an optional, real declared-capability catalog
     for the specific robot/cell this Plan would run on - a fixed
     template producing a well-formed GRIP step is not enough if the
     target robot never declared it has a gripper at all. `None` (the

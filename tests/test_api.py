@@ -62,7 +62,7 @@ def test_decompose_real_goal() -> None:
         assert body["valid"] is True
 
 
-# I38: a real, declared capability catalog reaches all the way through
+# a real, declared capability catalog reaches all the way through
 # the HTTP API, not just the internal validate_plan() call.
 def test_decompose_reports_a_real_capability_gap() -> None:
     with running_server() as base:
