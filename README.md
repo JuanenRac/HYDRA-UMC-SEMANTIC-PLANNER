@@ -9,7 +9,7 @@
 ### 🧠 LLM-Based Mission Planner & Logic Recovery System
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
+  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
   <img src="https://img.shields.io/badge/Brain-Local%20LLM-blueviolet.svg" alt="LLM">
   <img src="https://img.shields.io/badge/Target-Hailo--10-green.svg" alt="Hailo-10">
 </p>
