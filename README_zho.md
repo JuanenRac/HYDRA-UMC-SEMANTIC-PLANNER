@@ -16,7 +16,7 @@
 
 ---
 
-**诚实核查——今天真正能跑起来的部分：** 封闭的原语词汇表（`primitives.py`）、基于规则的任务分解（`decompose.py`）、基于固定 MCU 错误代码表的基于规则的语义错误恢复（`recovery.py`）、拒绝把畸形计划放行而不是直接通过的前置条件校验器（`validation.py`），以及在同一套逻辑之上暴露出来的、基于标准库 `http.server` 的简单 JSON/HTTP 接口（`api.py`：`POST /decompose`、`POST /recover`、`GET /stats`）都是真实且经过测试的（47 个测试，`pytest`），其中包括一个模糊测试：用固定随机种子对数百个随机/无效目标运行 `decompose_goal()`，并断言它永远不会崩溃或返回畸形计划。目前还不真实的部分：这段代码里完全没有任何本地 LLM——`decompose.py` 是针对一个小而固定的目标词汇表（装配/取放/检查）的正则/模板匹配，不是语言理解，而且从未针对真实的 Hailo-10 模块运行过（本环境没有这种模块）。下面的"Agentic Workflow"和"Hailo-10 Optimized"两条特性在同一份 README 中被明确标注为 `(planned)`——它们描述的是 `decompose_goal()` 当前基于规则的内核未来可能被替换成的样子，不是今天已经存在的东西。已交付的具体内容见 `CHANGELOG.md`，尚未完成的部分见下面的路线图。
+**诚实核查——今天真正能跑起来的部分：** 封闭的原语词汇表（`primitives.py`）、基于规则的任务分解（`decompose.py`）、基于固定 MCU 错误代码表的基于规则的语义错误恢复（`recovery.py`）、拒绝把畸形计划放行而不是直接通过的前置条件校验器（`validation.py`），以及在同一套逻辑之上暴露出来的、基于标准库 `http.server` 的简单 JSON/HTTP 接口（`api.py`：`POST /decompose`、`POST /recover`、`GET /stats`）都是真实且经过测试的（57 个测试，`pytest`），其中包括一个模糊测试：用固定随机种子对数百个随机/无效目标运行 `decompose_goal()`，并断言它永远不会崩溃或返回畸形计划。目前还不真实的部分：这段代码里完全没有任何本地 LLM——`decompose.py` 是针对一个小而固定的目标词汇表（装配/取放/检查）的正则/模板匹配，不是语言理解，而且从未针对真实的 Hailo-10 模块运行过（本环境没有这种模块）。下面的"Agentic Workflow"和"Hailo-10 Optimized"两条特性在同一份 README 中被明确标注为 `(planned)`——它们描述的是 `decompose_goal()` 当前基于规则的内核未来可能被替换成的样子，不是今天已经存在的东西。已交付的具体内容见 `CHANGELOG.md`，尚未完成的部分见下面的路线图。
 
 ---
 
