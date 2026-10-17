@@ -5,6 +5,13 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.1.1] - Non-object JSON bodies are a 400, idle connections dropped, Portuguese README
+
+- **A non-object JSON body crashed the handler:** `POST /decompose` and `POST /recover` read the body with `json.loads()` and indexed it as an object, so valid JSON that is not an object (a list, a string, `null`, a number, a boolean) raised a `TypeError` nothing caught - the handler thread died with a traceback and the client got no response at all. It is now a `400` ("the JSON body must be an object"), and the server keeps answering afterwards (confirmed against the real server with five body shapes on both routes).
+- **Idle connections are dropped:** the HTTP handler had no connection timeout, so a client that opened a connection and sent nothing held a handler thread forever. A silent client is now dropped after 15 seconds; the limit covers socket I/O only.
+- **Tests:** new tests cover the five non-object bodies on both routes and the dropped idle connection (59 tests).
+- **Docs:** the README test count and the sample version line are corrected, and a README in Portuguese (`README_por.md`) joins the other translations.
+
 ## [0.1.0] - Approval, cost limits and explanation before execution
 
 - `approval.py`: `propose()` turns a plan into a proposal with a stable fingerprint, a

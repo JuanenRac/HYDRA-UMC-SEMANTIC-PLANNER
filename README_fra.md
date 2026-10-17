@@ -4,7 +4,7 @@
 
 # 🧩 HYDRA-UMC-SEMANTIC-PLANNER
 
-<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | 🇫🇷 <b>Français</b> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | 🇫🇷 <b>Français</b> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🧠 Planificateur de mission basé sur LLM et système de récupération logique
 
@@ -16,7 +16,7 @@
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** le vocabulaire fermé de primitives (`primitives.py`), la décomposition de tâches à base de règles (`decompose.py`), la récupération sémantique d'erreurs à base de règles sur une table fixe de codes d'erreur MCU (`recovery.py`), le validateur de préconditions qui refuse un plan mal formé plutôt que de le laisser passer (`validation.py`), et la surface JSON/HTTP `http.server` de la stdlib exposant cette même logique (`api.py` : `POST /decompose`, `POST /recover`, `GET /stats`) sont réels et testés (57 tests, `pytest`), y compris un test de fuzzing qui exécute `decompose_goal()` contre des centaines d'objectifs aléatoires/invalides avec une graine fixe et vérifie qu'il ne plante jamais ni ne renvoie de plan mal formé. Ce qui n'est PAS encore réel : il n'y a aucun LLM local nulle part dans ce code - `decompose.py` est de la correspondance de motifs/gabarits regex sur un petit vocabulaire d'objectifs fixe (assembler/pick-and-place/inspecter), pas de la compréhension du langage, et cela n'a jamais tourné contre un véritable module Hailo-10 (cet environnement n'en possède pas). Les puces « Agentic Workflow » et « Hailo-10 Optimized » ci-dessous sont explicitement marquées `(planned)` dans ce même README - elles décrivent le remplacement éventuel du noyau actuel à base de règles de `decompose_goal()`, pas quelque chose qui existe aujourd'hui. Voir `CHANGELOG.md` pour ce qui a déjà été livré exactement, et la FEUILLE DE ROUTE ci-dessous pour ce qui reste ouvert.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** le vocabulaire fermé de primitives (`primitives.py`), la décomposition de tâches à base de règles (`decompose.py`), la récupération sémantique d'erreurs à base de règles sur une table fixe de codes d'erreur MCU (`recovery.py`), le validateur de préconditions qui refuse un plan mal formé plutôt que de le laisser passer (`validation.py`), et la surface JSON/HTTP `http.server` de la stdlib exposant cette même logique (`api.py` : `POST /decompose`, `POST /recover`, `GET /stats`) sont réels et testés (59 tests, `pytest`), y compris un test de fuzzing qui exécute `decompose_goal()` contre des centaines d'objectifs aléatoires/invalides avec une graine fixe et vérifie qu'il ne plante jamais ni ne renvoie de plan mal formé. Ce qui n'est PAS encore réel : il n'y a aucun LLM local nulle part dans ce code - `decompose.py` est de la correspondance de motifs/gabarits regex sur un petit vocabulaire d'objectifs fixe (assembler/pick-and-place/inspecter), pas de la compréhension du langage, et cela n'a jamais tourné contre un véritable module Hailo-10 (cet environnement n'en possède pas). Les puces « Agentic Workflow » et « Hailo-10 Optimized » ci-dessous sont explicitement marquées `(planned)` dans ce même README - elles décrivent le remplacement éventuel du noyau actuel à base de règles de `decompose_goal()`, pas quelque chose qui existe aujourd'hui. Voir `CHANGELOG.md` pour ce qui a déjà été livré exactement, et la FEUILLE DE ROUTE ci-dessous pour ce qui reste ouvert.
 
 ---
 
@@ -193,7 +193,7 @@ exécutent la vraie suite de tests (`pytest tests/`). Sortie attendue
 d'un `run.sh` sans argument :
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.1.0
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.1
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

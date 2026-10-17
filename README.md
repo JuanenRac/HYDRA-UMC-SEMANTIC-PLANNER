@@ -4,7 +4,7 @@
 
 # 🧩 HYDRA-UMC-SEMANTIC-PLANNER
 
-<p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+<p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🧠 LLM-Based Mission Planner & Logic Recovery System
 
@@ -16,7 +16,7 @@
 
 ---
 
-**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (57 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
+**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (59 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
 
 ---
 
@@ -185,7 +185,7 @@ run.bat
 (`pytest tests/`). Expected output of a bare `run.sh`:
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.1.0
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.1
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

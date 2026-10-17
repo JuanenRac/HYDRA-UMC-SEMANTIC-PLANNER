@@ -172,3 +172,40 @@ def test_oversized_json_request_is_rejected_before_parsing() -> None:
         except urllib.error.HTTPError as error:
             assert error.code == 400
             assert str(MAX_BODY_BYTES) in json.loads(error.read())["error"]
+
+
+def _post_raw(url: str, raw: bytes) -> tuple[int, dict]:
+    req = urllib.request.Request(url, data=raw, headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            return resp.status, json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read())
+
+
+def test_valid_json_that_is_not_an_object_is_a_400_not_a_crashed_handler() -> None:
+    # a list, a string, null, a number or a boolean used to reach body["goal"] and raise a
+    # TypeError nothing caught: the handler thread died and the client got no response at all
+    with running_server() as base:
+        for path in ("/decompose", "/recover"):
+            for raw in (b"[1, 2]", b'"text"', b"null", b"42", b"true"):
+                status, body = _post_raw(f"{base}{path}", raw)
+                assert status == 400, (path, raw, status)
+                assert "must be an object" in body["error"]
+        # and the server still answers normally afterwards
+        assert _get(f"{base}/stats")[0] == 200
+
+
+def test_a_client_that_sends_nothing_is_dropped_instead_of_holding_a_thread(monkeypatch) -> None:
+    import socket
+    import time
+
+    from hydra_umc_semantic_planner.api import Handler
+
+    monkeypatch.setattr(Handler, "timeout", 0.3)
+    with running_server() as base:
+        port = int(base.rsplit(":", 1)[1])
+        with socket.create_connection(("127.0.0.1", port), timeout=5) as client:
+            started = time.monotonic()
+            assert client.recv(1) == b""  # sends nothing; the server closes the connection by itself
+            assert time.monotonic() - started < 3

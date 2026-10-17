@@ -59,11 +59,22 @@ def _read_json_body(handler: BaseHTTPRequestHandler) -> dict:
             handler.rfile.read(length)
         raise ValueError(f"request body must contain 0-{MAX_BODY_BYTES} bytes")
     raw = handler.rfile.read(length) if length else b"{}"
-    return json.loads(raw)
+    parsed = json.loads(raw)
+    if not isinstance(parsed, dict):
+        # valid JSON that is not an object (a list, a string, null, a number) used to reach
+        # `body["goal"]` and raise a TypeError nothing caught: the handler thread died with
+        # a traceback and the client got no response at all
+        raise ValueError("the JSON body must be an object")
+    return parsed
 
 
 class Handler(BaseHTTPRequestHandler):
     server: "SemanticPlannerServer"
+
+    # Seconds a client may stay silent on its connection before the server
+    # drops it, so a client that connects and sends nothing cannot hold a
+    # handler thread forever. Socket I/O only; never the time a plan takes.
+    timeout = 15.0
 
     def log_message(self, format: str, *args: object) -> None:  # noqa: A002
         pass  # quiet by default, same reasoning as this family's other api.py files

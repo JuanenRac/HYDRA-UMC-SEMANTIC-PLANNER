@@ -4,7 +4,7 @@
 
 # 🧩 HYDRA-UMC-SEMANTIC-PLANNER
 
-<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | 🇮🇹 <b>Italiano</b> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a></p>
+<p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | 🇮🇹 <b>Italiano</b> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🧠 Pianificatore di missioni basato su LLM e sistema di recupero logico
 
@@ -16,7 +16,7 @@
 
 ---
 
-**Verifica di onestà - cosa funziona davvero oggi:** il vocabolario chiuso di primitive (`primitives.py`), la scomposizione dei task basata su regole (`decompose.py`), il recupero semantico degli errori basato su regole su una tabella fissa di codici di errore MCU (`recovery.py`), il validatore delle precondizioni che rifiuta un piano mal formato invece di lasciarlo passare (`validation.py`), e la superficie JSON/HTTP con `http.server` della stdlib sulla stessa logica (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) sono reali e testati (57 test, `pytest`), incluso un test di fuzzing che esegue `decompose_goal()` contro centinaia di obiettivi casuali/non validi con un seed fisso e verifica che non vada mai in crash né restituisca un piano mal formato. Ciò che NON è ancora reale: non esiste alcun LLM locale in nessuna parte di questo codice - `decompose.py` è corrispondenza di pattern/template regex su un piccolo vocabolario fisso di obiettivi (assemblare/pick-and-place/ispezionare), non comprensione del linguaggio, e non è mai stato eseguito contro un vero modulo Hailo-10 (questo ambiente non ne possiede uno). I punti "Agentic Workflow" e "Hailo-10 Optimized" più sotto sono esplicitamente contrassegnati come `(planned)` in questo stesso README - descrivono l'eventuale sostituzione dell'attuale nucleo basato su regole di `decompose_goal()`, non qualcosa che esiste oggi. Vedi `CHANGELOG.md` per ciò che è stato consegnato finora esattamente, e la TABELLA DI MARCIA più sotto per ciò che resta aperto.
+**Verifica di onestà - cosa funziona davvero oggi:** il vocabolario chiuso di primitive (`primitives.py`), la scomposizione dei task basata su regole (`decompose.py`), il recupero semantico degli errori basato su regole su una tabella fissa di codici di errore MCU (`recovery.py`), il validatore delle precondizioni che rifiuta un piano mal formato invece di lasciarlo passare (`validation.py`), e la superficie JSON/HTTP con `http.server` della stdlib sulla stessa logica (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) sono reali e testati (59 test, `pytest`), incluso un test di fuzzing che esegue `decompose_goal()` contro centinaia di obiettivi casuali/non validi con un seed fisso e verifica che non vada mai in crash né restituisca un piano mal formato. Ciò che NON è ancora reale: non esiste alcun LLM locale in nessuna parte di questo codice - `decompose.py` è corrispondenza di pattern/template regex su un piccolo vocabolario fisso di obiettivi (assemblare/pick-and-place/ispezionare), non comprensione del linguaggio, e non è mai stato eseguito contro un vero modulo Hailo-10 (questo ambiente non ne possiede uno). I punti "Agentic Workflow" e "Hailo-10 Optimized" più sotto sono esplicitamente contrassegnati come `(planned)` in questo stesso README - descrivono l'eventuale sostituzione dell'attuale nucleo basato su regole di `decompose_goal()`, non qualcosa che esiste oggi. Vedi `CHANGELOG.md` per ciò che è stato consegnato finora esattamente, e la TABELLA DI MARCIA più sotto per ciò che resta aperto.
 
 ---
 
@@ -191,7 +191,7 @@ suite di test (`pytest tests/`). Output atteso di un `run.sh` senza
 argomenti:
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.1.0
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.1
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
