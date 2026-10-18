@@ -86,3 +86,26 @@ def test_a_missing_explanation_blocks_the_release():
     proposal = replace(_proposal(), explanation=" ")
     decision = release_for_execution(proposal, PlanApproval(proposal.fingerprint, "operator"))
     assert not decision.released and "explanation" in decision.reason
+
+
+def test_a_proposal_that_understates_its_cost_is_judged_by_the_real_cost():
+    plan = Plan(goal="inspect the part", steps=tuple(Step(MOVE_TO, {"location": "x"}) for _ in range(20)))
+    honest = propose(plan)
+    forged = replace(honest, estimated_cost=0)
+    decision = release_for_execution(forged, PlanApproval(honest.fingerprint, "anyone"))
+    assert not decision.released
+    assert "cost" in decision.reason
+
+
+def test_an_explanation_that_describes_another_plan_blocks_the_release():
+    proposal = _proposal()
+    forged = replace(proposal, explanation="Goal: inspect the part\n1. INSPECT (target=part)")
+    decision = release_for_execution(forged, PlanApproval(proposal.fingerprint, "ana"))
+    assert not decision.released
+
+
+def test_capabilities_are_checked_at_release():
+    proposal = _proposal()
+    approval = PlanApproval(proposal.fingerprint, "ana")
+    assert release_for_execution(proposal, approval).released
+    assert not release_for_execution(proposal, approval, capabilities=frozenset({"MOVE_TO"})).released

@@ -39,7 +39,7 @@ Bare invocation (no subcommand) prints identity/version/role and exits `0`:
 
 ```
 $ hydra-umc-semantic-planner
-HYDRA-UMC-SEMANTIC-PLANNER v0.0.7
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.2
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
@@ -79,25 +79,21 @@ Plan for: "inspect the weld"
   2. INSPECT(target=weld)
 ```
 
-The "last word is the target" heuristic is honestly naive — worth
-showing where it produces a target you might not expect:
+The object is read from the words that follow the verb (an optional article is skipped), and for a pick-and-place goal the destination is read after `place`:
 
 ```
 $ hydra-umc-semantic-planner decompose "pick up the bolt and place it in the bin"
 Plan for: "pick up the bolt and place it in the bin"
   1. MOVE_TO(location=pickup)
-  2. GRIP(target=bin)
-  3. MOVE_TO(location=destination)
-  4. RELEASE(target=bin)
+  2. GRIP(target=bolt)
+  3. MOVE_TO(location=bin)
+  4. RELEASE(target=bolt)
 ```
 
-(The real target grabbed by a robot here is the goal sentence's last
-word, "bin" — the intended object, "bolt", isn't it. A future NLP-based
-target extractor is real, later work this v0 keyword/last-word heuristic
-stands in for.)
+A goal that is negated or cancelled ("do not pick ...", "never assemble ..."), that fits more than one template, that has no object ("assemble it") or that is longer than 512 characters returns no plan.
 
 **A real, honest miss** — a goal outside the small known vocabulary
-returns no plan rather than guessing one, and still exits `0`:
+returns no plan rather than guessing one, and exits `3`:
 
 ```
 $ hydra-umc-semantic-planner decompose "make me a sandwich"
@@ -204,8 +200,18 @@ default, matching the `systemd/hydra-umc-semantic-planner.service` unit.
   param. Omitted (the default) validates exactly as before this field
   existed — params only, no capability check. A malformed `capabilities`
   (not a list of strings) responds `400`.
+  The answer is a proposal: `"executable": false`, `"requires_approval": true`, plus
+  `fingerprint`, `estimated_cost` and `explanation`. `goal` must be text of at
+  most 512 characters (`400` otherwise).
+* **`POST /release`** — body `{"goal": "...", "approved_by": "...",
+  "plan_fingerprint": "...", "capabilities": [...]}` (`capabilities` optional).
+  Decomposes the goal again, recomputes the cost and the explanation, and
+  answers `{"released": true|false, "reason": "..."}`; a fingerprint that is not
+  the one of this exact plan is never released. The approval is not signed.
 * **`POST /recover`** — body `{"component": "...", "error_code": "...",
-  "detail": "..."}` (`detail` optional). Responds `200` with the real
+  "detail": "...", "attempt": 1}` (`detail` and `attempt` optional; `attempt` is
+  how many times this failure was reported, and `TIMEOUT` / `GRIP_LOST_SEAL`
+  escalate to the operator after 1 / 3 automatic attempts). Responds `200` with the real
   `RecoveryStrategy`. Either route responds `400` with
   `{"error": "..."}` for a malformed JSON body or a missing required
   field.
@@ -239,7 +245,9 @@ attempted here.
 
 | Code | Meaning |
 |------|---------|
-| `0` | `decompose`/`recover` both always succeed, including an honest "no matching template" miss from `decompose` |
+| `0` | a plan was produced, or `recover` answered |
+| `1` | the plan failed its own precondition validation |
+| `3` | `decompose` found no plan for the goal (an honest miss) |
 | `2` | argparse usage error — a missing/malformed required flag |
 
 ## Not yet implemented

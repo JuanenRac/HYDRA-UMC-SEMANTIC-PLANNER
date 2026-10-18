@@ -209,3 +209,33 @@ def test_a_client_that_sends_nothing_is_dropped_instead_of_holding_a_thread(monk
             started = time.monotonic()
             assert client.recv(1) == b""  # sends nothing; the server closes the connection by itself
             assert time.monotonic() - started < 3
+
+
+def test_decompose_answers_with_a_proposal_that_is_not_executable() -> None:
+    with running_server() as base:
+        status, body = _post(f"{base}/decompose", {"goal": "assemble the housing"})
+        assert status == 200
+        assert body["executable"] is False and body["requires_approval"] is True
+        assert len(body["fingerprint"]) == 64 and body["estimated_cost"] > 0 and body["explanation"]
+
+
+def test_release_needs_the_fingerprint_of_this_exact_plan() -> None:
+    with running_server() as base:
+        _, proposal = _post(f"{base}/decompose", {"goal": "inspect the weld"})
+        ok = {"goal": "inspect the weld", "approved_by": "ana", "plan_fingerprint": proposal["fingerprint"]}
+        status, body = _post(f"{base}/release", ok)
+        assert status == 200 and body["released"] is True
+        status, body = _post(f"{base}/release", {**ok, "plan_fingerprint": "0" * 64})
+        assert status == 200 and body["released"] is False
+        status, _ = _post(f"{base}/release", {"goal": "inspect the weld"})
+        assert status == 400
+
+
+def test_oversized_and_non_text_fields_are_rejected() -> None:
+    with running_server() as base:
+        assert _post(f"{base}/decompose", {"goal": "pick " * 1000})[0] == 400
+        assert _post(f"{base}/decompose", {"goal": None})[0] == 400
+        assert _post(f"{base}/recover", {"component": "arm", "error_code": None})[0] == 400
+        assert _post(f"{base}/recover", {"component": "arm", "error_code": "TIMEOUT", "attempt": 0})[0] == 400
+        status, body = _post(f"{base}/recover", {"component": "arm", "error_code": "TIMEOUT", "attempt": 2})
+        assert status == 200 and body["action"] == "ESCALATE_TO_OPERATOR"

@@ -6,17 +6,19 @@
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | 🇯🇵 <b>日本語</b> | <a href="README_por.md">🇵🇹 Português</a></p>
 
-### 🧠 LLM ベースのミッションプランナー & ロジック復旧システム
+### 🧠 ルールベースのミッションプランナー & ロジック復旧システム（LLM は計画中）
 
 <p align="center">
   <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Brain-Local%20LLM-blueviolet.svg" alt="LLM">
-  <img src="https://img.shields.io/badge/Target-Hailo--10-green.svg" alt="Hailo-10">
+  <img src="https://img.shields.io/badge/Brain-Rule--based%20(LLM%20planned)-blueviolet.svg" alt="LLM">
+  <img src="https://img.shields.io/badge/Target-Hailo--10%20(planned)-lightgrey.svg" alt="Hailo-10">
 </p>
 
 ---
 
 **正直な現状確認 - 実際に今動くもの:** 閉じたプリミティブ語彙（`primitives.py`）、ルールベースのタスク分解（`decompose.py`）、固定されたMCUエラーコード表に基づくルールベースの意味的エラー回復（`recovery.py`）、不正な形式の計画を通過させるのではなく拒否する事前条件バリデータ（`validation.py`)、そして同じロジックを公開する標準ライブラリの `http.server` によるシンプルなJSON/HTTPインターフェース（`api.py`: `POST /decompose`、`POST /recover`、`GET /stats`）は本物であり、テスト済みです（59件のテスト、`pytest`）。これには、固定シードで数百のランダム/無効な目標に対して `decompose_goal()` を実行し、決してクラッシュせず不正な形式の計画を返さないことを確認するファズテストも含まれます。まだ本物ではないもの: このコードのどこにもローカルLLMは存在しません - `decompose.py` は、小さく固定された目標語彙（組み立て/ピックアンドプレース/検査）に対する正規表現/テンプレートのパターンマッチングであり、言語理解ではありません。また、実際のHailo-10モジュールに対して実行されたことは一度もありません（この環境にはそのモジュールがありません）。下記の「Agentic Workflow」と「Hailo-10 Optimized」の項目は、この同じREADME内で明示的に `(planned)` とマークされています - これらは `decompose_goal()` の現在のルールベースのコアが将来的に置き換えられる先を説明しているのであり、今日すでに存在するものではありません。これまでに実際に出荷されたものの詳細は `CHANGELOG.md` を、残っている未完了事項は下記のROADMAPを参照してください。
+
+**ルールベースプランナーの既知の制限：** 否定・取り消しされた目標（「しない」「決して〜ない」）、複数のテンプレートに該当する目標、対象のない目標、512 文字を超える目標にはプランが作られません。対象は文末ではなく動詞の後ろの語から読み取ります。分解結果は命令ではなく提案です。`POST /decompose` は `executable: false` とフィンガープリント、推定コスト、読みやすい説明を返し、`POST /release`（または `release_for_execution()`）がプランからコストと説明を再計算し、承認のフィンガープリントを確認するまで何も実行できません。承認にはまだ署名がなく、担当者名を示すだけで資格情報ではありません。`FailureContext.attempt` により、`TIMEOUT` と `GRIP_LOST_SEAL` の復旧はそれぞれ自動 1 回・3 回の試行後にオペレーターへエスカレーションされます。
 
 ---
 
@@ -135,7 +137,7 @@ run.bat
 実行します（`pytest tests/`）。引数なしの `run.sh` の予期される出力：
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.1.1
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.2
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

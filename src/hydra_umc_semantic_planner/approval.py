@@ -78,19 +78,31 @@ class ReleaseDecision:
 
 
 def release_for_execution(
-    proposal: PlanProposal, approval: PlanApproval | None, limits: CostLimits = CostLimits()
+    proposal: PlanProposal,
+    approval: PlanApproval | None,
+    limits: CostLimits = CostLimits(),  # noqa: B008 - frozen dataclass, safe as a default
+    capabilities: frozenset[str] | None = None,
 ) -> ReleaseDecision:
+    """Decide whether `proposal` may reach an executing layer.
+
+    The cost and the explanation a person reads are recomputed here from the
+    plan itself: what a caller wrote into the proposal is never trusted, so a
+    proposal cannot understate its cost or describe a different plan.
+    """
     if plan_fingerprint(proposal.plan) != proposal.fingerprint:
         return ReleaseDecision(False, "the proposal no longer matches its plan")
-    issues = validate_plan(proposal.plan)
+    issues = validate_plan(proposal.plan, capabilities)
     if issues:
         return ReleaseDecision(False, f"the plan is not valid: {issues[0]}")
     if not proposal.explanation.strip():
         return ReleaseDecision(False, "the plan has no explanation")
+    if proposal.explanation != explain(proposal.plan):
+        return ReleaseDecision(False, "the explanation does not describe this plan")
     if len(proposal.plan.steps) > limits.max_steps:
         return ReleaseDecision(False, f"{len(proposal.plan.steps)} steps exceed the limit of {limits.max_steps}")
-    if proposal.estimated_cost > limits.max_total_cost:
-        return ReleaseDecision(False, f"estimated cost {proposal.estimated_cost} exceeds the limit of {limits.max_total_cost}")
+    real_cost = estimate_cost(proposal.plan)
+    if real_cost > limits.max_total_cost:
+        return ReleaseDecision(False, f"estimated cost {real_cost} exceeds the limit of {limits.max_total_cost}")
     if approval is None:
         return ReleaseDecision(False, "no approval was recorded")
     if not approval.approved_by.strip():

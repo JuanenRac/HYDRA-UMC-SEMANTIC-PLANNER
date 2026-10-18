@@ -38,6 +38,9 @@ class FailureContext:
     component: str
     error_code: str
     detail: str = ""
+    # 1 the first time this component reports the failure, 2 the second, and
+    # so on. The caller owns the count; recovery itself keeps no memory.
+    attempt: int = 1
 
 
 @dataclass(frozen=True)
@@ -72,6 +75,11 @@ _RULES: dict[str, RecoveryStrategy] = {
 }
 
 
+# Most times an automatic recovery is proposed for the same failure before a
+# person has to look at it.
+MAX_AUTOMATIC_ATTEMPTS: dict[str, int] = {TIMEOUT: 1, GRIP_LOST_SEAL: 3}
+
+
 def propose_recovery(failure: FailureContext) -> RecoveryStrategy:
     """Real rule-based recovery proposal for a real, known error code.
 
@@ -79,6 +87,12 @@ def propose_recovery(failure: FailureContext) -> RecoveryStrategy:
     conservative default a real safety-first system should: escalate to
     a human, never a silent retry loop.
     """
+    limit = MAX_AUTOMATIC_ATTEMPTS.get(failure.error_code)
+    if limit is not None and failure.attempt > limit:
+        return RecoveryStrategy(
+            ESCALATE_TO_OPERATOR,
+            f"{failure.error_code} repeated {failure.attempt} times - automatic recovery is limited to {limit}",
+        )
     return _RULES.get(
         failure.error_code,
         RecoveryStrategy(ESCALATE_TO_OPERATOR, f"unrecognized error code: {failure.error_code}"),

@@ -34,7 +34,7 @@ def test_decompose_unmatched_goal(capsys: pytest.CaptureFixture[str]) -> None:
     exit_code = main(["decompose", "write a poem"])
 
     captured = capsys.readouterr()
-    assert exit_code == 0
+    assert exit_code == 3
     assert "No matching task template" in captured.out
 
 

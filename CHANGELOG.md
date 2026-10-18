@@ -5,6 +5,17 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.1.2] - Safer goal parsing, recomputed release checks, bounded recovery
+
+- **Negated or ambiguous goals no longer become plans:** "do not pick ...", "never assemble ..." used to produce the plan for the forbidden action, and a goal fitting several templates silently used the first one. Negated goals (English and Spanish), goals matching more than one template and goals without a real object now get no plan.
+- **The object is read after the verb:** the target used to be the last word of the sentence ("bin", "now", "carefully"). It is now the word after the verb (and the destination after `place`); pronouns, adverbs and connectors are never an object.
+- **Goal length is bounded:** goals longer than 512 characters are refused (`400` over HTTP), and the pick/place pattern no longer backtracks quadratically, which let a 1 MiB request keep the service busy for minutes.
+- **Release recomputes what it checks:** `release_for_execution()` recomputes the cost and compares the explanation with the one derived from the plan instead of trusting the proposal, and accepts the robot's declared `capabilities`.
+- **Decompositions are proposals:** `POST /decompose` answers `executable: false` with the plan fingerprint, estimated cost and explanation; the new `POST /release` checks the approval fingerprint against the plan before it is released.
+- **Recovery is bounded:** `FailureContext.attempt` (and `attempt` on `POST /recover`) makes `TIMEOUT` and `GRIP_LOST_SEAL` escalate to the operator after 1 and 3 automatic attempts.
+- **Stricter input and exit codes:** `goal`, `component`, `error_code` and `detail` must be text (no more `"None"`), and `decompose` exits `3` when no plan is found (71 tests).
+- **Docs:** README title, badges and package description no longer claim an LLM or a Hailo-10 target that does not exist yet; the limits of the rule-based planner and the new API are documented in all languages.
+
 ## [0.1.1] - Non-object JSON bodies are a 400, idle connections dropped, Portuguese README
 
 - **A non-object JSON body crashed the handler:** `POST /decompose` and `POST /recover` read the body with `json.loads()` and indexed it as an object, so valid JSON that is not an object (a list, a string, `null`, a number, a boolean) raised a `TypeError` nothing caught - the handler thread died with a traceback and the client got no response at all. It is now a `400` ("the JSON body must be an object"), and the server keeps answering afterwards (confirmed against the real server with five body shapes on both routes).

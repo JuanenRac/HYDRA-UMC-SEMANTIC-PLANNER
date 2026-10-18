@@ -91,3 +91,39 @@ def test_property_random_fuzz_goals_never_crash_and_are_always_well_formed() -> 
         plan = decompose_goal(goal)
         if plan is not None:
             assert is_plan_valid(plan), f"random goal {goal!r} produced a malformed plan"
+
+
+def test_negated_goals_never_become_a_plan() -> None:
+    for goal in (
+        "do NOT pick the knife and place it on the table",
+        "never assemble anything",
+        "don't inspect the motor",
+        "nunca montes la pieza, no assemble it",
+    ):
+        assert decompose_goal(goal) is None, goal
+
+
+def test_the_target_is_the_object_not_the_last_word() -> None:
+    plan = decompose_goal("pick the bolt and place it in the bin")
+    assert plan is not None
+    assert plan.steps[1].params["target"] == "bolt"
+    assert plan.steps[2].params["location"] == "bin"
+    for goal, expected in (("inspect the motor now", "motor"), ("assemble the gearbox carefully", "gearbox")):
+        plan = decompose_goal(goal)
+        assert plan is not None
+        assert plan.steps[-1].params.get("target", plan.steps[1].params.get("target")) == expected
+
+
+def test_goals_without_a_real_object_or_matching_several_templates_are_refused() -> None:
+    assert decompose_goal("assemble it") is None
+    assert decompose_goal("inspect now") is None
+    assert decompose_goal("inspect the arm then assemble the gripper") is None
+
+
+def test_a_very_long_goal_is_refused_quickly() -> None:
+    import time
+
+    started = time.monotonic()
+    assert decompose_goal("pick " * 100_000) is None
+    assert decompose_goal("pick " * 90 + "x") is None
+    assert time.monotonic() - started < 1.0

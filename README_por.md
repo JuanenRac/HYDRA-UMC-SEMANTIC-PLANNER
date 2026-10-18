@@ -6,17 +6,19 @@
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | 🇵🇹 <b>Português</b></p>
 
-### 🧠 Planeador de missões baseado em LLM e sistema de recuperação lógica
+### 🧠 Planeador de missões baseado em regras e sistema de recuperação lógica (LLM previsto)
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Brain-Local%20LLM-blueviolet.svg" alt="LLM">
-  <img src="https://img.shields.io/badge/Target-Hailo--10-green.svg" alt="Hailo-10">
+  <img src="https://img.shields.io/badge/Brain-Rule--based%20(LLM%20planned)-blueviolet.svg" alt="LLM">
+  <img src="https://img.shields.io/badge/Target-Hailo--10%20(planned)-lightgrey.svg" alt="Hailo-10">
 </p>
 
 ---
 
 **Verificação de honestidade - o que realmente funciona hoje:** o vocabulário fechado de primitivas (`primitives.py`), a decomposição de tarefas baseada em regras (`decompose.py`), a recuperação semântica de erros baseada em regras sobre uma tabela fixa de códigos de erro do MCU (`recovery.py`), o validador de pré-condições que recusa um plano malformado em vez de o passar adiante (`validation.py`) e a superfície JSON/HTTP simples do `http.server` da biblioteca padrão sobre a mesma lógica (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) são reais e testados (59 testes, `pytest`), incluindo um teste de fuzzing que executa o `decompose_goal()` contra centenas de objetivos aleatórios/inválidos com uma semente fixa e afirma que nunca falha nem devolve um plano malformado. O que ainda NÃO é real: não há nenhum LLM local em todo este código - o `decompose.py` é correspondência de expressões regulares/modelos sobre um vocabulário pequeno e fixo de objetivos (montar/pick-and-place/inspecionar), não compreensão de linguagem, e nunca foi executado contra um módulo Hailo-10 real (este ambiente não tem nenhum). As funcionalidades "Fluxo de trabalho com agentes" e "Otimizado para Hailo-10" abaixo estão explicitamente marcadas `(planeado)` neste mesmo README - descrevem o substituto eventual do núcleo atual baseado em regras do `decompose_goal()`, não algo que exista hoje. Veja o `CHANGELOG.md` para saber exatamente o que foi entregue até agora e o ROTEIRO abaixo para o que continua em aberto.
+
+**Limites conhecidos do planeador por regras:** um objetivo negado ou cancelado («não ...», «nunca ...»), que se ajuste a mais do que um modelo, sem objeto ou com mais de 512 carateres não produz plano. O objeto é lido das palavras que seguem o verbo, não do fim da frase. Uma decomposição é uma proposta, não uma ordem: `POST /decompose` responde `executable: false` com uma impressão digital, o custo estimado e uma explicação legível, e `POST /release` (ou `release_for_execution()`) recalcula o custo e a explicação a partir do plano e verifica a impressão digital da aprovação antes de se poder executar o que quer que seja. A aprovação ainda não está assinada: nomeia uma pessoa mas não é uma credencial. `FailureContext.attempt` faz com que as recuperações de `TIMEOUT` e `GRIP_LOST_SEAL` escalem para um operador após 1 e 3 tentativas automáticas.
 
 ---
 
@@ -182,7 +184,7 @@ O `build.sh`/`build.bat` sobe a versão (ao estilo conta-quilómetros, veja
 (`pytest tests/`). Saída esperada de um `run.sh` simples:
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.1.1
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.2
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

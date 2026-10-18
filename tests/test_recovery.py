@@ -58,3 +58,23 @@ def test_unknown_error_code_escalates_conservatively() -> None:
 
     assert strategy.action == ESCALATE_TO_OPERATOR
     assert "SOMETHING_NEW" in strategy.reason
+
+
+def test_a_repeated_timeout_escalates_instead_of_retrying_forever():
+    from hydra_umc_semantic_planner.recovery import ESCALATE_TO_OPERATOR, RETRY, TIMEOUT, FailureContext, propose_recovery
+
+    assert propose_recovery(FailureContext("arm", TIMEOUT)).action == RETRY
+    assert propose_recovery(FailureContext("arm", TIMEOUT, attempt=2)).action == ESCALATE_TO_OPERATOR
+
+
+def test_gripper_pressure_is_only_raised_a_bounded_number_of_times():
+    from hydra_umc_semantic_planner.recovery import (
+        ESCALATE_TO_OPERATOR,
+        GRIP_LOST_SEAL,
+        INCREASE_PRESSURE,
+        FailureContext,
+        propose_recovery,
+    )
+
+    assert propose_recovery(FailureContext("grip", GRIP_LOST_SEAL, attempt=3)).action == INCREASE_PRESSURE
+    assert propose_recovery(FailureContext("grip", GRIP_LOST_SEAL, attempt=4)).action == ESCALATE_TO_OPERATOR

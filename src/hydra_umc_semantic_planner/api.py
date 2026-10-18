@@ -14,7 +14,8 @@ from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
-from .decompose import decompose_goal
+from .approval import PlanApproval, propose, release_for_execution
+from .decompose import MAX_GOAL_CHARS, decompose_goal
 from .recovery import FailureContext, propose_recovery
 from .validation import validate_plan
 
@@ -96,14 +97,17 @@ class Handler(BaseHTTPRequestHandler):
             self._handle_decompose(body)
         elif path == "/recover":
             self._handle_recover(body)
+        elif path == "/release":
+            self._handle_release(body)
         else:
             _write_error(self, 404, "not found")
 
     def _handle_decompose(self, body: dict) -> None:
-        try:
-            goal = str(body["goal"])
-        except KeyError as e:
-            _write_error(self, 400, f"missing required field: {e}")
+        goal = self._required_text(body, "goal")
+        if goal is None:
+            return
+        if len(goal) > MAX_GOAL_CHARS:
+            _write_error(self, 400, f"goal must be at most {MAX_GOAL_CHARS} characters")
             return
         # an optional real declared-capability catalog for the
         # target robot/cell - omitted (the default, and every existing
@@ -121,24 +125,78 @@ class Handler(BaseHTTPRequestHandler):
             _write_json(self, 200, {"matched": False, "goal": goal, "steps": [], "issues": []})
             return
         issues = validate_plan(plan, capabilities)
+        proposal = propose(plan)
         _write_json(self, 200, {
             "matched": True,
             "goal": plan.goal,
             "steps": [asdict(s) for s in plan.steps],
             "issues": [asdict(i) for i in issues],
             "valid": not issues,
+            # A decomposition is a proposal, never an order: the steps may only
+            # be executed once POST /release answers released=true.
+            "executable": False,
+            "requires_approval": True,
+            "fingerprint": proposal.fingerprint,
+            "estimated_cost": proposal.estimated_cost,
+            "explanation": proposal.explanation,
         })
 
-    def _handle_recover(self, body: dict) -> None:
-        try:
-            failure = FailureContext(
-                component=str(body["component"]),
-                error_code=str(body["error_code"]),
-                detail=str(body.get("detail", "")),
-            )
-        except KeyError as e:
-            _write_error(self, 400, f"missing required field: {e}")
+    def _handle_release(self, body: dict) -> None:
+        goal = self._required_text(body, "goal")
+        if goal is None:
             return
+        approved_by = self._required_text(body, "approved_by")
+        if approved_by is None:
+            return
+        fingerprint = self._required_text(body, "plan_fingerprint")
+        if fingerprint is None:
+            return
+        if len(goal) > MAX_GOAL_CHARS:
+            _write_error(self, 400, f"goal must be at most {MAX_GOAL_CHARS} characters")
+            return
+        capabilities: frozenset[str] | None = None
+        if "capabilities" in body:
+            raw = body["capabilities"]
+            if not isinstance(raw, list) or not all(isinstance(item, str) for item in raw):
+                _write_error(self, 400, "capabilities must be a list of strings")
+                return
+            capabilities = frozenset(raw)
+        plan = decompose_goal(goal)
+        if plan is None:
+            _write_json(self, 200, {"released": False, "reason": "the goal does not decompose into a plan"})
+            return
+        decision = release_for_execution(
+            propose(plan), PlanApproval(fingerprint, approved_by), capabilities=capabilities
+        )
+        _write_json(self, 200, asdict(decision))
+
+    def _required_text(self, body: dict, field: str) -> str | None:
+        """The text value of `field`, or None after answering 400 when it is missing or not text."""
+        if field not in body:
+            _write_error(self, 400, f"missing required field: {field!r}")
+            return None
+        value = body[field]
+        if not isinstance(value, str):
+            _write_error(self, 400, f"{field} must be text")
+            return None
+        return value
+
+    def _handle_recover(self, body: dict) -> None:
+        component = self._required_text(body, "component")
+        if component is None:
+            return
+        error_code = self._required_text(body, "error_code")
+        if error_code is None:
+            return
+        detail = body.get("detail", "")
+        attempt = body.get("attempt", 1)
+        if not isinstance(detail, str):
+            _write_error(self, 400, "detail must be text")
+            return
+        if isinstance(attempt, bool) or not isinstance(attempt, int) or attempt < 1:
+            _write_error(self, 400, "attempt must be an integer of at least 1")
+            return
+        failure = FailureContext(component=component, error_code=error_code, detail=detail, attempt=attempt)
         strategy = propose_recovery(failure)
         _write_json(self, 200, asdict(strategy))
 

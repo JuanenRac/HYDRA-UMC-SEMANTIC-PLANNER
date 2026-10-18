@@ -34,12 +34,16 @@ def _print_identity() -> None:
     print(ROLE)
 
 
+# Exit status for a goal that did not decompose: 0 is a plan, 1 a failed validation.
+EXIT_NO_PLAN = 3
+
+
 def _run_decompose(goal: str) -> int:
     plan = decompose_goal(goal)
     if plan is None:
         print(f'No matching task template for: "{goal}"')
         print("(v0 is a real rule-based planner over a small template vocabulary - an honest miss, not a guess.)")
-        return 0
+        return EXIT_NO_PLAN
 
     issues = validate_plan(plan)
     if issues:
@@ -73,7 +77,7 @@ def _run_recover(component: str, error_code: str, detail: str) -> int:
 def _run_serve(addr: str, port: int) -> int:
     server = SemanticPlannerServer((addr, port), ROLE)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
-    print("[semantic-planner] POST /decompose, POST /recover, GET /stats")
+    print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
