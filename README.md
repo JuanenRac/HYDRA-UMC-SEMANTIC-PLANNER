@@ -22,6 +22,17 @@
 
 ---
 
+## 📋 At a glance
+
+| | |
+|---|---|
+| Version | `0.1.2` |
+| Maturity | Established |
+| Tests | 71 (`pytest`) |
+| Stack | Python / local LLM (Llama-3 class) |
+| Target | The Raspberry Pi CM5 of a HYDRA-UMC cell |
+| On real hardware | Not yet: no run on real hardware is recorded for this version |
+
 ## 1. 🛠️ TECHNICAL OVERVIEW
 
 **HYDRA-UMC-SEMANTIC-PLANNER** is the "Logic Orchestrator" of the Cognitive AI Node. It uses local LLMs (Large Language Models) to decompose complex goals into actionable robotic primitives.
