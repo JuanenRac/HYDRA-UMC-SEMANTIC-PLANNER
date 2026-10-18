@@ -5,6 +5,11 @@ version number follows this ecosystem's "odometer" scheme: PATCH +1 on
 every real build, rolling into MINOR past 9 (`0.0.9` -> `0.1.0`); MAJOR is
 bumped manually only. See `bump_version.py`.
 
+## [0.1.3]
+
+- Maturity is functional: nothing here has been verified on real hardware yet.
+- The READMEs say, in the eight languages, what is planned and what has only been tested against fakes, emulators or fixtures, and carry a short safety and security status note.
+
 ## [0.1.2] - Safer goal parsing, recomputed release checks, bounded recovery
 
 - **Negated or ambiguous goals no longer become plans:** "do not pick ...", "never assemble ..." used to produce the plan for the forbidden action, and a goal fitting several templates silently used the first one. Negated goals (English and Spanish), goals matching more than one template and goals without a real object now get no plan.
