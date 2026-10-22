@@ -54,8 +54,7 @@ LLM（大语言模型）将复杂目标分解为可执行的机器人操作单�
 * ⚡ **Hailo-10 优化：** 利用 40 TOPS 算力实现快速的多步推理。*（计划中——需要真实的本地 LLM）*
 * 👨‍👩‍👧 **认知 AI 节点子项目：** 作为
   [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE) 下 4 个同级服务之一运行（与 VLA-Engine、Voice-UI 和 Docs-QA 并列），共享父项目的 HydraOS 镜像和模型权重，而非各自保留独立副本。
-* 📦 **里程表式版本管理：** 每次真实构建都会自动递增 `pyproject.toml`
-  自身的版本号（`bump_version.py`）——无需手动编辑版本号。
+* 📦 **里程表式版本管理：** `pyproject.toml` 中的版本只由显式的 `bump` 命令提升（`python tools/hydra_project_tool.py bump`，它会运行 `bump_version.py`）- 构建绝不会更改它。
 
 ---
 
@@ -141,8 +140,7 @@ build.bat
 run.bat
 ```
 
-`build.sh`/`build.bat` 会在每次真实构建之前递增版本号（里程表式，见
-`bump_version.py`），并运行真实的测试套件（`pytest tests/`）。不带参数的
+`build.sh`/`build.bat` 不会更改版本号（只有 `python tools/hydra_project_tool.py bump` 才会提升），并运行真实的测试套件（`pytest tests/`）。不带参数的
 `run.sh` 的预期输出：
 
 ```text

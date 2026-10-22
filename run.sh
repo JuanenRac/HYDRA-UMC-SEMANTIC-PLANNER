@@ -43,12 +43,13 @@ trap 'hydra_umc_pause_on_exit' EXIT
 set -euo pipefail
 cd "$(dirname "$0")"
 
-if [ -f .venv/bin/activate ]; then
-    # shellcheck disable=SC1091
-    source .venv/bin/activate
-elif [ -f .venv/Scripts/activate ]; then
-    # shellcheck disable=SC1091
-    source .venv/Scripts/activate
+# The python of the venv is used directly (no activate script); without a venv the python on the PATH is used.
+if [ -x .venv/bin/python ]; then
+    VPY=".venv/bin/python"
+elif [ -x .venv/Scripts/python.exe ]; then
+    VPY=".venv/Scripts/python.exe"
+else
+    VPY="python3"
 fi
 
-python -m hydra_umc_semantic_planner.main "$@"
+"$VPY" -m hydra_umc_semantic_planner.main "$@"

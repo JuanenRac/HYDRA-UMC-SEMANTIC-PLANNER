@@ -54,9 +54,7 @@ Maneja la ambigüedad de alto nivel y proporciona recuperación semántica de er
   (junto a VLA-Engine, Voice-UI y Docs-QA), compartiendo la imagen
   HydraOS y los pesos de modelos de su padre en vez de mantener copias
   propias.
-* 📦 **Versionado Cuentakilómetros:** Cada build real incrementa
-  automáticamente la versión de `pyproject.toml` (`bump_version.py`) - sin
-  ediciones manuales de versión.
+* 📦 **Versionado Cuentakilómetros:** La versión de `pyproject.toml` solo la sube el comando `bump` explícito (`python tools/hydra_project_tool.py bump`, que ejecuta `bump_version.py`) - compilar nunca la cambia.
 
 ---
 
@@ -171,7 +169,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 ├── build/                            # Salida de build local (ignorada por git)
 ├── pyproject.toml                    # Metadatos del paquete (versión con incremento cuentakilómetros)
 ├── bump_manifest_version.py          # Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)
-├── bump_version.py                   # Incremento de versión estilo cuentakilómetros (usado por build.sh/.bat)
+├── bump_version.py                   # Incremento de versión tipo cuentakilómetros (solo lo ejecuta el comando `bump` explícito)
 ├── build.sh / build.bat              # Crea el venv, instala (con extras de dev), corre tests, verifica la importación
 └── run.sh / run.bat                  # Ejecuta el punto de entrada (reenvia argumentos, ej. `decompose`)
 ```
@@ -199,8 +197,7 @@ build.bat
 run.bat
 ```
 
-`build.sh`/`build.bat` incrementan la versión (estilo cuentakilómetros, ver
-`bump_version.py`) antes de cada build real, y corren la suite de tests
+`build.sh`/`build.bat` nunca cambian la versión (solo `python tools/hydra_project_tool.py bump` la sube), y corren la suite de tests
 real (`pytest tests/`). Salida esperada de un `run.sh` sin argumentos:
 
 ```text

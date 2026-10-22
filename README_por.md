@@ -53,8 +53,7 @@ Trata a ambiguidade de alto nível e fornece recuperação semântica de erros: 
   sob o [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)
   (a par do VLA-Engine, Voice-UI e Docs-QA), partilhando a imagem HydraOS e os pesos
   de modelos do pai em vez de manter cópias próprias.
-* 📦 **Versionamento ao estilo conta-quilómetros:** cada compilação real sobe automaticamente a versão do
-  `pyproject.toml` (`bump_version.py`) - sem edições manuais de versão.
+* 📦 **Versionamento ao estilo conta-quilómetros:** A versão do `pyproject.toml` só é subida pelo comando `bump` explícito (`python tools/hydra_project_tool.py bump`, que executa o `bump_version.py`) - compilar nunca a altera.
 
 ---
 
@@ -162,8 +161,8 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   ├── build_test.py                 # Verificação de compilação sem subir a versão
 │   └── ci_validate.py                # Validação de manifesto/CHANGELOG/documentação usada pelo CI
 ├── build/                            # Saída da compilação local (ignorada pelo git)
-├── pyproject.toml                    # Metadados do pacote (versão subida ao estilo conta-quilómetros em cada compilação real)
-├── bump_version.py                   # Subida de versão nativa ao estilo conta-quilómetros (usada pelo build.sh/.bat)
+├── pyproject.toml                    # Metadados do pacote (versão subida só pelo comando bump explícito)
+├── bump_version.py                   # Subida de versão ao estilo conta-quilómetros (executada só pelo comando `bump` explícito)
 ├── bump_manifest_version.py          # Sincroniza a versão do hydra-umc.project.json com a nativa (--sync)
 ├── build.sh / build.bat              # Cria o venv, instala (com extras de desenvolvimento), executa os testes, verifica a importação
 └── run.sh / run.bat                  # Executa o ponto de entrada (reencaminha argumentos, por exemplo `decompose`)
@@ -192,8 +191,7 @@ build.bat
 run.bat
 ```
 
-O `build.sh`/`build.bat` sobe a versão (ao estilo conta-quilómetros, veja
-`bump_version.py`) antes de cada compilação real e executa a suite de testes real
+`build.sh`/`build.bat` nunca altera a versão (só `python tools/hydra_project_tool.py bump` a sobe) e executa a suite de testes real
 (`pytest tests/`). Saída esperada de um `run.sh` simples:
 
 ```text
