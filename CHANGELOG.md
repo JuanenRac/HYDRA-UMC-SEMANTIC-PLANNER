@@ -1,4 +1,4 @@
-# Changelog: HYDRA-UMC-SEMANTIC-PLANNER 🧩
+# Changelog
 
 All notable changes to this project are documented here.
 
@@ -138,7 +138,6 @@ All notable changes to this project are documented here.
 - Real verification: ran `decompose` live against a real goal (passes validation unchanged) and an unmatched goal (unchanged honest miss).
 
 ## [0.0.4] - Real v0 rule-based decomposition and recovery
-### Added
 - `primitives.py` - a real, closed vocabulary of robotic command primitives (`MOVE_TO`/`GRIP`/`RELEASE`/`INSPECT`/`WAIT`) a `Plan` is made of.
 - `decompose.py` - real rule-based task decomposition (`decompose_goal()`) over a small known goal vocabulary (assemble/pick-and-place/inspect). Honestly template-based, not a local LLM - same reasoning as the sibling HYDRA-UMC-VOICE-UI's real rule-based intent parser and HYDRA-UMC-DOCS-QA's real TF-IDF index instead of an embedding model.
 - `recovery.py` - real rule-based semantic recovery (`propose_recovery()`) over the MCU adapter error-code vocabulary (`INVALID_STATE`/`OUT_OF_RANGE`/`ESTOP_ACTIVE`/`TOOL_INCOMPATIBLE`/`TIMEOUT`/`UNSUPPORTED`), plus the README's own worked example (`GRIP_LOST_SEAL` -> increase pressure). `ESTOP_ACTIVE`/`UNSUPPORTED`/unknown codes always escalate to a human, matching the ecosystem safety rule that AI/UI never overrides a physical safety condition.
@@ -146,20 +145,17 @@ All notable changes to this project are documented here.
 - 14 new real tests (`tests/`) - decomposition coverage for every template plus an unmatched-goal case, recovery coverage for every rule including the safety-critical `ESTOP_ACTIVE` case and an unknown-code fallback, and a real end-to-end CLI round-trip for both subcommands.
 
 ## [0.0.3]
-### Added
 - Copyright/license header on every source file and build/run script.
 - `CHANGELOG.md` (this file).
 - Extended documentation across `README.md` and its 4 translations:
   advanced technical/architecture section, detailed build/run
   troubleshooting, and a full "Related Projects" section.
 
-### Changed
 - Inline comments explaining the *why* behind non-obvious decisions
   (versioning scheme, src-layout, why this child has no hardware/
   firmware/os/models of its own).
 
 ## [0.0.0]
-### Added
 - Initial Python scaffolding: `pyproject.toml` (setuptools, src-layout),
   `src/hydra_umc_semantic_planner/__init__.py` + `main.py` (real entry
   point - prints identity/version/role, exits 0).
