@@ -20,6 +20,7 @@
     "pattern": "^version\\s*=\\s*\"(\\d+)\\.(\\d+)\\.(\\d+)\""
   },
   "service": {
-    "systemd_unit": "hydra-umc-semantic-planner.service"
+    "systemd_unit": "hydra-umc-semantic-planner.service",
+    "health_path": "/stats"
   }
 }
