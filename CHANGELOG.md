@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here.
 
-## [Unreleased]
+## [0.1.4] - The gripper is followed along the plan and the parameters of a step cannot be changed
 
 - **The gripper is followed along the plan.** `validate_plan` walks the steps with a symbolic gripper (empty at the start): a GRIP while it already holds something, and a RELEASE with nothing held or of something other than what is held, are issues at their own step (`gripper_state_issues`). A plan may end holding its target; what the templates produce is always valid.
 - **The parameters of a step cannot be changed.** `Step.params` is a read-only, hashable `Params` (a plain dict is accepted and copied; `dataclasses.asdict` and JSON give the dict they always gave; the fingerprint of a plan is unchanged), so a step can be hashed and a plan cannot be edited after it was proposed.

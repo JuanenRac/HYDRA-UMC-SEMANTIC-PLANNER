@@ -28,7 +28,7 @@
 
 | | |
 |---|---|
-| Versão | `0.1.3` |
+| Versão | `0.1.4` |
 | Maturidade | Funcional |
 | Testes | 71 (`pytest`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
@@ -196,7 +196,7 @@ run.bat
 (`pytest tests/`). Saída esperada de um `run.sh` simples:
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.1.3
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.4
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 

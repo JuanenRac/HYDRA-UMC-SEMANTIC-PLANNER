@@ -28,7 +28,7 @@
 
 | | |
 |---|---|
-| 版本 | `0.1.3` |
+| 版本 | `0.1.4` |
 | 成熟度 | 可用 |
 | 测试 | 71 (`pytest`) |
 | 技术栈 | Python / local LLM (Llama-3 class) |
@@ -145,7 +145,7 @@ run.bat
 `run.sh` 的预期输出：
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.1.3
+HYDRA-UMC-SEMANTIC-PLANNER v0.1.4
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
