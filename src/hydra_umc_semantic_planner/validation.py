@@ -25,6 +25,11 @@ real feedback from a live executor this project doesn't have yet
 (HYDRA-UMC-ORCHESTRATOR, per this module's own docstring above) -
 fabricating a postcondition schema nobody could ever actually verify
 would be worse than not having one.
+
+What IS closed here is the state of the gripper along the plan, simulated symbolically (`gripper_state_issues`): a GRIP while the
+gripper already holds something, and a RELEASE of something it is not holding (or with nothing in it), are errors of the plan itself,
+visible before anything moves. Nothing is assumed about the start (the gripper is empty) beyond what a fixed template does; a plan
+that ends holding its target is allowed (picking up is a goal).
 """
 from __future__ import annotations
 
@@ -81,6 +86,33 @@ def validate_step(step: Step, capabilities: frozenset[str] | None = None) -> lis
     return issues
 
 
+def gripper_state_issues(plan: Plan) -> list[PlanIssue]:
+    """Walks the plan with a symbolic gripper: empty at the start, holding `target` after a GRIP, empty again after the RELEASE of the
+    thing held. A step that does not make sense in that state is an issue at its own index. Steps with an unusable `target` (missing,
+    not text) are left to `validate_step`; this only judges the order of GRIP and RELEASE."""
+    issues: list[PlanIssue] = []
+    holding: str | None = None
+    for index, step in enumerate(plan.steps):
+        if step.primitive not in (GRIP, RELEASE):
+            continue
+        target = step.params.get("target")
+        if not isinstance(target, str) or not target.strip():
+            continue
+        if step.primitive == GRIP:
+            if holding is not None:
+                issues.append(PlanIssue(index, GRIP, f"the gripper is already holding {holding!r}: it must be released before gripping {target!r}"))
+            else:
+                holding = target
+        else:
+            if holding is None:
+                issues.append(PlanIssue(index, RELEASE, f"nothing is held: there is nothing to release of {target!r}"))
+            elif holding != target:
+                issues.append(PlanIssue(index, RELEASE, f"the gripper holds {holding!r}, not {target!r}"))
+            else:
+                holding = None
+    return issues
+
+
 def validate_plan(plan: Plan, capabilities: frozenset[str] | None = None) -> list[PlanIssue]:
     """Real precondition validation over every step in `plan`, in order.
     An empty result means every step is genuinely executable as-is on a
@@ -92,6 +124,8 @@ def validate_plan(plan: Plan, capabilities: frozenset[str] | None = None) -> lis
     for index, step in enumerate(plan.steps):
         for issue in validate_step(step, capabilities):
             issues.append(PlanIssue(step_index=index, primitive=step.primitive, issue=issue))
+    issues.extend(gripper_state_issues(plan))
+    issues.sort(key=lambda found: found.step_index)
     return issues
 
 
