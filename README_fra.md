@@ -166,12 +166,14 @@ frères (VLA-Engine, Voice-UI, Docs-QA) :
 ```text
 HYDRA-UMC-SEMANTIC-PLANNER/
 ├── src/hydra_umc_semantic_planner/
+│   ├── __init__.py                    # Description et version du paquet
 │   ├── primitives.py                  # Vrai vocabulaire fermé de primitives de commande robot
 │   ├── decompose.py                    # Décomposition réelle de tâches à base de règles
 │   ├── recovery.py                      # Récupération sémantique réelle d'erreurs à base de règles
 │   ├── validation.py                    # Validation réelle des préconditions sur un Plan décomposé
 │   ├── api.py                             # Surface JSON/HTTP simple (http.server de stdlib) sur decompose/recover
-│   └── main.py                            # Point d'entrée + sous-commandes réelles `decompose`/`recover`
+│   ├── main.py                            # Point d'entrée + sous-commandes réelles `decompose`/`recover`
+│   └── approval.py                        # Ce qui doit être vrai avant qu'un plan puisse atteindre une couche d'exécution
 ├── tests/                            # Tests réels : décomposition, récupération, validation, api, tests de propriétés, CLI de bout en bout
 ├── docs/                             # Documentation et base de connaissances
 │   ├── CLI_REFERENCE.md               # Contrat public de ligne de commande
@@ -181,11 +183,14 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   └── hydra-umc-semantic-planner.service # Unité systemd de l'API locale decompose/recover sur la CM5
 ├── tools/
 │   ├── build_test.py                 # Vérification de build sans versionnage
-│   └── ci_validate.py                # Validation manifeste/CHANGELOG/docs utilisée par CI
+│   ├── ci_validate.py                # Validation manifeste/CHANGELOG/docs utilisée par CI
+│   ├── _doc_policy.py                # Règles de documentation partagées par la famille (copie de celle de HYDRA-UMC-SDK, tenue synchronisée)
+│   ├── _readme_parity.py             # Contrôle que les huit README partagent la même structure (copie de celui de HYDRA-UMC-SDK, tenue synchronisée)
+│   └── hydra_project_tool.py         # Les mêmes commandes dans chaque dépôt : validate, test, ci, version, status, bump
 ├── build/                            # Sortie de build locale (ignorée par git)
 ├── pyproject.toml                    # Métadonnées du paquet (version à incrément type compteur kilométrique)
+├── bump_version.py                   # Incrément de version façon compteur kilométrique (lancé seulement par la commande `bump` explicite)
 ├── bump_manifest_version.py          # Synchronise la version de hydra-umc.project.json avec la version native (--sync)
-├── bump_version.py                   # Incrément de version type compteur kilométrique (exécuté seulement par la commande `bump` explicite)
 ├── build.sh / build.bat              # Crée le venv, installe (avec extras dev), exécute les tests, vérifie l'import
 └── run.sh / run.bat                  # Exécute le point d'entrée (transmet les arguments, ex. `decompose`)
 ```

@@ -161,12 +161,14 @@ service into `docker-compose.yml` alongside its three siblings
 ```text
 HYDRA-UMC-SEMANTIC-PLANNER/
 ├── src/hydra_umc_semantic_planner/
+│   ├── __init__.py                    # Package description and version
 │   ├── primitives.py                  # Real closed vocabulary of robot command primitives
 │   ├── decompose.py                    # Real rule-based task decomposition
 │   ├── recovery.py                      # Real rule-based semantic error recovery
 │   ├── validation.py                    # Real precondition validation over a decomposed Plan
 │   ├── api.py                             # Plain JSON/HTTP surface (stdlib http.server) over decompose/recover
-│   └── main.py                            # Entry point + real `decompose`/`recover` subcommands
+│   ├── main.py                            # Entry point + real `decompose`/`recover` subcommands
+│   └── approval.py                        # What must be true before a plan may reach an executing layer
 ├── tests/                            # Real tests: decomposition, recovery, validation, api, property tests, end-to-end CLI
 ├── docs/                             # Documentation and knowledge base
 │   ├── CLI_REFERENCE.md               # Public command-line contract
@@ -176,7 +178,10 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   └── hydra-umc-semantic-planner.service # Local CM5 decompose/recover API systemd unit
 ├── tools/
 │   ├── build_test.py                 # Non-versioning build/compile check
-│   └── ci_validate.py                # Manifest/CHANGELOG/docs validation used by CI
+│   ├── ci_validate.py                # Manifest/CHANGELOG/docs validation used by CI
+│   ├── _doc_policy.py                # Documentation rules shared by the family (a copy of HYDRA-UMC-SDK's, kept in sync)
+│   ├── _readme_parity.py             # Check that the eight READMEs share one structure (a copy of HYDRA-UMC-SDK's, kept in sync)
+│   └── hydra_project_tool.py         # The same commands in every repository: validate, test, ci, version, status, bump
 ├── build/                            # Local build output (git-ignored)
 ├── pyproject.toml                    # Package metadata (version raised only by the explicit bump command)
 ├── bump_version.py                   # Odometer-style version bump (run only by the explicit `bump` command)

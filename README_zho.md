@@ -109,12 +109,14 @@ flowchart TB
 ```text
 HYDRA-UMC-SEMANTIC-PLANNER/
 ├── src/hydra_umc_semantic_planner/
+│   ├── __init__.py                    # 包说明与版本
 │   ├── primitives.py                  # 真实的、封闭的机器人命令原语词汇表
 │   ├── decompose.py                    # 真实的、基于规则的任务分解
 │   ├── recovery.py                      # 真实的、基于规则的语义错误恢复
 │   ├── validation.py                    # 对已分解 Plan 的真实前置条件验证
 │   ├── api.py                             # 简洁的 JSON/HTTP 接口(基于 stdlib http.server),桥接 decompose/recover
-│   └── main.py                            # 入口点 + 真实的 `decompose`/`recover` 子命令
+│   ├── main.py                            # 入口点 + 真实的 `decompose`/`recover` 子命令
+│   └── approval.py                        # 计划到达执行层之前必须满足的条件
 ├── tests/                            # 真实测试：分解、恢复、验证、api、属性测试、端到端 CLI
 ├── docs/                             # 文档与知识库
 │   ├── CLI_REFERENCE.md               # 公开命令行契约
@@ -124,9 +126,13 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 │   └── hydra-umc-semantic-planner.service # 本地 CM5 decompose/recover API 的 systemd 单元
 ├── tools/
 │   ├── build_test.py                 # 不递增版本号的构建检查
-│   └── ci_validate.py                # CI 使用的清单/CHANGELOG/文档校验
+│   ├── ci_validate.py                # CI 使用的清单/CHANGELOG/文档校验
+│   ├── _doc_policy.py                # 家族共享的文档规则 (HYDRA-UMC-SDK 的副本,保持同步)
+│   ├── _readme_parity.py             # 检查八个 README 结构一致 (HYDRA-UMC-SDK 的副本,保持同步)
+│   └── hydra_project_tool.py         # 每个仓库相同的命令: validate、test、ci、version、status、bump
 ├── build/                            # 本地构建输出（已被 git 忽略）
 ├── pyproject.toml                    # 包元数据（里程表式递增版本号）
+├── bump_version.py                   # 里程表式版本递增（仅由显式 `bump` 命令运行）
 ├── bump_manifest_version.py          # 将 hydra-umc.project.json 的版本与原生版本同步(--sync)
 ├── build.sh / build.bat              # 创建 venv、安装（含 dev 附加依赖）、运行测试、验证导入
 └── run.sh / run.bat                  # 运行入口点（转发参数，例如 `decompose`）
