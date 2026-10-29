@@ -1,22 +1,29 @@
+<!-- =============================================================================
+HYDRA-UMC-SEMANTIC-PLANNER - Rule-based mission planner and semantic error recovery
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-SEMANTIC-PLANNER banner" width="100%">
 </p>
 
-# 🧩 HYDRA-UMC-SEMANTIC-PLANNER
+# 🧭 HYDRA-UMC-SEMANTIC-PLANNER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | 🇫🇷 <b>Français</b> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🧠 Planificateur de mission à base de règles et système de récupération logique (LLM prévu)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licence-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Cerveau-Rule--based%20(LLM%20planned)-blueviolet.svg" alt="LLM">
-  <img src="https://img.shields.io/badge/Cible-Hailo--10%20(planned)-lightgrey.svg" alt="Hailo-10">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Tests-88%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.1.4-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** le vocabulaire fermé de primitives (`primitives.py`), la décomposition de tâches à base de règles (`decompose.py`), la récupération sémantique d'erreurs à base de règles sur une table fixe de codes d'erreur MCU (`recovery.py`), le validateur de préconditions qui refuse un plan mal formé plutôt que de le laisser passer (`validation.py`), et la surface JSON/HTTP `http.server` de la stdlib exposant cette même logique (`api.py` : `POST /decompose`, `POST /recover`, `GET /stats`) sont réels et testés (71 tests, `pytest`), y compris un test de fuzzing qui exécute `decompose_goal()` contre des centaines d'objectifs aléatoires/invalides avec une graine fixe et vérifie qu'il ne plante jamais ni ne renvoie de plan mal formé. Ce qui n'est PAS encore réel : il n'y a aucun LLM local nulle part dans ce code - `decompose.py` est de la correspondance de motifs/gabarits regex sur un petit vocabulaire d'objectifs fixe (assembler/pick-and-place/inspecter), pas de la compréhension du langage, et cela n'a jamais tourné contre un véritable module Hailo-10 (cet environnement n'en possède pas). Les puces « Agentic Workflow » et « Hailo-10 Optimized » ci-dessous sont explicitement marquées `(planned)` dans ce même README - elles décrivent le remplacement éventuel du noyau actuel à base de règles de `decompose_goal()`, pas quelque chose qui existe aujourd'hui. Voir `CHANGELOG.md` pour ce qui a déjà été livré exactement, et la FEUILLE DE ROUTE ci-dessous pour ce qui reste ouvert.
+**Vérification d'honnêteté - ce qui fonctionne réellement aujourd'hui :** le vocabulaire fermé de primitives (`primitives.py`), la décomposition de tâches à base de règles (`decompose.py`), la récupération sémantique d'erreurs à base de règles sur une table fixe de codes d'erreur MCU (`recovery.py`), le validateur de préconditions qui refuse un plan mal formé plutôt que de le laisser passer (`validation.py`), et la surface JSON/HTTP `http.server` de la stdlib exposant cette même logique (`api.py` : `POST /decompose`, `POST /recover`, `GET /stats`) sont réels et testés (88 tests, `pytest`), y compris un test de fuzzing qui exécute `decompose_goal()` contre des centaines d'objectifs aléatoires/invalides avec une graine fixe et vérifie qu'il ne plante jamais ni ne renvoie de plan mal formé. Ce qui n'est PAS encore réel : il n'y a aucun LLM local nulle part dans ce code - `decompose.py` est de la correspondance de motifs/gabarits regex sur un petit vocabulaire d'objectifs fixe (assembler/pick-and-place/inspecter), pas de la compréhension du langage, et cela n'a jamais tourné contre un véritable module Hailo-10 (cet environnement n'en possède pas). Les puces « Agentic Workflow » et « Hailo-10 Optimized » ci-dessous sont explicitement marquées `(planned)` dans ce même README - elles décrivent le remplacement éventuel du noyau actuel à base de règles de `decompose_goal()`, pas quelque chose qui existe aujourd'hui. Voir `CHANGELOG.md` pour ce qui a déjà été livré exactement, et la FEUILLE DE ROUTE ci-dessous pour ce qui reste ouvert.
 
 **Limites connues du planificateur à règles :** un objectif nié ou annulé (« ne pas ... », « jamais ... »), qui correspond à plus d'un modèle, sans objet ou de plus de 512 caractères ne produit aucun plan. L'objet est lu dans les mots qui suivent le verbe, pas à la fin de la phrase. Une décomposition est une proposition, pas un ordre : `POST /decompose` répond `executable: false` avec une empreinte, le coût estimé et une explication lisible, et `POST /release` (ou `release_for_execution()`) recalcule le coût et l'explication à partir du plan et vérifie l'empreinte de l'approbation avant que quoi que ce soit puisse être exécuté. L'approbation n'est pas encore signée : elle nomme une personne mais n'est pas un justificatif. `FailureContext.attempt` fait escalader vers un opérateur les récupérations `TIMEOUT` et `GRIP_LOST_SEAL` après 1 et 3 tentatives automatiques.
 
@@ -24,16 +31,20 @@
 
 > **État de la sûreté et de la cybersécurité :** cet écosystème n'est pas un système de sécurité certifié. Il n'existe pas encore de chaîne d'E-STOP matérielle, ni de limites ou de verrouillages imposés par le firmware, ni de commande de mouvement vérifiée ; les images de firmware sont contrôlées par CRC32 et un HMAC-SHA256 à clé partagée, pas par une signature asymétrique ; TLS et TLS mutuel sont optionnels et désactivés par défaut ; aucune carte propre n'a encore été assemblée ni testée. Lisez la [base de sécurité](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) et le [modèle de menaces](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) avant de vous fier à une affirmation d'ici pour la sécurité d'une personne.
 
+---
+
 ## 📋 En un coup d'œil
 
 | | |
 |---|---|
 | Version | `0.1.4` |
 | Maturité | Fonctionnel |
-| Tests | 71 (`pytest`) |
+| Tests | 88 (`python -m pytest -q tests`) |
 | Technologie | Python / local LLM (Llama-3 class) |
 | Cible | Le Raspberry Pi CM5 d'une cellule HYDRA-UMC |
 | Sur matériel réel | Pas encore : aucune exécution sur du matériel réel n'est consignée pour cette version |
+
+**Aller à :** [Présentation](#-présentation) · [Architecture](#-architecture) · [Démarrage rapide](#-démarrage-rapide) · [Tests](#-tests) · [Structure du dépôt](#-structure-du-dépôt) · [Projets liés](#-projets-liés)
 
 ## 🚦 État du projet
 
@@ -44,11 +55,11 @@ Chaque ligne est une partie de ce dépôt et le feu dit où elle en est aujourd'
 | Domaine | État | Ce que cela veut dire ici |
 |---|---|---|
 | Logiciel | 🟡 | Fonctionne pour son usage principal ; la vérification d'honnêteté ci-dessus liste ce qui manque encore |
-| Tests | 🟢 | 71 tests automatiques, exécutés à chaque modification |
+| Tests | 🟢 | 88 tests automatiques, exécutés à chaque modification |
 | Matériel réel | 🔴 | Pas encore : aucune exécution sur du matériel réel n'est consignée pour cette version |
 | Documentation | 🟢 | README en huit langues, vérifié par rapport au manifeste à chaque modification |
 
-## 1. 🛠️ APERÇU TECHNIQUE
+## 🎯 Présentation
 
 **HYDRA-UMC-SEMANTIC-PLANNER** est l'« orchestrateur logique » du nœud Cognitive AI. Il utilise des LLM locaux (Large Language Models) pour décomposer des objectifs complexes en primitives robotiques exploitables.
 
@@ -70,9 +81,18 @@ Il gère l'ambiguïté de haut niveau et permet la récupération d'erreurs sém
   propres copies.
 * 📦 **Versionnage compteur kilométrique :** La version de `pyproject.toml` n'est augmentée que par la commande `bump` explicite (`python tools/hydra_project_tool.py bump`, qui exécute `bump_version.py`) - compiler ne la change jamais.
 
----
+## 🧩 Rôle dans HYDRA-UMC
 
-## 2. 🔄 CYCLE DE PLANIFICATION
+**HYDRA-UMC-SEMANTIC-PLANNER** transforme un objectif de haut niveau en un plan fait d'un vocabulaire fermé de primitives du robot et propose une reprise quand une étape échoue. Aujourd'hui il est fondé sur des règles, pas sur un modèle de langage ; un plan n'est qu'une proposition tant qu'une personne nommée n'a pas approuvé ce plan exact.
+
+## 🏛️ Architecture
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-SEMANTIC-PLANNER architecture" width="100%">
+</p>
+
+<details>
+<summary>Version texte du diagramme (Mermaid)</summary>
 
 ```mermaid
 flowchart TB
@@ -85,9 +105,9 @@ flowchart TB
     REC --> EXEC
 ```
 
----
+</details>
 
-## 3. 🧱 ARCHITECTURE & DÉCISIONS DE CONCEPTION
+### ARCHITECTURE & DÉCISIONS DE CONCEPTION
 
 Ce dépôt est un **enfant** de la famille Cognitive AI Node - son parent,
 [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE),
@@ -159,53 +179,24 @@ frères (VLA-Engine, Voice-UI, Docs-QA) :
   la même propriété réelle (ne plante jamais, ne renvoie jamais de
   plan malformé) sans ajouter de nouvelle dépendance.
 
----
+## 🚀 Démarrage rapide
 
-## 📂 STRUCTURE DES RÉPERTOIRES
+Nécessite Python 3.10 ou plus récent.
 
-```text
-HYDRA-UMC-SEMANTIC-PLANNER/
-├── src/hydra_umc_semantic_planner/
-│   ├── __init__.py                    # Description et version du paquet
-│   ├── primitives.py                  # Vrai vocabulaire fermé de primitives de commande robot
-│   ├── decompose.py                    # Décomposition réelle de tâches à base de règles
-│   ├── recovery.py                      # Récupération sémantique réelle d'erreurs à base de règles
-│   ├── validation.py                    # Validation réelle des préconditions sur un Plan décomposé
-│   ├── api.py                             # Surface JSON/HTTP simple (http.server de stdlib) sur decompose/recover
-│   ├── main.py                            # Point d'entrée + sous-commandes réelles `decompose`/`recover`
-│   └── approval.py                        # Ce qui doit être vrai avant qu'un plan puisse atteindre une couche d'exécution
-├── tests/                            # Tests réels : décomposition, récupération, validation, api, tests de propriétés, CLI de bout en bout
-├── docs/                             # Documentation et base de connaissances
-│   ├── CLI_REFERENCE.md               # Contrat public de ligne de commande
-│   └── RECOVERY_CONTRACT.md           # Vocabulaire public de récupération
-├── images/                           # Médias et diagrammes
-├── systemd/
-│   └── hydra-umc-semantic-planner.service # Unité systemd de l'API locale decompose/recover sur la CM5
-├── tools/
-│   ├── build_test.py                 # Vérification de build sans versionnage
-│   ├── ci_validate.py                # Validation manifeste/CHANGELOG/docs utilisée par CI
-│   ├── _doc_policy.py                # Règles de documentation partagées par la famille (copie de celle de HYDRA-UMC-SDK, tenue synchronisée)
-│   ├── _readme_parity.py             # Contrôle que les huit README partagent la même structure (copie de celui de HYDRA-UMC-SDK, tenue synchronisée)
-│   └── hydra_project_tool.py         # Les mêmes commandes dans chaque dépôt : validate, test, ci, version, status, bump
-├── build/                            # Sortie de build locale (ignorée par git)
-├── pyproject.toml                    # Métadonnées du paquet (version à incrément type compteur kilométrique)
-├── bump_version.py                   # Incrément de version façon compteur kilométrique (lancé seulement par la commande `bump` explicite)
-├── bump_manifest_version.py          # Synchronise la version de hydra-umc.project.json avec la version native (--sync)
-├── build.sh / build.bat              # Crée le venv, installe (avec extras dev), exécute les tests, vérifie l'import
-└── run.sh / run.bat                  # Exécute le point d'entrée (transmet les arguments, ex. `decompose`)
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh decompose "assemble the pcb"
+./run.sh recover --component gripper --error-code TIMEOUT
+./run.sh serve --port 8110
 ```
 
-> **Remarque :** `hardware/` et `firmware/` ont été supprimés - ce nœud
-> fonctionne sur un module CM5 + Hailo-10 M.2 déjà existant, sans
-> conception matérielle/firmware propre. `os/` et `models/` ont également
-> été supprimés - l'image HydraOS et les poids de modèles Hailo-10
-> partagés se trouvent dans le projet parent
-> `HYDRA-UMC-COGNITIVE-NODE`, auquel ce projet se rattache en tant que
-> service (voir son `docker-compose.yml`).
+## 🧪 Tests
 
----
+88 tests automatiques s'exécutent avec `python -m pytest -q tests`. Ils n'ont besoin ni de matériel ni de rien en dehors de cette machine.
 
-## ⚙️ BUILD ET EXÉCUTION
+La CI exécute `HYDRA_UMC_CI=1 python tools/ci_validate.py`, qui vérifie le manifeste, les documents, les huit README et les images.
+
+## 🏗️ Compilation et publication
 
 Nécessite Python >= 3.10.
 
@@ -280,17 +271,60 @@ Voir [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) pour la référence compl�
   hydra_umc_semantic_planner"` a lui-même échoué - relancez avec le venv
   actif pour voir la vraie trace d'erreur.
 
----
+## 📂 Structure du dépôt
 
-## 🚀 FEUILLE DE ROUTE
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-SEMANTIC-PLANNER" width="100%">
+</p>
+
+<details>
+<summary>Version texte de l'arborescence</summary>
+
+```text
+HYDRA-UMC-SEMANTIC-PLANNER/
+├── src/hydra_umc_semantic_planner/   code source
+│   ├── __init__.py                   Description et version du paquet
+│   ├── primitives.py                 Vrai vocabulaire fermé de primitives de commande robot
+│   ├── decompose.py                  Décomposition réelle de tâches à base de règles
+│   ├── recovery.py                   Récupération sémantique réelle d'erreurs à base de règles
+│   ├── validation.py                 Validation réelle des préconditions sur un Plan décomposé
+│   ├── api.py                        Surface JSON/HTTP simple (http.server de stdlib) sur decompose/recover
+│   ├── main.py                       Point d'entrée + sous-commandes réelles `decompose`/`recover`
+│   └── approval.py                   Ce qui doit être vrai avant qu'un plan puisse atteindre une couche d'exécution
+├── tests/                            Tests réels : décomposition, récupération, validation, api, tests de propriétés, CLI de bout en bout
+├── docs/                             Documentation et base de connaissances
+├── images/                           Médias et diagrammes
+├── systemd/                          unité de service
+├── tools/                            outils du projet et vérifications de la CI
+├── .github/                          workflow de CI et modèles de tickets
+├── pyproject.toml                    Métadonnées du paquet (version à incrément type compteur kilométrique)
+├── bump_version.py                   Incrément de version façon compteur kilométrique (lancé seulement par la commande `bump` explicite)
+├── bump_manifest_version.py          Synchronise la version de hydra-umc.project.json avec la version native (--sync)
+├── build.sh / build.bat              Crée le venv, installe (avec extras dev), exécute les tests, vérifie l'import
+├── run.sh / run.bat                  Exécute le point d'entrée (transmet les arguments, ex. `decompose`)
+├── CHANGELOG.md                      ce qui a changé à chaque version
+├── Dockerfile                        image de conteneur
+├── build-test.sh                     vérification de build sans modification
+├── hydra-umc.project.json            manifeste : version, maturité, famille
+└── test.sh                           lance les tests
+```
+
+</details>
+
+## 🗺️ Feuille de route et limites connues
+
+**Limites connues aujourd'hui**
+
 * **Phase 1 :** Déploiement du moteur VLA et traitement des entrées multimodales sur Hailo-10.
 * **Phase 2 :** Intégration du planificateur sémantique avec des modèles de comportement en essaim et une mémoire à long terme.
 * **Phase 3 :** Exécution locale à faible latence de l'interface vocale et suppression du bruit industriel.
 * **Phase 4 :** Coordination multi-agents pour la décomposition d'objectifs partagés et optimisation de la récupération sémantique.
 
----
+## 🌍 Langues
 
-## 🔗 Projets Liés
+Ce README et les documents du dépôt existent en huit langues : anglais, espagnol, allemand, français, italien, japonais, chinois et portugais (Portugal). Ils sont écrits ensemble et la CI vérifie que les huit fichiers ont les mêmes sections et les mêmes liens. Ce dépôt n'a ni écran ni catalogue de messages propre, il n'y a donc aucune chaîne d'interface à traduire.
+
+## 🔗 Projets liés
 
 Ce projet fait partie de l'écosystème robotique HYDRA-UMC du même auteur (JuanenRac / Electro Hobby 3D). Bon à savoir, car une demande pourrait en réalité concerner l'un de ceux-ci plutôt que ce dépôt.
 
@@ -381,20 +415,26 @@ Ce projet fait partie de l'écosystème robotique HYDRA-UMC du même auteur (Jua
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — coordinateur d'incidents de maintenance : un rôle edge à faible privilège collecte un instantané d'inventaire/santé assaini, un rôle control-plane le rend en lecture seule et demande à un fournisseur d'IA de suggérer un diagnostic - n'applique jamais de correctif ni ne déploie rien.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — hôte de développement reproductible (Raspberry Pi 5 / CM5) qui héberge le code source de l'écosystème et exécute des tâches de compilation/test délimitées via une file d'attente durable ; un rôle de développement dédié, explicitement distinct d'un CM5 opérationnel.
 
----
+## 📚 Documentation
 
-## 📚 Documentation & Communauté
+Où lire la suite :
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — pile technologique et lignes directrices de codage pour une pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — les normes de comportement attendues dans cette communauté.
-- **[SECURITY.md](SECURITY.md)** — comment signaler une vulnérabilité, et les véritables axes de sécurité de ce projet.
-- **[SUPPORT.md](SUPPORT.md)** — où poser des questions et signaler des bugs.
-- **[LICENSE.md](LICENSE.md)** — la licence propre de ce projet.
+* [Base de sécurité de l'écosystème](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [Modèle de menaces de l'écosystème](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [Journal des modifications de ce dépôt](CHANGELOG.md)
+* [Licence de ce dépôt](LICENSE.md)
+
+## 🤝 Contribuer et communauté
+
+* Avant une pull request, exécutez `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py` (ou `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`) : il doit afficher `CI_VALIDATION=PASS`. N'exécutez pas `build.sh` ni `build.bat` pour cette vérification ; compiler n'est pas vérifier.
+* Les huit README sont écrits à partir d'une source unique dans HYDRA-UMC-DOCS ; ne les modifiez pas à la main. Changez la source et réécrivez-les avec `tools/make_readmes.py`.
+* N'affirmez pas dans un README ce qui n'a pas tourné : écrivez « simulé » ou « non essayé sur matériel » quand c'est la vérité.
+* Voir [CONTRIBUTING.md](CONTRIBUTING.md), le [code de conduite](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) et [SUPPORT.md](SUPPORT.md).
 
 ## 👤 AUTEUR
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 LICENCE
-GPL-3.0 - Voir le fichier LICENSE pour plus de détails.
+
+GPL-3.0-or-later - [LICENSE](LICENSE).

@@ -1,0 +1,572 @@
+{
+  "repo": "HYDRA-UMC-SEMANTIC-PLANNER",
+  "ecosystem": "hydra",
+  "svg": "en",
+  "exempt": [
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+    "LICENSE",
+    "LICENSE.md",
+    "build-test.bat",
+    "test.bat"
+  ],
+  "cards": [
+    {
+      "name": "src/hydra_umc_semantic_planner/",
+      "span": 3,
+      "accent": "a",
+      "rows": [
+        {
+          "name": "__init__.py",
+          "desc": {
+            "en": "Package description and version",
+            "es": "Descripción y versión del paquete",
+            "de": "Paketbeschreibung und Version",
+            "fr": "Description et version du paquet",
+            "it": "Descrizione e versione del pacchetto",
+            "ja": "パッケージの説明とバージョン",
+            "zh": "包说明与版本",
+            "pt": "Descrição e versão do pacote"
+          },
+          "tree_desc": {
+            "en": "Package description and version",
+            "es": "Descripción y versión del paquete",
+            "de": "Paketbeschreibung und Version",
+            "fr": "Description et version du paquet",
+            "it": "Descrizione e versione del pacchetto",
+            "ja": "パッケージの説明とバージョン",
+            "zh": "包说明与版本",
+            "pt": "Descrição e versão do pacote"
+          }
+        },
+        {
+          "name": "primitives.py",
+          "desc": {
+            "en": "Real closed vocabulary of robot command",
+            "es": "Vocabulario cerrado real de primitivas de",
+            "de": "Echtes geschlossenes Vokabular von",
+            "fr": "Vrai vocabulaire fermé de primitives de",
+            "it": "Vero vocabolario chiuso di primitive di",
+            "ja": "実際の、閉じたロボットコマンドプリミティブの",
+            "zh": "真实的、封闭的机器人命令原语词汇表",
+            "pt": "Vocabulário fechado e real de primitivas de"
+          },
+          "tree_desc": {
+            "en": "Real closed vocabulary of robot command primitives",
+            "es": "Vocabulario cerrado real de primitivas de comando del robot",
+            "de": "Echtes geschlossenes Vokabular von Roboter-Befehlsprimitiven",
+            "fr": "Vrai vocabulaire fermé de primitives de commande robot",
+            "it": "Vero vocabolario chiuso di primitive di comando del robot",
+            "ja": "実際の、閉じたロボットコマンドプリミティブの語彙",
+            "zh": "真实的、封闭的机器人命令原语词汇表",
+            "pt": "Vocabulário fechado e real de primitivas de comandos do robô"
+          }
+        },
+        {
+          "name": "decompose.py",
+          "desc": {
+            "en": "Real rule-based task decomposition",
+            "es": "Descomposición real de tareas basada en",
+            "de": "Echte regelbasierte Aufgabenzerlegung",
+            "fr": "Décomposition réelle de tâches à base de",
+            "it": "Decomposizione reale dei compiti basata su",
+            "ja": "実際の、ルールベースのタスク分解",
+            "zh": "真实的、基于规则的任务分解",
+            "pt": "Decomposição real de tarefas baseada em"
+          },
+          "tree_desc": {
+            "en": "Real rule-based task decomposition",
+            "es": "Descomposición real de tareas basada en reglas",
+            "de": "Echte regelbasierte Aufgabenzerlegung",
+            "fr": "Décomposition réelle de tâches à base de règles",
+            "it": "Decomposizione reale dei compiti basata su regole",
+            "ja": "実際の、ルールベースのタスク分解",
+            "zh": "真实的、基于规则的任务分解",
+            "pt": "Decomposição real de tarefas baseada em regras"
+          }
+        },
+        {
+          "name": "recovery.py",
+          "desc": {
+            "en": "Real rule-based semantic error recovery",
+            "es": "Recuperación semántica real de errores",
+            "de": "Echte regelbasierte semantische",
+            "fr": "Récupération sémantique réelle d'erreurs à",
+            "it": "Recupero semantico reale degli errori",
+            "ja": "実際の、ルールベースの意味的エラー復旧",
+            "zh": "真实的、基于规则的语义错误恢复",
+            "pt": "Recuperação semântica real de erros baseada"
+          },
+          "tree_desc": {
+            "en": "Real rule-based semantic error recovery",
+            "es": "Recuperación semántica real de errores basada en reglas",
+            "de": "Echte regelbasierte semantische Fehlerwiederherstellung",
+            "fr": "Récupération sémantique réelle d'erreurs à base de règles",
+            "it": "Recupero semantico reale degli errori basato su regole",
+            "ja": "実際の、ルールベースの意味的エラー復旧",
+            "zh": "真实的、基于规则的语义错误恢复",
+            "pt": "Recuperação semântica real de erros baseada em regras"
+          }
+        },
+        {
+          "name": "validation.py",
+          "desc": {
+            "en": "Real precondition validation",
+            "es": "Validación real de precondiciones sobre un",
+            "de": "Echte Präconditions-Validierung über einen",
+            "fr": "Validation réelle des préconditions sur un",
+            "it": "Validazione reale delle precondizioni su un",
+            "ja": "分解された Plan に対する実際の前提条件",
+            "zh": "对已分解 Plan 的真实前置条件验证",
+            "pt": "Validação real de pré-condições sobre um"
+          },
+          "tree_desc": {
+            "en": "Real precondition validation over a decomposed Plan",
+            "es": "Validación real de precondiciones sobre un Plan descompuesto",
+            "de": "Echte Präconditions-Validierung über einen zerlegten Plan",
+            "fr": "Validation réelle des préconditions sur un Plan décomposé",
+            "it": "Validazione reale delle precondizioni su un Plan decomposto",
+            "ja": "分解された Plan に対する実際の前提条件検証",
+            "zh": "对已分解 Plan 的真实前置条件验证",
+            "pt": "Validação real de pré-condições sobre um Plan decomposto"
+          }
+        },
+        {
+          "name": "api.py",
+          "desc": {
+            "en": "Plain JSON/HTTP surface",
+            "es": "Superficie JSON/HTTP plana",
+            "de": "Einfache JSON/HTTP-Oberfläche",
+            "fr": "Surface JSON/HTTP simple",
+            "it": "Superficie JSON/HTTP semplice",
+            "ja": "シンプルなJSON/HTTPサーフェス(st",
+            "zh": "简洁的 JSON/HTTP 接口(基于 st",
+            "pt": "Superfície JSON/HTTP simples"
+          },
+          "tree_desc": {
+            "en": "Plain JSON/HTTP surface (stdlib http.server) over decompose/recover",
+            "es": "Superficie JSON/HTTP plana (http.server de stdlib) sobre decompose/recover",
+            "de": "Einfache JSON/HTTP-Oberfläche (stdlib http.server) über decompose/recover",
+            "fr": "Surface JSON/HTTP simple (http.server de stdlib) sur decompose/recover",
+            "it": "Superficie JSON/HTTP semplice (http.server di stdlib) su decompose/recover",
+            "ja": "シンプルなJSON/HTTPサーフェス(stdlibのhttp.server)。decompose/recoverを橋渡し",
+            "zh": "简洁的 JSON/HTTP 接口(基于 stdlib http.server),桥接 decompose/recover",
+            "pt": "Superfície JSON/HTTP simples (http.server da biblioteca padrão) sobre decompose/recover"
+          }
+        },
+        {
+          "name": "main.py",
+          "desc": {
+            "en": "Entry point + real `decompose`/`recover`",
+            "es": "Punto de entrada + subcomandos reales",
+            "de": "Einstiegspunkt + echte Subcommands",
+            "fr": "Point d'entrée + sous-commandes réelles",
+            "it": "Punto di ingresso + sottocomandi reali",
+            "ja": "エントリポイント + 実際の `decomp",
+            "zh": "入口点 + 真实的 `decompose`/",
+            "pt": "Ponto de entrada + subcomandos reais"
+          },
+          "tree_desc": {
+            "en": "Entry point + real `decompose`/`recover` subcommands",
+            "es": "Punto de entrada + subcomandos reales `decompose`/`recover`",
+            "de": "Einstiegspunkt + echte Subcommands `decompose`/`recover`",
+            "fr": "Point d'entrée + sous-commandes réelles `decompose`/`recover`",
+            "it": "Punto di ingresso + sottocomandi reali `decompose`/`recover`",
+            "ja": "エントリポイント + 実際の `decompose`/`recover` サブコマンド",
+            "zh": "入口点 + 真实的 `decompose`/`recover` 子命令",
+            "pt": "Ponto de entrada + subcomandos reais `decompose`/`recover`"
+          }
+        },
+        {
+          "name": "approval.py",
+          "desc": {
+            "en": "What must be true before a plan may reach",
+            "es": "Lo que debe cumplirse antes de que un plan",
+            "de": "Was gelten muss",
+            "fr": "Ce qui doit être vrai avant qu'un plan",
+            "it": "Ciò che deve valere prima che un piano",
+            "ja": "プランが実行層に到達する前に満たすべき条件",
+            "zh": "计划到达执行层之前必须满足的条件",
+            "pt": "O que tem de ser verdade antes de um plano"
+          },
+          "tree_desc": {
+            "en": "What must be true before a plan may reach an executing layer",
+            "es": "Lo que debe cumplirse antes de que un plan llegue a una capa que ejecuta",
+            "de": "Was gelten muss, bevor ein Plan eine ausführende Schicht erreichen darf",
+            "fr": "Ce qui doit être vrai avant qu'un plan puisse atteindre une couche d'exécution",
+            "it": "Ciò che deve valere prima che un piano possa raggiungere uno strato che esegue",
+            "ja": "プランが実行層に到達する前に満たすべき条件",
+            "zh": "计划到达执行层之前必须满足的条件",
+            "pt": "O que tem de ser verdade antes de um plano chegar a uma camada que executa"
+          }
+        }
+      ],
+      "tree_head": {
+        "en": "source code",
+        "es": "código fuente",
+        "de": "Quellcode",
+        "fr": "code source",
+        "it": "codice sorgente",
+        "ja": "ソースコード",
+        "zh": "源代码",
+        "pt": "código-fonte"
+      },
+      "sub": {
+        "en": "source code",
+        "es": "código fuente",
+        "de": "Quellcode",
+        "fr": "code source",
+        "it": "codice sorgente",
+        "ja": "ソースコード",
+        "zh": "源代码",
+        "pt": "código-fonte"
+      }
+    },
+    {
+      "name": {
+        "en": "folders",
+        "es": "carpetas",
+        "de": "Ordner",
+        "fr": "dossiers",
+        "it": "cartelle",
+        "ja": "フォルダ",
+        "zh": "文件夹",
+        "pt": "pastas"
+      },
+      "kind": "group",
+      "span": 3,
+      "accent": "b",
+      "columns": 2,
+      "rows": [
+        {
+          "name": "tests/",
+          "desc": {
+            "en": "Real tests: decomposition",
+            "es": "Tests reales: descomposición",
+            "de": "Echte Tests: Zerlegung",
+            "fr": "Tests réels : décomposition",
+            "it": "Test reali: decomposizione",
+            "ja": "実際のテスト：分解、復旧、検証、api、プロ",
+            "zh": "真实测试：分解、恢复、验证、api、属性测试",
+            "pt": "Testes reais: decomposição"
+          },
+          "tree_desc": {
+            "en": "Real tests: decomposition, recovery, validation, api, property tests, end-to-end CLI",
+            "es": "Tests reales: descomposición, recuperación, validación, api, tests de propiedades, CLI end-to-end",
+            "de": "Echte Tests: Zerlegung, Wiederherstellung, Validierung, api, Property-Tests, End-to-End-CLI",
+            "fr": "Tests réels : décomposition, récupération, validation, api, tests de propriétés, CLI de bout en bout",
+            "it": "Test reali: decomposizione, recupero, validazione, api, test di proprietà, CLI end-to-end",
+            "ja": "実際のテスト：分解、復旧、検証、api、プロパティテスト、エンドツーエンド CLI",
+            "zh": "真实测试：分解、恢复、验证、api、属性测试、端到端 CLI",
+            "pt": "Testes reais: decomposição, recuperação, validação, api, testes de propriedades, CLI de ponta a ponta"
+          }
+        },
+        {
+          "name": "docs/",
+          "desc": {
+            "en": "Documentation and knowledge base",
+            "es": "Documentación y base de conocimientos",
+            "de": "Dokumentation und Wissensdatenbank",
+            "fr": "Documentation et base de connaissances",
+            "it": "Documentazione e base di conoscenza",
+            "ja": "ドキュメントとナレッジベース",
+            "zh": "文档与知识库",
+            "pt": "Documentação e base de conhecimento"
+          },
+          "tree_desc": {
+            "en": "Documentation and knowledge base",
+            "es": "Documentación y base de conocimientos",
+            "de": "Dokumentation und Wissensdatenbank",
+            "fr": "Documentation et base de connaissances",
+            "it": "Documentazione e base di conoscenza",
+            "ja": "ドキュメントとナレッジベース",
+            "zh": "文档与知识库",
+            "pt": "Documentação e base de conhecimento"
+          }
+        },
+        {
+          "name": "images/",
+          "desc": {
+            "en": "Media and diagrams",
+            "es": "Medios y diagramas",
+            "de": "Medien und Diagramme",
+            "fr": "Médias et diagrammes",
+            "it": "Media e diagrammi",
+            "ja": "メディアと図表",
+            "zh": "媒体与图表",
+            "pt": "Multimédia e diagramas"
+          },
+          "tree_desc": {
+            "en": "Media and diagrams",
+            "es": "Medios y diagramas",
+            "de": "Medien und Diagramme",
+            "fr": "Médias et diagrammes",
+            "it": "Media e diagrammi",
+            "ja": "メディアと図表",
+            "zh": "媒体与图表",
+            "pt": "Multimédia e diagramas"
+          }
+        },
+        {
+          "name": "systemd/",
+          "desc": {
+            "en": "service unit",
+            "es": "unidad de servicio",
+            "de": "Dienst-Unit",
+            "fr": "unité de service",
+            "it": "unità di servizio",
+            "ja": "サービスユニット",
+            "zh": "服务单元",
+            "pt": "unidade de serviço"
+          },
+          "tree_desc": {
+            "en": "service unit",
+            "es": "unidad de servicio",
+            "de": "Dienst-Unit",
+            "fr": "unité de service",
+            "it": "unità di servizio",
+            "ja": "サービスユニット",
+            "zh": "服务单元",
+            "pt": "unidade de serviço"
+          }
+        },
+        {
+          "name": "tools/",
+          "desc": {
+            "en": "project tools and CI checks",
+            "es": "herramientas del proyecto y comprobaciones",
+            "de": "Projektwerkzeuge und CI-Prüfungen",
+            "fr": "outils du projet et vérifications de la CI",
+            "it": "strumenti del progetto e controlli della CI",
+            "ja": "プロジェクトのツールと CI の検査",
+            "zh": "项目工具和 CI 检查",
+            "pt": "ferramentas do projeto e verificações da CI"
+          },
+          "tree_desc": {
+            "en": "project tools and CI checks",
+            "es": "herramientas del proyecto y comprobaciones del CI",
+            "de": "Projektwerkzeuge und CI-Prüfungen",
+            "fr": "outils du projet et vérifications de la CI",
+            "it": "strumenti del progetto e controlli della CI",
+            "ja": "プロジェクトのツールと CI の検査",
+            "zh": "项目工具和 CI 检查",
+            "pt": "ferramentas do projeto e verificações da CI"
+          }
+        },
+        {
+          "name": ".github/",
+          "desc": {
+            "en": "CI workflow and issue templates",
+            "es": "flujo de CI y plantillas de incidencias",
+            "de": "CI-Workflow und Issue-Vorlagen",
+            "fr": "workflow de CI et modèles de tickets",
+            "it": "workflow di CI e modelli di segnalazione",
+            "ja": "CI ワークフローと Issue テンプレート",
+            "zh": "CI 工作流和 Issue 模板",
+            "pt": "fluxo de CI e modelos de problemas"
+          }
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "project files",
+        "es": "ficheros del proyecto",
+        "de": "Projektdateien",
+        "fr": "fichiers du projet",
+        "it": "file del progetto",
+        "ja": "プロジェクトのファイル",
+        "zh": "项目文件",
+        "pt": "ficheiros do projeto"
+      },
+      "kind": "group",
+      "span": 3,
+      "accent": "c",
+      "columns": 2,
+      "rows": [
+        {
+          "name": "pyproject.toml",
+          "desc": {
+            "en": "Package metadata",
+            "es": "Metadatos del paquete",
+            "de": "Paketmetadaten",
+            "fr": "Métadonnées du paquet",
+            "it": "Metadati del pacchetto",
+            "ja": "パッケージのメタデータ",
+            "zh": "包的元数据",
+            "pt": "Metadados do pacote"
+          },
+          "tree_desc": {
+            "en": "Package metadata (version raised only by the explicit bump command)",
+            "es": "Metadatos del paquete (versión con incremento cuentakilómetros)",
+            "de": "Paketmetadaten",
+            "fr": "Métadonnées du paquet (version à incrément type compteur kilométrique)",
+            "it": "Metadati del pacchetto (versione a incremento contachilometri)",
+            "ja": "パッケージのメタデータ",
+            "zh": "包的元数据",
+            "pt": "Metadados do pacote (versão subida só pelo comando bump explícito)"
+          }
+        },
+        {
+          "name": "bump_version.py",
+          "desc": {
+            "en": "explicit version bump",
+            "es": "Incremento de versión tipo cuentakilómetros",
+            "de": "ausdrückliche Versionserhöhung",
+            "fr": "Incrément de version façon compteur",
+            "it": "Incremento di versione a contachilometri",
+            "ja": "明示的なバージョン更新",
+            "zh": "显式提升版本",
+            "pt": "Incremento de versão tipo conta-quilómetros"
+          },
+          "tree_desc": {
+            "en": "explicit version bump",
+            "es": "Incremento de versión tipo cuentakilómetros (solo lo ejecuta el comando `bump` explícito)",
+            "de": "ausdrückliche Versionserhöhung",
+            "fr": "Incrément de version façon compteur kilométrique (lancé seulement par la commande `bump` explicite)",
+            "it": "Incremento di versione a contachilometri (eseguito solo dal comando `bump` esplicito)",
+            "ja": "明示的なバージョン更新",
+            "zh": "显式提升版本",
+            "pt": "Incremento de versão tipo conta-quilómetros (só é executado pelo comando `bump` explícito)"
+          }
+        },
+        {
+          "name": "bump_manifest_version.py",
+          "desc": {
+            "en": "Syncs hydra-umc.project.json's version",
+            "es": "Sincroniza la versión de",
+            "de": "Synchronisiert die Version von",
+            "fr": "Synchronise la version de",
+            "it": "Sincronizza la versione di",
+            "ja": "hydra-umc.project.json",
+            "zh": "将 hydra-umc.project.js",
+            "pt": "Sincroniza a versão do"
+          },
+          "tree_desc": {
+            "en": "Syncs hydra-umc.project.json's version to the native one (--sync)",
+            "es": "Sincroniza la versión de hydra-umc.project.json con la nativa (--sync)",
+            "de": "Synchronisiert die Version von hydra-umc.project.json mit der nativen (--sync)",
+            "fr": "Synchronise la version de hydra-umc.project.json avec la version native (--sync)",
+            "it": "Sincronizza la versione di hydra-umc.project.json con quella nativa (--sync)",
+            "ja": "hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)",
+            "zh": "将 hydra-umc.project.json 的版本与原生版本同步(--sync)",
+            "pt": "Sincroniza a versão do hydra-umc.project.json com a nativa (--sync)"
+          }
+        },
+        {
+          "name": "build.sh / build.bat",
+          "desc": {
+            "en": "Create venv, install",
+            "es": "Crea el venv, instala",
+            "de": "Erstellt das venv, installiert",
+            "fr": "Crée le venv, installe",
+            "it": "Crea il venv, installa",
+            "ja": "venv 作成、インストール",
+            "zh": "创建 venv、安装（含 dev 附加依赖）",
+            "pt": "Cria o venv, instala"
+          },
+          "tree_desc": {
+            "en": "Create venv, install (with dev extras), run tests, verify import",
+            "es": "Crea el venv, instala (con extras de dev), corre tests, verifica la importación",
+            "de": "Erstellt das venv, installiert (mit Dev-Extras), führt Tests aus, prüft den Import",
+            "fr": "Crée le venv, installe (avec extras dev), exécute les tests, vérifie l'import",
+            "it": "Crea il venv, installa (con extra dev), esegue i test, verifica l'import",
+            "ja": "venv 作成、インストール（dev エクストラ付き）、テスト実行、インポート検証",
+            "zh": "创建 venv、安装（含 dev 附加依赖）、运行测试、验证导入",
+            "pt": "Cria o venv, instala (com extras de desenvolvimento), executa os testes, verifica a importação"
+          }
+        },
+        {
+          "name": "run.sh / run.bat",
+          "desc": {
+            "en": "Run the entry point",
+            "es": "Ejecuta el punto de entrada",
+            "de": "Führt den Einstiegspunkt aus",
+            "fr": "Exécute le point d'entrée",
+            "it": "Esegue il punto di ingresso",
+            "ja": "エントリポイントを実行（引数を転送",
+            "zh": "运行入口点（转发参数，例如 `decompo",
+            "pt": "Executa o ponto de entrada"
+          },
+          "tree_desc": {
+            "en": "Run the entry point (forwards args, e.g. `decompose`)",
+            "es": "Ejecuta el punto de entrada (reenvia argumentos, ej. `decompose`)",
+            "de": "Führt den Einstiegspunkt aus (leitet Argumente weiter, z. B. `decompose`)",
+            "fr": "Exécute le point d'entrée (transmet les arguments, ex. `decompose`)",
+            "it": "Esegue il punto di ingresso (inoltra gli argomenti, es. `decompose`)",
+            "ja": "エントリポイントを実行（引数を転送、例：`decompose`）",
+            "zh": "运行入口点（转发参数，例如 `decompose`）",
+            "pt": "Executa o ponto de entrada (reencaminha argumentos, por exemplo `decompose`)"
+          }
+        },
+        {
+          "name": "CHANGELOG.md",
+          "desc": {
+            "en": "what changed in each version",
+            "es": "qué cambió en cada versión",
+            "de": "was sich in jeder Version geändert hat",
+            "fr": "ce qui a changé à chaque version",
+            "it": "cosa è cambiato in ogni versione",
+            "ja": "各バージョンの変更点",
+            "zh": "每个版本的变更",
+            "pt": "o que mudou em cada versão"
+          }
+        },
+        {
+          "name": "Dockerfile",
+          "desc": {
+            "en": "container image",
+            "es": "imagen de contenedor",
+            "de": "Container-Image",
+            "fr": "image de conteneur",
+            "it": "immagine del container",
+            "ja": "コンテナイメージ",
+            "zh": "容器镜像",
+            "pt": "imagem de contentor"
+          }
+        },
+        {
+          "name": "build-test.sh",
+          "desc": {
+            "en": "non-mutating build check",
+            "es": "comprobación de compilación sin cambios",
+            "de": "Build-Prüfung ohne Änderungen",
+            "fr": "vérification de build sans modification",
+            "it": "controllo di build senza modifiche",
+            "ja": "変更を伴わないビルド確認",
+            "zh": "不修改内容的构建检查",
+            "pt": "verificação de compilação sem alterações"
+          }
+        },
+        {
+          "name": "hydra-umc.project.json",
+          "desc": {
+            "en": "manifest: version, maturity, family",
+            "es": "manifiesto: versión, madurez, familia",
+            "de": "Manifest: Version, Reifegrad, Familie",
+            "fr": "manifeste : version, maturité, famille",
+            "it": "manifesto: versione, maturità, famiglia",
+            "ja": "マニフェスト：バージョン、成熟度、ファミリー",
+            "zh": "清单：版本、成熟度、系列",
+            "pt": "manifesto: versão, maturidade, família"
+          }
+        },
+        {
+          "name": "test.sh",
+          "desc": {
+            "en": "runs the tests",
+            "es": "ejecuta las pruebas",
+            "de": "führt die Tests aus",
+            "fr": "lance les tests",
+            "it": "esegue i test",
+            "ja": "テストを実行",
+            "zh": "运行测试",
+            "pt": "executa os testes"
+          }
+        }
+      ]
+    }
+  ]
+}

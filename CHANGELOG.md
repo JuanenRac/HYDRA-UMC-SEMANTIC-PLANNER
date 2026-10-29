@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **README in the universal layout:** the README and its seven translations follow the layout that the four families share (22 sections in a fixed order), with an architecture picture and a repository-structure picture drawn from `docs/architecture.json` and `docs/structure.json`; the CI validator checks both pictures and the file tree.
+
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 - `docs/LLM_REQUIREMENTS.md` lists what must hold, and be tested, before a language model is connected to the planner: closed vocabulary, targets from the catalogue of the cell, untrusted text kept apart, limits and approval outside the model, explanation produced by code.
 
@@ -170,7 +172,7 @@ All notable changes to this project are documented here.
 - Initial Python scaffolding: `pyproject.toml` (setuptools, src-layout),
   `src/hydra_umc_semantic_planner/__init__.py` + `main.py` (real entry
   point - prints identity/version/role, exits 0).
-- `bump_version.py` - odometer-style version bump applied to
+- `bump_version.py` - version bump applied to
   `pyproject.toml` and mirrored into `__init__.py`.
 - `build.sh` / `build.bat` - create/activate a venv, install the package
   editable, verify it compiles and imports.

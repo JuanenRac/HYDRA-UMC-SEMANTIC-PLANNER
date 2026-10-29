@@ -1,17 +1,24 @@
+<!-- =============================================================================
+HYDRA-UMC-SEMANTIC-PLANNER - Rule-based mission planner and semantic error recovery
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-SEMANTIC-PLANNER banner" width="100%">
 </p>
 
-# 🧩 HYDRA-UMC-SEMANTIC-PLANNER
+# 🧭 HYDRA-UMC-SEMANTIC-PLANNER
 
 <p align="center"><a href="README.md">🇺🇸 English</a> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | 🇯🇵 <b>日本語</b> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🧠 ルールベースのミッションプランナー & ロジック復旧システム（LLM は計画中）
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Licencia-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Brain-Rule--based%20(LLM%20planned)-blueviolet.svg" alt="LLM">
-  <img src="https://img.shields.io/badge/Target-Hailo--10%20(planned)-lightgrey.svg" alt="Hailo-10">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Tests-88%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.1.4-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
@@ -24,16 +31,20 @@
 
 > **安全性とセキュリティの現状:** このエコシステムは認証された安全システムではありません。ハードウェアの E-STOP 経路、ファームウェアが強制する制限やインターロック、検証済みの動作コマンドはまだありません。ファームウェアイメージは CRC32 と共有鍵の HMAC-SHA256 で検査しており、非対称署名ではありません。TLS と相互 TLS は任意で、既定では無効です。独自基板はまだ実装も試験もされていません。ここに書かれた内容を人の安全のために頼る前に、[セキュリティベースライン](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)と[脅威モデル](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)をお読みください。
 
+---
+
 ## 📋 ひと目で
 
 | | |
 |---|---|
 | バージョン | `0.1.4` |
 | 成熟度 | 機能する |
-| テスト | 71 (`pytest`) |
+| テスト | 88 (`python -m pytest -q tests`) |
 | 技術 | Python / local LLM (Llama-3 class) |
 | 対象 | HYDRA-UMC セルの Raspberry Pi CM5 |
 | 実機での確認 | まだです：このバージョンについて実機での動作記録はありません |
+
+**移動：** [概要](#-概要) · [アーキテクチャ](#-アーキテクチャ) · [クイックスタート](#-クイックスタート) · [テスト](#-テスト) · [リポジトリの構成](#-リポジトリの構成) · [関連プロジェクト](#-関連プロジェクト)
 
 ## 🚦 プロジェクトの状況
 
@@ -44,11 +55,11 @@
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 71 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 88 件。変更のたびに実行されます |
 | 実機 | 🔴 | まだです：このバージョンについて実機での動作記録はありません |
 | ドキュメント | 🟢 | 8 言語の README。変更のたびにマニフェストと照合されます |
 
-## 1. 🛠️ 技術概要
+## 🎯 概要
 
 **HYDRA-UMC-SEMANTIC-PLANNER** は、Cognitive AI Node の「ロジック
 オーケストレーター」です。ローカル LLM（大規模言語モデル）を使用して、
@@ -60,7 +71,7 @@
 替えるかを判断します。
 
 ### 主な機能：
-* 🧩 **タスク分解（v0）：** 既知の小さな目標語彙に対する実際のルールベース分解（例：「PCB を組み立てる」）により、順序立ったロボットコマンドを生成します。*（実際のテンプレートルールとして実装済み——まだ LLM ではありません。下記の「ビルドと実行」を参照）*
+* 🧩 **タスク分解（v0）：** 既知の小さな目標語彙に対する実際のルールベース分解（例：「PCB を組み立てる」）により、順序立ったロボットコマンドを生成します。*（実際のテンプレートルールとして実装済み——まだ LLM ではありません。下記の「ビルドとリリース」を参照）*
 * 🛡️ **意味的復旧（v0）：** 構造化された MCU エラーコードから復旧アクションへの、実際のルールベースの参照。*（既知のコード語彙に対する実際の明示的なテーブルとして実装済み。未知のコードは常に人間にエスカレーションされます）*
 * ✅ **前提条件の検証：** 分解された各プランは、渡される前に、各実際のプリミティブが本当に必要とするものに照らしてチェックされます —— 失敗したプランは拒否され、実行可能として黙って次に渡されることはありません。対象のロボット/セルの実際の宣言済み能力カタログ(`validate_plan()`/`POST /decompose` の `capabilities`、任意指定)により、そのロボットが対応を宣言したことのないプリミティブに対する形式的には正しいステップも検出できます。*(実装済み)*
 * ✅ **プランに沿ったグリッパーの状態：** プランは記号的なグリッパー（開始時は空）で辿られます。すでに何かを持っているときの GRIP、何も持っていない、または持っているものと別のものの RELEASE は、そのステップのプラン上の誤りとして、何かが動く前に見つかります。プランは対象を持ったまま終わってもかまいません。ステップのパラメータは読み取り専用でハッシュ可能（`Params`）なので、提案後にプランを変更することはできません。*（実装済み）*
@@ -70,11 +81,19 @@
 * ⚡ **Hailo-10 最適化：** 40 TOPS を活用した高速な多段階推論。*（計画中——実際のローカル LLM が必要です）*
 * 👨‍👩‍👧 **認知 AI ノードの子プロジェクト：**
   [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE) の下で 4 つの兄弟サービスの 1 つとして動作します（VLA-Engine、Voice-UI、Docs-QA と並んで）。独自のコピーを保持するのではなく、親プロジェクトの HydraOS イメージとモデルの重みを共有します。
-* 📦 **オドメーター式バージョン管理：** `pyproject.toml` のバージョンを上げるのは明示的な `bump` コマンド（`python tools/hydra_project_tool.py bump`、内部で `bump_version.py` を実行）だけです - ビルドがバージョンを変更することはありません。
 
----
+## 🧩 HYDRA-UMC での役割
 
-## 2. 🔄 プランニングサイクル
+**HYDRA-UMC-SEMANTIC-PLANNER** は高レベルの目標を、閉じたロボットプリミティブの語彙で作られた計画に変換し、ステップが失敗したときの回復案を提案します。現在はルールベースで言語モデルではなく、計画は名前のある担当者がその計画そのものを承認するまで提案にすぎません。
+
+## 🏛️ アーキテクチャ
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-SEMANTIC-PLANNER architecture" width="100%">
+</p>
+
+<details>
+<summary>図のテキスト版（Mermaid）</summary>
 
 ```mermaid
 flowchart TB
@@ -87,9 +106,9 @@ flowchart TB
     REC --> EXEC
 ```
 
----
+</details>
 
-## 3. 🧱 アーキテクチャと設計上の決定
+### アーキテクチャと設計上の決定
 
 本リポジトリは Cognitive AI Node ファミリーの**子プロジェクト**です——
 親プロジェクトである [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE) が共有の HydraOS イメージと量子化モデルの重みを保持し、本サービスを他の 3 つの兄弟プロジェクト（VLA-Engine、Voice-UI、Docs-QA）とともに `docker-compose.yml` に接続します：
@@ -104,52 +123,24 @@ flowchart TB
 * **`decompose.py` の実際のテンプレートが実際には無効なプランを一度も生成しないにもかかわらず、`validation.py` が存在する理由。** 固定のテンプレートは、その構造自体によって整形されたパラメータを保証できますが —— 将来の LLM ベースのプランナーはそうはいきません。`validate_plan()` は、そのプランナーが満たす必要のある実際の、明示的な契約であり、今存在する唯一のプランナーに対して今ここで検証することで、より難しいものがそれを満たす必要ができる前に、契約そのものが正しいことを証明します。
 * **`decompose_goal()` が `hypothesis` ではなく、固定のランダムシードでファジングテストされている理由。** 本プロジェクトは（エコシステムの他の部分と同様に）標準ライブラリのみに依存しています —— 新たな依存関係を追加せずに、数百の合成目標に対する再現可能でシード付きの `random.Random` ループが、同じ実際の特性（クラッシュしない、形式不正なプランを返さない）を得られます。
 
----
+## 🚀 クイックスタート
 
-## 📂 リポジトリ構成
+Python 3.10 以上が必要です。
 
-```text
-HYDRA-UMC-SEMANTIC-PLANNER/
-├── src/hydra_umc_semantic_planner/
-│   ├── __init__.py                    # パッケージの説明とバージョン
-│   ├── primitives.py                  # 実際の、閉じたロボットコマンドプリミティブの語彙
-│   ├── decompose.py                    # 実際の、ルールベースのタスク分解
-│   ├── recovery.py                      # 実際の、ルールベースの意味的エラー復旧
-│   ├── validation.py                    # 分解された Plan に対する実際の前提条件検証
-│   ├── api.py                             # シンプルなJSON/HTTPサーフェス(stdlibのhttp.server)。decompose/recoverを橋渡し
-│   ├── main.py                            # エントリポイント + 実際の `decompose`/`recover` サブコマンド
-│   └── approval.py                        # プランが実行層に到達する前に満たすべき条件
-├── tests/                            # 実際のテスト：分解、復旧、検証、api、プロパティテスト、エンドツーエンド CLI
-├── docs/                             # ドキュメントとナレッジベース
-│   ├── CLI_REFERENCE.md               # 公開コマンドライン契約
-│   └── RECOVERY_CONTRACT.md           # 公開エラー/復旧語彙
-├── images/                           # メディアと図表
-├── systemd/
-│   └── hydra-umc-semantic-planner.service # ローカルCM5 decompose/recover APIのsystemdユニット
-├── tools/
-│   ├── build_test.py                 # バージョンを増やさないビルドチェック
-│   ├── ci_validate.py                # CI が使用するマニフェスト/CHANGELOG/ドキュメント検証
-│   ├── _doc_policy.py                # ファミリー共通のドキュメント規則 (HYDRA-UMC-SDK のコピーで、同期を維持)
-│   ├── _readme_parity.py             # 8つの README が同じ構造であることの検査 (HYDRA-UMC-SDK のコピーで、同期を維持)
-│   └── hydra_project_tool.py         # すべてのリポジトリで共通のコマンド: validate、test、ci、version、status、bump
-├── build/                            # ローカルビルド出力（git 管理外）
-├── pyproject.toml                    # パッケージメタデータ（オドメーター式バージョン増加）
-├── bump_version.py                   # オドメーター式バージョンインクリメント（明示的な `bump` コマンドのみが実行）
-├── bump_manifest_version.py          # hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
-├── build.sh / build.bat              # venv 作成、インストール（dev エクストラ付き）、テスト実行、インポート検証
-└── run.sh / run.bat                  # エントリポイントを実行（引数を転送、例：`decompose`）
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh decompose "assemble the pcb"
+./run.sh recover --component gripper --error-code TIMEOUT
+./run.sh serve --port 8110
 ```
 
-> **注：** `hardware/` と `firmware/` は省略されています——本ノードは
-> 既存の CM5 + Hailo-10 M.2 モジュール上で動作し、独自のハードウェア/
-> ファームウェア設計を持ちません。`os/` と `models/` も省略されています
-> ——HydraOS イメージと共有される Hailo-10 モデルの重みは、親プロジェクト
-> `HYDRA-UMC-COGNITIVE-NODE` に存在し、本プロジェクトはサービスとして
-> それに接続します（その `docker-compose.yml` を参照）。
+## 🧪 テスト
 
----
+`python -m pytest -q tests` で自動テスト 88 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
-## ⚙️ ビルドと実行
+CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
+
+## 🏗️ ビルドとリリース
 
 Python >= 3.10 が必要です。
 
@@ -206,15 +197,58 @@ curl -s -X POST http://127.0.0.1:8109/decompose -d '{"goal": "assemble the pcb"}
 * **`pip install -e .` が失敗する。** 通常は `.venv/` が古くなっていることが原因です。`.venv/` フォルダを削除して `./build.sh`/`build.bat` を再実行し、再作成してください。
 * **`import OK` が一度も表示されない。** `python -c "import hydra_umc_semantic_planner"` 自体が失敗したことを意味します——venv がアクティブな状態で再実行し、実際のトレースバックを確認してください。
 
----
+## 📂 リポジトリの構成
 
-## 🚀 ロードマップ
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-SEMANTIC-PLANNER" width="100%">
+</p>
+
+<details>
+<summary>ツリーのテキスト版</summary>
+
+```text
+HYDRA-UMC-SEMANTIC-PLANNER/
+├── src/hydra_umc_semantic_planner/   ソースコード
+│   ├── __init__.py                   パッケージの説明とバージョン
+│   ├── primitives.py                 実際の、閉じたロボットコマンドプリミティブの語彙
+│   ├── decompose.py                  実際の、ルールベースのタスク分解
+│   ├── recovery.py                   実際の、ルールベースの意味的エラー復旧
+│   ├── validation.py                 分解された Plan に対する実際の前提条件検証
+│   ├── api.py                        シンプルなJSON/HTTPサーフェス(stdlibのhttp.server)。decompose/recoverを橋渡し
+│   ├── main.py                       エントリポイント + 実際の `decompose`/`recover` サブコマンド
+│   └── approval.py                   プランが実行層に到達する前に満たすべき条件
+├── tests/                            実際のテスト：分解、復旧、検証、api、プロパティテスト、エンドツーエンド CLI
+├── docs/                             ドキュメントとナレッジベース
+├── images/                           メディアと図表
+├── systemd/                          サービスユニット
+├── tools/                            プロジェクトのツールと CI の検査
+├── .github/                          CI ワークフローと Issue テンプレート
+├── pyproject.toml                    パッケージのメタデータ
+├── bump_version.py                   明示的なバージョン更新
+├── bump_manifest_version.py          hydra-umc.project.json のバージョンをネイティブ版と同期(--sync)
+├── build.sh / build.bat              venv 作成、インストール（dev エクストラ付き）、テスト実行、インポート検証
+├── run.sh / run.bat                  エントリポイントを実行（引数を転送、例：`decompose`）
+├── CHANGELOG.md                      各バージョンの変更点
+├── Dockerfile                        コンテナイメージ
+├── build-test.sh                     変更を伴わないビルド確認
+├── hydra-umc.project.json            マニフェスト：バージョン、成熟度、ファミリー
+└── test.sh                           テストを実行
+```
+
+</details>
+
+## 🗺️ ロードマップと既知の制限
+
+**現時点の既知の制限**
+
 * **フェーズ 1：** Hailo-10 上での VLA エンジンのデプロイとマルチモーダル入力処理。
 * **フェーズ 2：** 意味プランナーと群行動モデルおよび長期記憶の統合。
 * **フェーズ 3：** 音声 UI の低遅延ローカル実行と産業用ノイズキャンセリング。
 * **フェーズ 4：** 共有目標分解のためのマルチエージェント協調と意味的復旧の最適化。
 
----
+## 🌍 言語
+
+この README とリポジトリの文書は、英語・スペイン語・ドイツ語・フランス語・イタリア語・日本語・中国語・ポルトガル語（ポルトガル）の 8 言語で提供されています。8 つのファイルは同時に書かれ、同じ節と同じリンクを持つことを CI が確認します。 このリポジトリには独自の画面もメッセージカタログもないため、翻訳すべきインターフェース文字列はありません。
 
 ## 🔗 関連プロジェクト
 
@@ -307,20 +341,26 @@ curl -s -X POST http://127.0.0.1:8109/decompose -d '{"goal": "assemble the pcb"}
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — 保守インシデントコーディネーター: 低権限のエッジ役割がサニタイズされたインベントリ/ヘルスのスナップショットを収集し、コントロールプレーン役割がそれを読み取り専用でレンダリングして AI プロバイダーに診断の提案を依頼します - パッチを適用することも、何かをデプロイすることも決してありません。
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — 再現可能な開発ホスト（Raspberry Pi 5 / CM5）。エコシステムのソースコードを保管し、永続キューのもとで境界の明確なビルド/テストタスクを実行する。運用中の CM5 とは明確に異なる、開発専用の役割。
 
----
+## 📚 ドキュメント
 
-## 📚 ドキュメント & コミュニティ
+さらに読むには：
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** —— プルリクエストのための技術スタックとコーディング指針。
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** —— このコミュニティで期待される行動規範。
-- **[SECURITY.md](SECURITY.md)** —— 脆弱性の報告方法と、このプロジェクトの実際のセキュリティ重点領域。
-- **[SUPPORT.md](SUPPORT.md)** —— 質問の投稿先とバグの報告先。
-- **[LICENSE.md](LICENSE.md)** —— このプロジェクト自身のライセンス。
+* [エコシステムのセキュリティ基準](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [エコシステムの脅威モデル](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [このリポジトリの変更履歴](CHANGELOG.md)
+* [このリポジトリのライセンス](LICENSE.md)
+
+## 🤝 コントリビュートとコミュニティ
+
+* プルリクエストの前に `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py`（または `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`）を実行してください。`CI_VALIDATION=PASS` と表示される必要があります。この確認に `build.sh` や `build.bat` は使わないでください。ビルドは検査ではありません。
+* 8 つの README は HYDRA-UMC-DOCS の 1 つのソースから書かれます。手で編集しないでください。ソースを変更し、`tools/make_readmes.py` で書き直します。
+* 実行していないことを README に書かないでください。事実であれば「シミュレーションのみ」「実機では未確認」と書きます。
+* [CONTRIBUTING.md](CONTRIBUTING.md)、[行動規範](CODE_OF_CONDUCT.md)、[SECURITY.md](SECURITY.md)、[SUPPORT.md](SUPPORT.md) を参照してください。
 
 ## 👤 作者
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 ライセンス
-GPL-3.0 —— 詳細は LICENSE を参照してください。
+
+GPL-3.0-or-later - [LICENSE](LICENSE).

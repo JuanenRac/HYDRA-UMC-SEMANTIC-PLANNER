@@ -1,22 +1,29 @@
+<!-- =============================================================================
+HYDRA-UMC-SEMANTIC-PLANNER - Rule-based mission planner and semantic error recovery
+Copyright (C) JuanenRac (Electro Hobby 3D) <electrohobby3d@gmail.com>
+GPL-3.0-or-later - see LICENSE
+============================================================================= -->
+
 <p align="center">
   <img src="images/HYDRA_UMC_BANNER.svg" alt="HYDRA-UMC-SEMANTIC-PLANNER banner" width="100%">
 </p>
 
-# 🧩 HYDRA-UMC-SEMANTIC-PLANNER
+# 🧭 HYDRA-UMC-SEMANTIC-PLANNER
 
 <p align="center">🇺🇸 <b>English</b> | <a href="README_spa.md">🇪🇸 Español</a> | <a href="README_fra.md">🇫🇷 Français</a> | <a href="README_ita.md">🇮🇹 Italiano</a> | <a href="README_deu.md">🇩🇪 Deutsch</a> | <a href="README_zho.md">🇨🇳 简体中文</a> | <a href="README_jpn.md">🇯🇵 日本語</a> | <a href="README_por.md">🇵🇹 Português</a></p>
 
 ### 🧠 Rule-Based Mission Planner & Logic Recovery System (LLM planned)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL%203.0-blue.svg" alt="GPL 3.0">
-  <img src="https://img.shields.io/badge/Brain-Rule--based%20(LLM%20planned)-blueviolet.svg" alt="LLM">
-  <img src="https://img.shields.io/badge/Target-Hailo--10%20(planned)-lightgrey.svg" alt="Hailo-10">
+  <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
+  <img src="https://img.shields.io/badge/Tests-88%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Version-0.1.4-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (71 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
+**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (88 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
 
 **Known limits of the rule-based planner:** a goal that is negated or cancelled ("do not ...", "never ..."), that fits more than one template, that has no object, or that is longer than 512 characters gets no plan. The object is read from the words after the verb, not from the end of the sentence. A decomposition is a proposal, not an order: `POST /decompose` answers `executable: false` with a fingerprint, the estimated cost and a plain-language explanation, and `POST /release` (or `release_for_execution()`) recomputes the cost and the explanation from the plan and checks the approval fingerprint before anything may be executed. The approval is not signed yet: it names a person but is not a credential. `FailureContext.attempt` makes `TIMEOUT` and `GRIP_LOST_SEAL` recoveries escalate to an operator after 1 and 3 automatic attempts.
 
@@ -24,16 +31,20 @@
 
 > **Safety and security status:** this ecosystem is not a certified safety system. There is no hardware E-STOP path, no firmware-enforced limits or interlocks and no verified motion command yet; firmware images are checked with CRC32 and a shared-key HMAC-SHA256, not with an asymmetric signature; TLS and mutual TLS are optional and off by default; no custom board has been populated or tested yet. Read the [security baseline](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md) and the [threat model](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md) before relying on any statement here for the safety of a person.
 
+---
+
 ## 📋 At a glance
 
 | | |
 |---|---|
 | Version | `0.1.4` |
 | Maturity | Functional |
-| Tests | 71 (`pytest`) |
+| Tests | 88 (`python -m pytest -q tests`) |
 | Stack | Python / local LLM (Llama-3 class) |
 | Target | The Raspberry Pi CM5 of a HYDRA-UMC cell |
 | On real hardware | Not yet: no run on real hardware is recorded for this version |
+
+**Jump to:** [Overview](#-overview) · [Architecture](#-architecture) · [Quick start](#-quick-start) · [Testing](#-testing) · [Repository Structure](#-repository-structure) · [Related Projects](#-related-projects)
 
 ## 🚦 Project status
 
@@ -44,18 +55,18 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟡 | Works for its main purpose; the honesty check above lists what is still missing |
-| Tests | 🟢 | 71 automated tests, run on every change |
+| Tests | 🟢 | 88 automated tests, run on every change |
 | Real hardware | 🔴 | Not yet: no run on real hardware is recorded for this version |
 | Documentation | 🟢 | README in eight languages, checked against the manifest on every change |
 
-## 1. 🛠️ TECHNICAL OVERVIEW
+## 🎯 Overview
 
 **HYDRA-UMC-SEMANTIC-PLANNER** is the "Logic Orchestrator" of the Cognitive AI Node. It uses local LLMs (Large Language Models) to decompose complex goals into actionable robotic primitives.
 
 It handles high-level ambiguity and provides semantic error recovery: if a task fails (e.g., "vacuum gripper lost seal"), the planner reasons about the cause and decides whether to increase pressure, try again, or swap for a mechanical tool.
 
 ### Key Features:
-* 🧩 **Task Decomposition (v0):** Real rule-based breakdown of a small known goal vocabulary (e.g., "assemble PCB") into sequential robot commands. *(implemented as real template rules, not yet an LLM - see BUILD & RUN below)*
+* 🧩 **Task Decomposition (v0):** Real rule-based breakdown of a small known goal vocabulary (e.g., "assemble PCB") into sequential robot commands. *(implemented as real template rules, not yet an LLM - see Build & Release below)*
 * 🛡️ **Semantic Recovery (v0):** Real rule-based lookup from structured MCU error codes to a recovery action. *(implemented as a real, explicit table over a known code vocabulary; unknown codes always escalate to a human)*
 * ✅ **Precondition Validation:** Every decomposed plan is checked against what each real primitive genuinely needs before being handed off - a plan that fails is refused, never silently passed on as execution-ready. An optional, real declared-capability catalog for the target robot/cell (`capabilities` in `validate_plan()`/`POST /decompose`) also catches a well-formed step for a primitive that robot never declared support for. *(implemented)*
 * ✅ **Gripper state along the plan:** the plan is walked with a symbolic gripper (empty at the start): a GRIP while it already holds something, and a RELEASE with nothing held or of something else than what is held, are errors of the plan at their own step, found before anything moves. A plan may end holding its target. The parameters of a step are read-only and hashable (`Params`), so a plan cannot be changed after it was proposed. *(implemented)*
@@ -67,11 +78,19 @@ It handles high-level ambiguity and provides semantic error recovery: if a task 
   under [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)
   (alongside VLA-Engine, Voice-UI and Docs-QA), sharing its parent's
   HydraOS image and model weights instead of keeping its own copies.
-* 📦 **Odometer Versioning:** The version in `pyproject.toml` is raised only by the explicit bump command (`python tools/hydra_project_tool.py bump`, which runs `bump_version.py`) - building never changes it.
 
----
+## 🧩 Role in HYDRA-UMC
 
-## 2. 🔄 PLANNING CYCLE
+**HYDRA-UMC-SEMANTIC-PLANNER** turns a high-level goal into a plan made of a closed vocabulary of robot primitives and proposes a recovery when a step fails. Today it is rule-based, not a language model; a plan is only a proposal until a named person approves that exact plan.
+
+## 🏛️ Architecture
+
+<p align="center">
+  <img src="images/architecture.svg" alt="HYDRA-UMC-SEMANTIC-PLANNER architecture" width="100%">
+</p>
+
+<details>
+<summary>Text version of the diagram (Mermaid)</summary>
 
 ```mermaid
 flowchart TB
@@ -84,9 +103,9 @@ flowchart TB
     REC --> EXEC
 ```
 
----
+</details>
 
-## 3. 🧱 ARCHITECTURE & DESIGN DECISIONS
+### ARCHITECTURE & DESIGN DECISIONS
 
 This repository is a **child** of the Cognitive AI Node family - its
 parent, [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE),
@@ -108,7 +127,7 @@ service into `docker-compose.yml` alongside its three siblings
   and imports cleanly - on the actual target Python version - before any
   real LLM-based planning/recovery logic was added, keeping that later
   work isolated from packaging concerns. `main.py` has since grown real
-  `decompose`/`recover`/`serve` subcommands (see BUILD & RUN below) - the
+  `decompose`/`recover`/`serve` subcommands (see Build & Release below) - the
   bare `run.sh` with no arguments still only prints identity/version/role,
   which is intentional (a quick "did the package install correctly"
   smoke check), not a sign the CLI itself is still a stub.
@@ -154,52 +173,24 @@ service into `docker-compose.yml` alongside its three siblings
   (never crashes, never returns a malformed plan) without a new
   dependency.
 
----
+## 🚀 Quick start
 
-## 📂 DIRECTORY STRUCTURE
+Requires Python 3.10 or newer.
 
-```text
-HYDRA-UMC-SEMANTIC-PLANNER/
-├── src/hydra_umc_semantic_planner/
-│   ├── __init__.py                    # Package description and version
-│   ├── primitives.py                  # Real closed vocabulary of robot command primitives
-│   ├── decompose.py                    # Real rule-based task decomposition
-│   ├── recovery.py                      # Real rule-based semantic error recovery
-│   ├── validation.py                    # Real precondition validation over a decomposed Plan
-│   ├── api.py                             # Plain JSON/HTTP surface (stdlib http.server) over decompose/recover
-│   ├── main.py                            # Entry point + real `decompose`/`recover` subcommands
-│   └── approval.py                        # What must be true before a plan may reach an executing layer
-├── tests/                            # Real tests: decomposition, recovery, validation, api, property tests, end-to-end CLI
-├── docs/                             # Documentation and knowledge base
-│   ├── CLI_REFERENCE.md               # Public command-line contract
-│   └── RECOVERY_CONTRACT.md           # Public error/recovery vocabulary
-├── images/                           # Media and diagrams
-├── systemd/
-│   └── hydra-umc-semantic-planner.service # Local CM5 decompose/recover API systemd unit
-├── tools/
-│   ├── build_test.py                 # Non-versioning build/compile check
-│   ├── ci_validate.py                # Manifest/CHANGELOG/docs validation used by CI
-│   ├── _doc_policy.py                # Documentation rules shared by the family (a copy of HYDRA-UMC-SDK's, kept in sync)
-│   ├── _readme_parity.py             # Check that the eight READMEs share one structure (a copy of HYDRA-UMC-SDK's, kept in sync)
-│   └── hydra_project_tool.py         # The same commands in every repository: validate, test, ci, version, status, bump
-├── build/                            # Local build output (git-ignored)
-├── pyproject.toml                    # Package metadata (version raised only by the explicit bump command)
-├── bump_version.py                   # Odometer-style version bump (run only by the explicit `bump` command)
-├── bump_manifest_version.py          # Syncs hydra-umc.project.json's version to the native one (--sync)
-├── build.sh / build.bat              # Create venv, install (with dev extras), run tests, verify import
-└── run.sh / run.bat                  # Run the entry point (forwards args, e.g. `decompose`)
+```bash
+./build.sh  # Linux, macOS (build.bat on Windows)
+./run.sh decompose "assemble the pcb"
+./run.sh recover --component gripper --error-code TIMEOUT
+./run.sh serve --port 8110
 ```
 
-> **Note:** `hardware/` and `firmware/` were pruned - this node runs on an
-> existing CM5 + Hailo-10 M.2 module with no hardware/firmware design of
-> its own. `os/` and `models/` were also pruned - the HydraOS image and
-> the shared Hailo-10 model weights live in the parent
-> `HYDRA-UMC-COGNITIVE-NODE`, which this project attaches to as a
-> service (see its `docker-compose.yml`).
+## 🧪 Testing
 
----
+88 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
 
-## ⚙️ BUILD & RUN GUIDE
+The CI runs `HYDRA_UMC_CI=1 python tools/ci_validate.py`, which checks the manifest, the documents, the eight READMEs and the pictures.
+
+## 🏗️ Build & Release
 
 Requires Python >= 3.10.
 
@@ -270,15 +261,58 @@ See [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for the full command/flag/e
   hydra_umc_semantic_planner"` itself failed - re-run with the venv
   active to see the real traceback.
 
----
+## 📂 Repository Structure
 
-## 🚀 ROADMAP
+<p align="center">
+  <img src="images/repository-structure.svg" alt="Repository structure of HYDRA-UMC-SEMANTIC-PLANNER" width="100%">
+</p>
+
+<details>
+<summary>Text version of the tree</summary>
+
+```text
+HYDRA-UMC-SEMANTIC-PLANNER/
+├── src/hydra_umc_semantic_planner/   source code
+│   ├── __init__.py                   Package description and version
+│   ├── primitives.py                 Real closed vocabulary of robot command primitives
+│   ├── decompose.py                  Real rule-based task decomposition
+│   ├── recovery.py                   Real rule-based semantic error recovery
+│   ├── validation.py                 Real precondition validation over a decomposed Plan
+│   ├── api.py                        Plain JSON/HTTP surface (stdlib http.server) over decompose/recover
+│   ├── main.py                       Entry point + real `decompose`/`recover` subcommands
+│   └── approval.py                   What must be true before a plan may reach an executing layer
+├── tests/                            Real tests: decomposition, recovery, validation, api, property tests, end-to-end CLI
+├── docs/                             Documentation and knowledge base
+├── images/                           Media and diagrams
+├── systemd/                          service unit
+├── tools/                            project tools and CI checks
+├── .github/                          CI workflow and issue templates
+├── pyproject.toml                    Package metadata (version raised only by the explicit bump command)
+├── bump_version.py                   explicit version bump
+├── bump_manifest_version.py          Syncs hydra-umc.project.json's version to the native one (--sync)
+├── build.sh / build.bat              Create venv, install (with dev extras), run tests, verify import
+├── run.sh / run.bat                  Run the entry point (forwards args, e.g. `decompose`)
+├── CHANGELOG.md                      what changed in each version
+├── Dockerfile                        container image
+├── build-test.sh                     non-mutating build check
+├── hydra-umc.project.json            manifest: version, maturity, family
+└── test.sh                           runs the tests
+```
+
+</details>
+
+## 🗺️ Roadmap & Known limits
+
+**Known limits today**
+
 * **Phase 1:** VLA engine deployment and multi-modal input processing on Hailo-10.
 * **Phase 2:** Semantic planner integration with swarm behavioral models and long-term memory.
 * **Phase 3:** Voice UI low-latency local execution and industrial noise cancellation.
 * **Phase 4:** Multi-agent coordination for shared goal decomposition and semantic recovery optimization.
 
----
+## 🌍 Languages
+
+This README and the documents of the repository exist in eight languages: English, Spanish, German, French, Italian, Japanese, Chinese and Portuguese (Portugal). They are written together and checked in the CI so that the eight files have the same sections and the same links. This repository has no screen or message catalogue of its own, so there are no interface strings to translate.
 
 ## 🔗 Related Projects
 
@@ -371,20 +405,26 @@ This project is part of the HYDRA-UMC robotics ecosystem by the same author (Jua
 - **[HYDRA-UMC-OPS-AGENT](https://github.com/JuanenRac/HYDRA-UMC-OPS-AGENT)** — maintenance-incident coordinator: a low-privilege edge role collects a sanitized inventory/health snapshot, a control-plane role renders it read-only and asks an AI provider to suggest a diagnosis - never applies a patch or deploys anything.
 - **[HYDRA-UMC-DEV-SERVER](https://github.com/JuanenRac/HYDRA-UMC-DEV-SERVER)** — reproducible development host (Raspberry Pi 5 / CM5) that stores the ecosystem's source and runs bounded build/test tasks under a durable queue; a dedicated dev role, explicitly not an operational CM5.
 
----
+## 📚 Documentation
 
-## 📚 Documentation & Community
+Where to read more:
 
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — tech stack and coding guidelines for a pull request.
-- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — the standards of behavior expected in this community.
-- **[SECURITY.md](SECURITY.md)** — how to report a vulnerability, and this project's own real security focus areas.
-- **[SUPPORT.md](SUPPORT.md)** — where to ask questions and report bugs.
-- **[LICENSE.md](LICENSE.md)** — this project's own license.
+* [Security baseline of the ecosystem](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/SECURITY_BASELINE.md)
+* [Threat model of the ecosystem](https://github.com/JuanenRac/HYDRA-UMC-DOCS/blob/main/docs/THREAT_MODEL.md)
+* [Changelog of this repository](CHANGELOG.md)
+* [License of this repository](LICENSE.md)
+
+## 🤝 Contributing & Community
+
+* Before a pull request run `HYDRA_UMC_CI=1 py -3 tools/ci_validate.py` (or `HYDRA_UMC_CI=1 python3 tools/ci_validate.py`): it must print `CI_VALIDATION=PASS`. Do not run `build.sh` or `build.bat` for this check; building is not a check.
+* The eight READMEs are written from one source in HYDRA-UMC-DOCS; do not edit them by hand. Change the source and write them again with `tools/make_readmes.py`.
+* Do not state in a README what has not run: say "simulated" or "not tried on hardware" where that is the truth.
+* See [CONTRIBUTING.md](CONTRIBUTING.md), the [code of conduct](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) and [SUPPORT.md](SUPPORT.md).
 
 ## 👤 AUTHOR
-**JuanenRac** (Electro Hobby 3D)
-📧 electrohobby3d@gmail.com
-📺 [youtube.com/@electrohobby3d](https://youtube.com/@electrohobby3d)
+
+**JuanenRac (Electro Hobby 3D)** · electrohobby3d@gmail.com
 
 ## 📜 LICENSE
-GPL-3.0 - See LICENSE for details.
+
+GPL-3.0-or-later - [LICENSE](LICENSE).

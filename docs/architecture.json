@@ -1,0 +1,167 @@
+{
+  "repo": "HYDRA-UMC-SEMANTIC-PLANNER",
+  "ecosystem": "hydra",
+  "tagline": "Goal in, plan out; a plan is released only with a readable explanation, a cost within limits and a named approval.",
+  "description": "HYDRA-UMC-SEMANTIC-PLANNER decomposes a goal into primitives, validates the plan, estimates its cost, requires an approval that carries the plan fingerprint, and proposes recoveries for structured failure codes.",
+  "columns": [
+    "WHO CALLS IT",
+    "THIS REPOSITORY",
+    "WHO RECEIVES THE PLAN"
+  ],
+  "nodes": [
+    {
+      "id": "cli",
+      "column": 0,
+      "level": "tested",
+      "title": "CLI",
+      "lines": [
+        "decompose, recover, serve"
+      ],
+      "code": [
+        "src/hydra_umc_semantic_planner/main.py"
+      ]
+    },
+    {
+      "id": "http",
+      "column": 0,
+      "level": "tested",
+      "title": "HTTP API",
+      "lines": [
+        "POST /decompose and",
+        "POST /recover"
+      ],
+      "code": [
+        "src/hydra_umc_semantic_planner/api.py"
+      ]
+    },
+    {
+      "id": "exe",
+      "column": 2,
+      "level": "untested",
+      "title": "Executing layer",
+      "lines": [
+        "receives only approved",
+        "plans; not connected"
+      ]
+    },
+    {
+      "id": "llm",
+      "column": 2,
+      "level": "untested",
+      "title": "Local language model",
+      "lines": [
+        "planned on Hailo-10;",
+        "not part of this code"
+      ]
+    },
+    {
+      "id": "pri",
+      "column": 1,
+      "level": "tested",
+      "title": "primitives.py",
+      "lines": [
+        "closed vocabulary:",
+        "move, grip, release..."
+      ],
+      "code": [
+        "src/hydra_umc_semantic_planner/primitives.py"
+      ]
+    },
+    {
+      "id": "dec",
+      "column": 1,
+      "level": "tested",
+      "title": "decompose.py",
+      "lines": [
+        "goal to steps, by",
+        "templates (no LLM yet)"
+      ],
+      "code": [
+        "src/hydra_umc_semantic_planner/decompose.py"
+      ]
+    },
+    {
+      "id": "app",
+      "column": 1,
+      "level": "tested",
+      "title": "approval.py",
+      "lines": [
+        "cost, explanation and",
+        "approval of this plan"
+      ],
+      "code": [
+        "src/hydra_umc_semantic_planner/approval.py"
+      ]
+    },
+    {
+      "id": "val",
+      "column": 1,
+      "level": "tested",
+      "title": "validation.py",
+      "lines": [
+        "preconditions of",
+        "every step"
+      ],
+      "code": [
+        "src/hydra_umc_semantic_planner/validation.py"
+      ]
+    },
+    {
+      "id": "rec",
+      "column": 1,
+      "level": "tested",
+      "title": "recovery.py",
+      "lines": [
+        "failure code to a",
+        "recovery proposal"
+      ],
+      "code": [
+        "src/hydra_umc_semantic_planner/recovery.py"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "cli",
+      "to": "dec",
+      "level": "tested"
+    },
+    {
+      "from": "http",
+      "to": "dec",
+      "level": "tested"
+    },
+    {
+      "from": "cli",
+      "to": "rec",
+      "level": "tested"
+    },
+    {
+      "from": "pri",
+      "to": "dec",
+      "level": "tested"
+    },
+    {
+      "from": "dec",
+      "to": "val",
+      "level": "tested"
+    },
+    {
+      "from": "val",
+      "to": "app",
+      "level": "tested"
+    },
+    {
+      "from": "app",
+      "to": "exe",
+      "level": "untested",
+      "label": "approved plans"
+    },
+    {
+      "from": "llm",
+      "to": "dec",
+      "level": "untested"
+    }
+  ],
+  "footer": "Tried with the command line and the HTTP API on a computer; no executing layer and no model were connected."
+}
