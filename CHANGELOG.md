@@ -2,6 +2,10 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased]
+
+- `docs/LLM_REQUIREMENTS.md` lists what must hold, and be tested, before a language model is connected to the planner: closed vocabulary, targets from the catalogue of the cell, untrusted text kept apart, limits and approval outside the model, explanation produced by code.
+
 ## [0.1.4] - The gripper is followed along the plan and the parameters of a step cannot be changed
 
 - **The gripper is followed along the plan.** `validate_plan` walks the steps with a symbolic gripper (empty at the start): a GRIP while it already holds something, and a RELEASE with nothing held or of something other than what is held, are issues at their own step (`gripper_state_issues`). A plan may end holding its target; what the templates produce is always valid.
