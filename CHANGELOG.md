@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
 - `docs/LLM_REQUIREMENTS.md` lists what must hold, and be tested, before a language model is connected to the planner: closed vocabulary, targets from the catalogue of the cell, untrusted text kept apart, limits and approval outside the model, explanation produced by code.
 
 ## [0.1.4] - The gripper is followed along the plan and the parameters of a step cannot be changed
