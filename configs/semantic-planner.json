@@ -1,0 +1,5 @@
+{
+  "recovery": {
+    "out_of_range_action": "ABORT"
+  }
+}

@@ -14,7 +14,10 @@ table rather than a local LLM (which isn't wired to anything yet).
 """
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass
+from pathlib import Path
 
 RETRY = "RETRY"
 INCREASE_PRESSURE = "INCREASE_PRESSURE"
@@ -49,6 +52,50 @@ class RecoveryStrategy:
     reason: str
 
 
+# What an out-of-range request does. New installations abort: a motion beyond
+# the real limits of the tool must not be retried with another tool by itself.
+# "SWAP_TOOL" is the earlier behaviour, kept for installations that rely on it.
+OUT_OF_RANGE_ACTIONS = (ABORT, SWAP_TOOL)
+CONFIG_ENV = "HYDRA_UMC_SEMANTIC_PLANNER_CONFIG"
+
+
+class PolicyError(ValueError):
+    """The recovery policy file cannot be used."""
+
+
+@dataclass(frozen=True)
+class RecoveryPolicy:
+    """Recovery settings; they come from the configuration file, never from the code."""
+
+    out_of_range_action: str = ABORT
+
+    def __post_init__(self) -> None:
+        if self.out_of_range_action not in OUT_OF_RANGE_ACTIONS:
+            raise PolicyError(
+                f"out_of_range_action must be one of {', '.join(OUT_OF_RANGE_ACTIONS)}, got {self.out_of_range_action!r}"
+            )
+
+
+def load_policy(path: str | os.PathLike[str] | None = None) -> RecoveryPolicy:
+    """The policy of the file `path`, or of the file named by HYDRA_UMC_SEMANTIC_PLANNER_CONFIG, or the safe default."""
+    chosen = str(path) if path else os.environ.get(CONFIG_ENV, "")
+    if not chosen:
+        return RecoveryPolicy()
+    try:
+        data = json.loads(Path(chosen).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise PolicyError(f"cannot read the configuration file {chosen}: {error}") from error
+    if not isinstance(data, dict):
+        raise PolicyError(f"{chosen} must hold a JSON object")
+    recovery = data.get("recovery", {})
+    if not isinstance(recovery, dict):
+        raise PolicyError("recovery must be a JSON object")
+    action = recovery.get("out_of_range_action", ABORT)
+    if not isinstance(action, str):
+        raise PolicyError("out_of_range_action must be text")
+    return RecoveryPolicy(out_of_range_action=action.strip().upper())
+
+
 # A real, explicit lookup - ESTOP_ACTIVE and UNSUPPORTED always escalate to
 # a human rather than being retried automatically, matching the ecosystem's
 # own safety rule that IA/UI never overrides a physical safety condition.
@@ -58,7 +105,7 @@ _RULES: dict[str, RecoveryStrategy] = {
     ),
     TIMEOUT: RecoveryStrategy(RETRY, "no response within the deadline - a single retry is safe"),
     OUT_OF_RANGE: RecoveryStrategy(
-        SWAP_TOOL, "requested motion exceeds this tool's real limits - a different tool may not"
+        ABORT, "requested motion exceeds this tool's real limits - the action is aborted, not retried"
     ),
     TOOL_INCOMPATIBLE: RecoveryStrategy(
         SWAP_TOOL, "the mounted tool cannot perform this action - swap for a compatible one"
@@ -80,13 +127,20 @@ _RULES: dict[str, RecoveryStrategy] = {
 MAX_AUTOMATIC_ATTEMPTS: dict[str, int] = {TIMEOUT: 1, GRIP_LOST_SEAL: 3}
 
 
-def propose_recovery(failure: FailureContext) -> RecoveryStrategy:
+_LEGACY_OUT_OF_RANGE = RecoveryStrategy(
+    SWAP_TOOL, "requested motion exceeds this tool's real limits - a different tool may not"
+)
+
+
+def propose_recovery(failure: FailureContext, policy: RecoveryPolicy | None = None) -> RecoveryStrategy:
     """Real rule-based recovery proposal for a real, known error code.
 
     An error code outside this v0's known table gets the same
     conservative default a real safety-first system should: escalate to
     a human, never a silent retry loop.
     """
+    if failure.error_code == OUT_OF_RANGE and policy is not None and policy.out_of_range_action == SWAP_TOOL:
+        return _LEGACY_OUT_OF_RANGE
     limit = MAX_AUTOMATIC_ATTEMPTS.get(failure.error_code)
     if limit is not None and failure.attempt > limit:
         return RecoveryStrategy(

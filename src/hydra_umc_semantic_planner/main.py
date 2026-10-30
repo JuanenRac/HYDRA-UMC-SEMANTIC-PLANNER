@@ -21,7 +21,7 @@ from . import __version__
 from .api import SemanticPlannerServer
 from .approval_signing import ApprovalKeyError, load_key, sign_approval
 from .decompose import decompose_goal
-from .recovery import FailureContext, propose_recovery
+from .recovery import FailureContext, PolicyError, load_policy, propose_recovery
 from .validation import validate_plan
 
 PROJECT_NAME = "HYDRA-UMC-SEMANTIC-PLANNER"
@@ -68,15 +68,27 @@ def _run_decompose(goal: str) -> int:
     return 0
 
 
-def _run_recover(component: str, error_code: str, detail: str) -> int:
+def _run_recover(component: str, error_code: str, detail: str, config: str | None = None) -> int:
+    try:
+        policy = load_policy(config)
+    except PolicyError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
     failure = FailureContext(component=component, error_code=error_code, detail=detail)
-    strategy = propose_recovery(failure)
+    strategy = propose_recovery(failure, policy)
     print(f"Failure: {component} reported {error_code}" + (f" ({detail})" if detail else ""))
     print(f"Recovery: {strategy.action} - {strategy.reason}")
     return 0
 
 
-def _run_serve(addr: str, port: int, approval_key_file: str | None = None, robot_id: str = "") -> int:
+def _run_serve(
+    addr: str, port: int, approval_key_file: str | None = None, robot_id: str = "", config: str | None = None
+) -> int:
+    try:
+        policy = load_policy(config)
+    except PolicyError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
     approval_key = None
     if approval_key_file:
         if not robot_id.strip():
@@ -87,7 +99,7 @@ def _run_serve(addr: str, port: int, approval_key_file: str | None = None, robot
         except ApprovalKeyError as error:
             print(f"error: {error}", file=sys.stderr)
             return 2
-    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id)
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
     if approval_key is not None:
@@ -117,12 +129,14 @@ def build_parser() -> argparse.ArgumentParser:
     recover_parser.add_argument("--component", required=True, help="Component that reported the failure.")
     recover_parser.add_argument("--error-code", required=True, help="Structured error code (e.g. TIMEOUT).")
     recover_parser.add_argument("--detail", default="", help="Optional human-readable detail.")
+    recover_parser.add_argument("--config", default=None, help="Configuration file with the recovery policy (default: the file named by HYDRA_UMC_SEMANTIC_PLANNER_CONFIG, else the safe defaults).")
 
     serve_parser = subparsers.add_parser(
         "serve",
         help="Run decompose/recover as a JSON/HTTP API (POST /decompose, POST /recover) "
              "- the exact same functions the CLI subcommands above already run.",
     )
+    serve_parser.add_argument("--config", default=None, help="Configuration file with the recovery policy (default: the file named by HYDRA_UMC_SEMANTIC_PLANNER_CONFIG, else the safe defaults).")
     serve_parser.add_argument("--addr", default="127.0.0.1", help="address to bind the HTTP API to")
     serve_parser.add_argument("--port", type=int, default=8109, help="port for the HTTP API")
 
@@ -176,9 +190,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "decompose":
         return _run_decompose(args.goal)
     if args.command == "recover":
-        return _run_recover(args.component, args.error_code, args.detail)
+        return _run_recover(args.component, args.error_code, args.detail, args.config)
     if args.command == "serve":
-        return _run_serve(args.addr, args.port, args.approval_key_file, args.robot_id)
+        return _run_serve(args.addr, args.port, args.approval_key_file, args.robot_id, args.config)
     if args.command == "sign-approval":
         return _run_sign(args)
 

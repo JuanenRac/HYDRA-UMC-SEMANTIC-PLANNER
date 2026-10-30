@@ -66,3 +66,18 @@ def test_recover_known_error_code(capsys: pytest.CaptureFixture[str]) -> None:
     assert exit_code == 0
     assert "INCREASE_PRESSURE" in captured.out
     assert "vacuum gripper lost seal" in captured.out
+
+
+def test_recover_out_of_range_aborts_and_the_configuration_can_restore_the_earlier_action(
+    capsys: pytest.CaptureFixture[str], tmp_path
+) -> None:
+    assert main(["recover", "--component", "arm", "--error-code", "OUT_OF_RANGE"]) == 0
+    assert "Recovery: ABORT" in capsys.readouterr().out
+
+    config = tmp_path / "planner.json"
+    config.write_text('{"recovery": {"out_of_range_action": "SWAP_TOOL"}}', encoding="utf-8")
+    assert main(["recover", "--component", "arm", "--error-code", "OUT_OF_RANGE", "--config", str(config)]) == 0
+    assert "Recovery: SWAP_TOOL" in capsys.readouterr().out
+
+    config.write_text('{"recovery": {"out_of_range_action": "EXPLODE"}}', encoding="utf-8")
+    assert main(["recover", "--component", "arm", "--error-code", "OUT_OF_RANGE", "--config", str(config)]) == 2

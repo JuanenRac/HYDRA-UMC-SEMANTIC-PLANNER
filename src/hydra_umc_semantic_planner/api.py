@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
 from .decompose import MAX_GOAL_CHARS, decompose_goal
-from .recovery import FailureContext, propose_recovery
+from .recovery import FailureContext, RecoveryPolicy, propose_recovery
 from .validation import validate_plan
 
 
@@ -224,16 +224,22 @@ class Handler(BaseHTTPRequestHandler):
             _write_error(self, 400, "attempt must be an integer of at least 1")
             return
         failure = FailureContext(component=component, error_code=error_code, detail=detail, attempt=attempt)
-        strategy = propose_recovery(failure)
+        strategy = propose_recovery(failure, self.server.policy)
         _write_json(self, 200, asdict(strategy))
 
 
 class SemanticPlannerServer(ThreadingHTTPServer):
     def __init__(
-        self, address: tuple[str, int], role: str, approval_key: bytes | None = None, robot_id: str = ""
+        self,
+        address: tuple[str, int],
+        role: str,
+        approval_key: bytes | None = None,
+        robot_id: str = "",
+        policy: RecoveryPolicy | None = None,
     ) -> None:
         super().__init__(address, Handler)
         # With a key, POST /release only releases a plan whose approval is signed with it, for `robot_id`, and current.
         self.approval_key = approval_key
         self.robot_id = robot_id
+        self.policy = policy if policy is not None else RecoveryPolicy()
         self.role = role

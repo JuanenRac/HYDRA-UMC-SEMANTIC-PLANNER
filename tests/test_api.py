@@ -239,3 +239,21 @@ def test_oversized_and_non_text_fields_are_rejected() -> None:
         assert _post(f"{base}/recover", {"component": "arm", "error_code": "TIMEOUT", "attempt": 0})[0] == 400
         status, body = _post(f"{base}/recover", {"component": "arm", "error_code": "TIMEOUT", "attempt": 2})
         assert status == 200 and body["action"] == "ESCALATE_TO_OPERATOR"
+
+
+def test_recover_out_of_range_follows_the_policy_of_the_server() -> None:
+    from hydra_umc_semantic_planner.recovery import RecoveryPolicy
+
+    for policy, expected in ((None, "ABORT"), (RecoveryPolicy(out_of_range_action="SWAP_TOOL"), "SWAP_TOOL")):
+        server = SemanticPlannerServer(("127.0.0.1", 0), "test role", policy=policy)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            base = f"http://127.0.0.1:{server.server_address[1]}"
+            status, body = _post(f"{base}/recover", {"component": "arm", "error_code": "OUT_OF_RANGE"})
+            assert status == 200
+            assert body["action"] == expected
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)

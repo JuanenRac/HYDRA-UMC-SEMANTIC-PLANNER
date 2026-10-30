@@ -101,7 +101,7 @@ No matching task template for: "make me a sandwich"
 (v0 is a real rule-based planner over a small template vocabulary - an honest miss, not a guess.)
 ```
 
-### `recover --component COMPONENT --error-code ERROR_CODE [--detail DETAIL]`
+### `recover --component COMPONENT --error-code ERROR_CODE [--detail DETAIL] [--config FILE]`
 
 ```
 $ hydra-umc-semantic-planner recover -h
@@ -122,6 +122,10 @@ options:
 adapter's real error vocabulary (`INVALID_STATE`, `OUT_OF_RANGE`,
 `ESTOP_ACTIVE`, `TOOL_INCOMPATIBLE`, `TIMEOUT`, `UNSUPPORTED`) plus one
 domain-specific gripper failure mode (`GRIP_LOST_SEAL`).
+
+`--config FILE` (also `serve --config FILE`, or the variable
+`HYDRA_UMC_SEMANTIC_PLANNER_CONFIG`) names the recovery policy; see
+`docs/RECOVERY_CONTRACT.md`. `OUT_OF_RANGE` is aborted by default.
 
 A transient failure gets a safe retry:
 

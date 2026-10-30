@@ -78,3 +78,40 @@ def test_gripper_pressure_is_only_raised_a_bounded_number_of_times():
 
     assert propose_recovery(FailureContext("grip", GRIP_LOST_SEAL, attempt=3)).action == INCREASE_PRESSURE
     assert propose_recovery(FailureContext("grip", GRIP_LOST_SEAL, attempt=4)).action == ESCALATE_TO_OPERATOR
+
+
+def test_out_of_range_aborts_by_default() -> None:
+    from hydra_umc_semantic_planner.recovery import OUT_OF_RANGE
+
+    assert propose_recovery(FailureContext("arm", OUT_OF_RANGE)).action == ABORT
+
+
+def test_out_of_range_keeps_the_earlier_contract_when_the_configuration_asks_for_it(tmp_path) -> None:
+    import json
+
+    from hydra_umc_semantic_planner.recovery import OUT_OF_RANGE, load_policy
+
+    config = tmp_path / "planner.json"
+    config.write_text(json.dumps({"recovery": {"out_of_range_action": "swap_tool"}}), encoding="utf-8")
+    policy = load_policy(config)
+
+    assert propose_recovery(FailureContext("arm", OUT_OF_RANGE), policy).action == SWAP_TOOL
+    assert propose_recovery(FailureContext("arm", OUT_OF_RANGE)).action == ABORT
+
+
+def test_the_policy_file_is_read_from_the_environment_and_rejects_unknown_actions(tmp_path, monkeypatch) -> None:
+    import json
+
+    import pytest
+
+    from hydra_umc_semantic_planner.recovery import CONFIG_ENV, PolicyError, load_policy
+
+    config = tmp_path / "planner.json"
+    config.write_text(json.dumps({"recovery": {"out_of_range_action": "RETRY"}}), encoding="utf-8")
+    monkeypatch.setenv(CONFIG_ENV, str(config))
+    with pytest.raises(PolicyError):
+        load_policy()
+    config.write_text("{}", encoding="utf-8")
+    assert load_policy().out_of_range_action == ABORT
+    with pytest.raises(PolicyError):
+        load_policy(tmp_path / "missing.json")
