@@ -221,6 +221,24 @@ default, matching the `systemd/hydra-umc-semantic-planner.service` unit.
   `{"error": "..."}` for a malformed JSON body or a missing required
   field.
 
+## The plan as an Operation
+
+`POST /decompose` answers, besides the steps, with `operation`: the same proposal expressed as the common Operation of the SDK
+(`operation.schema.json`), which is what the orchestrator and the job dispatcher read. It is only present when a plan was found.
+
+| Field | Value |
+|---|---|
+| `kind` | `execute_plan` |
+| `status` | `received`: nothing has been authorized, queued or sent. The answer still says `executable: false`; only `POST /release` releases a plan. |
+| `operation_id` | `plan-` and the first 32 characters of the fingerprint: the same plan is the same operation, so a consumer that deduplicates by id keeps one. |
+| `correlation_id` | the fingerprint of the plan |
+| `target` | the `target` of the request (`{"kind": ..., "id": ...}`, the cell or robot the plan is for), `{"kind": "cell", "id": "unassigned"}` when it has none |
+| `params` | `goal`, `steps`, `fingerprint`, `requires_approval` and `priority` (the `priority` of the request, 0 by default) |
+
+The request may carry `target` and `priority`; a `target` without a non-empty `kind` and `id`, or a `priority` that is not an integer, is a `400`.
+The orchestrator (`POST /missions`) and the job dispatcher (`POST /jobs/submit`) take this object as it is: the id of the operation is the id of the
+mission or job, and the `priority`, `required_tool`, `location` and `depends_on` of its `params` are the ones they use.
+
 ## Validation contract
 
 `validate_plan()`/`validate_step()` fail closed on malformed input, not

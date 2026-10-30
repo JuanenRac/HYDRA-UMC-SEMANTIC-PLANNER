@@ -177,6 +177,8 @@ neben seinen drei Geschwistern (VLA-Engine, Voice-UI, Docs-QA) ein:
   (stürzt nie ab, liefert nie einen fehlerhaft geformten Plan), ohne
   eine neue Abhängigkeit hinzuzufügen.
 
+**Ein Plan als Operation.** `POST /decompose` antwortet zusätzlich mit `operation`: der Vorschlag als gemeinsame Operation des SDK (`kind` `execute_plan`, `status` `received`, `target` und `priority` der Anfrage, die Schritte, das Ziel und der Fingerabdruck in `params`; derselbe Plan ist dieselbe `operation_id`). Das ist die Form, die der Orchestrator und der Job-Dispatcher als Mission oder Job übernehmen. Sie gibt nichts frei: `executable` bleibt `false` bis `POST /release`.
+
 ## 🔒 Sicherheit und Schutz
 
 Freigaben können signiert werden (standardmäßig aus): `serve --approval-key-file DATEI --robot-id ROBOT` lässt `POST /release` `robot_id`, `issued_at_ms`, `expires_at_ms` und eine HMAC-SHA256-`signature` über den Plan-Fingerabdruck, den Freigebenden, den Roboter und ein Zeitfenster von höchstens einer Stunde verlangen; eine unsignierte, veränderte, abgelaufene oder für einen anderen Roboter gedachte Freigabe gibt nichts frei; `sign-approval` erzeugt die Felder. Der Schlüssel (mindestens 16 Bytes) liegt in einer Datei der Installation, nie im Repository.

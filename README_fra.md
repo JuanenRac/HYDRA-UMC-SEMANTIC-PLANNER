@@ -179,6 +179,8 @@ frères (VLA-Engine, Voice-UI, Docs-QA) :
   la même propriété réelle (ne plante jamais, ne renvoie jamais de
   plan malformé) sans ajouter de nouvelle dépendance.
 
+**Un plan comme Operation.** `POST /decompose` répond aussi avec `operation` : la proposition exprimée comme l'Operation commune du SDK (`kind` `execute_plan`, `status` `received`, le `target` et la `priority` de la requête, les étapes, l'objectif et l'empreinte dans `params` ; le même plan donne le même `operation_id`). C'est la forme que l'orchestrateur et le répartiteur de tâches prennent comme mission ou comme tâche. Elle ne libère rien : `executable` reste `false` jusqu'à `POST /release`.
+
 ## 🔒 Sécurité et protection
 
 Les approbations peuvent être signées (désactivé par défaut) : `serve --approval-key-file FICHIER --robot-id ROBOT` fait exiger à `POST /release` `robot_id`, `issued_at_ms`, `expires_at_ms` et une `signature` HMAC-SHA256 portant sur l'empreinte du plan, l'approbateur, le robot et une fenêtre de temps d'une heure au plus ; une approbation non signée, altérée, expirée ou destinée à un autre robot ne libère rien ; `sign-approval` produit les champs. La clé (au moins 16 octets) se trouve dans un fichier de l'installation, jamais dans le dépôt.

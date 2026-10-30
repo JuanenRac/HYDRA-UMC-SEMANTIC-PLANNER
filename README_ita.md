@@ -178,6 +178,8 @@ fratelli (VLA-Engine, Voice-UI, Docs-QA):
   stessa proprietà reale (non va mai in crash, non restituisce mai un
   piano malformato) senza aggiungere una nuova dipendenza.
 
+**Un piano come Operation.** `POST /decompose` risponde anche con `operation`: la proposta espressa come Operation comune dell'SDK (`kind` `execute_plan`, `status` `received`, il `target` e la `priority` della richiesta, i passi, l'obiettivo e l'impronta in `params`; lo stesso piano è lo stesso `operation_id`). È la forma che l'orchestratore e il dispatcher dei lavori accettano come missione o come lavoro. Non rilascia nulla: `executable` resta `false` fino a `POST /release`.
+
 ## 🔒 Sicurezza e protezione
 
 Le approvazioni possono essere firmate (spento per impostazione predefinita): `serve --approval-key-file FILE --robot-id ROBOT` fa sì che `POST /release` richieda `robot_id`, `issued_at_ms`, `expires_at_ms` e una `signature` HMAC-SHA256 sull'impronta del piano, l'approvatore, il robot e una finestra di tempo di al massimo un'ora; un'approvazione non firmata, alterata, scaduta o di un altro robot non rilascia nulla; `sign-approval` produce i campi. La chiave (almeno 16 byte) sta in un file dell'installazione, mai nel repository.

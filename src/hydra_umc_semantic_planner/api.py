@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
 from .decompose import MAX_GOAL_CHARS, decompose_goal
+from .operation import plan_as_operation
 from .recovery import FailureContext, RecoveryPolicy, propose_recovery
 from .validation import validate_plan
 
@@ -121,6 +122,17 @@ class Handler(BaseHTTPRequestHandler):
                 _write_error(self, 400, "capabilities must be a list of strings")
                 return
             capabilities = frozenset(raw)
+        # an optional target for the Operation that expresses the plan (the cell or robot it is meant for) and its priority for the queue
+        target = body.get("target")
+        if target is not None and not (
+            isinstance(target, dict) and all(isinstance(target.get(key), str) and target[key] for key in ("kind", "id"))
+        ):
+            _write_error(self, 400, "target must be an object with a non-empty kind and id")
+            return
+        priority = body.get("priority", 0)
+        if isinstance(priority, bool) or not isinstance(priority, int):
+            _write_error(self, 400, "priority must be an integer")
+            return
         plan = decompose_goal(goal)
         if plan is None:
             _write_json(self, 200, {"matched": False, "goal": goal, "steps": [], "issues": []})
@@ -140,6 +152,8 @@ class Handler(BaseHTTPRequestHandler):
             "fingerprint": proposal.fingerprint,
             "estimated_cost": proposal.estimated_cost,
             "explanation": proposal.explanation,
+            # the same proposal as the common Operation of the SDK (status "received"): what the orchestrator and the job dispatcher read
+            "operation": plan_as_operation(plan, proposal, target=target, priority=priority),
         })
 
     def _handle_release(self, body: dict) -> None:

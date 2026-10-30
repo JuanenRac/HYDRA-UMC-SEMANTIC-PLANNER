@@ -173,6 +173,8 @@ service into `docker-compose.yml` alongside its three siblings
   (never crashes, never returns a malformed plan) without a new
   dependency.
 
+**A plan as an Operation.** `POST /decompose` also answers with `operation`: the proposal expressed as the common Operation of the SDK (`kind` `execute_plan`, `status` `received`, the `target` and `priority` of the request, the steps, the goal and the fingerprint in `params`; the same plan is the same `operation_id`). It is the shape that the orchestrator and the job dispatcher take as a mission or a job. It releases nothing: `executable` stays `false` until `POST /release`.
+
 ## 🔒 Security & Safety
 
 Approvals can be signed (off by default): `serve --approval-key-file FILE --robot-id ROBOT` makes `POST /release` require `robot_id`, `issued_at_ms`, `expires_at_ms` and an HMAC-SHA256 `signature` over the plan fingerprint, the approver, the robot and a time window of one hour at most, so an unsigned, altered, expired or other-robot approval releases nothing; `sign-approval` produces the fields. The key (at least 16 bytes) lives in a file of the installation, never in the repository.

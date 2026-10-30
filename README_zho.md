@@ -121,6 +121,8 @@ flowchart TB
 * **为何 `validation.py` 依然存在，即使 `decompose.py` 的真实模板从未真正产生过无效计划。** 固定的模板可以在构造上保证参数格式良好 —— 未来基于 LLM 的规划器则不能。`validate_plan()` 是那个规划器将必须满足的真实、显式契约，在此处、现在就针对当前唯一存在的规划器进行了验证，以便在更难的东西需要满足它之前，契约本身就已被证明正确。
 * **为何 `decompose_goal()` 使用固定的随机种子进行 fuzz 测试，而不是使用 `hypothesis`。** 本项目（与生态系统的其余部分一样）仅依赖标准库 —— 一个对数百个合成目标可重现、带种子的 `random.Random` 循环，在不引入新依赖的情况下，获得了同样的真实属性（从不崩溃，从不返回格式错误的计划）。
 
+**作为 Operation 的计划。** `POST /decompose` 还会返回 `operation`：把提案表示为 SDK 通用的 Operation（`kind` 为 `execute_plan`，`status` 为 `received`，请求中的 `target` 和 `priority`，`params` 中的步骤、目标和指纹；相同的计划对应相同的 `operation_id`）。编排器和作业调度器把它当作任务或作业接收。它不放行任何东西：在 `POST /release` 之前 `executable` 保持 `false`。
+
 ## 🔒 安全与防护
 
 批准可以签名（默认关闭）：`serve --approval-key-file 文件 --robot-id ROBOT` 会让 `POST /release` 要求 `robot_id`、`issued_at_ms`、`expires_at_ms`，以及对计划指纹、批准人、机器人和最长一小时的时间窗口计算的 HMAC-SHA256 `signature`；未签名、被篡改、已过期或属于其他机器人的批准不会放行任何内容；`sign-approval` 用于生成这些字段。密钥（至少 16 字节）放在安装目录中的文件里，绝不放进仓库。

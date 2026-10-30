@@ -171,6 +171,8 @@ serviço no `docker-compose.yml` a par dos seus três irmãos
   (nunca falha, nunca devolve um plano malformado) sem uma nova
   dependência.
 
+**Um plano como Operation.** `POST /decompose` responde também com `operation`: a proposta expressa como a Operation comum do SDK (`kind` `execute_plan`, `status` `received`, o `target` e a `priority` do pedido, os passos, o objetivo e a impressão digital em `params`; o mesmo plano é o mesmo `operation_id`). É a forma que o orquestrador e o despachante de trabalhos aceitam como missão ou como trabalho. Não liberta nada: `executable` continua `false` até `POST /release`.
+
 ## 🔒 Segurança e proteção
 
 As aprovações podem ser assinadas (desligado por predefinição): `serve --approval-key-file FICHEIRO --robot-id ROBOT` faz com que `POST /release` exija `robot_id`, `issued_at_ms`, `expires_at_ms` e uma `signature` HMAC-SHA256 sobre a impressão digital do plano, o aprovador, o robô e uma janela de tempo de uma hora no máximo, pelo que uma aprovação sem assinatura, alterada, expirada ou de outro robô não liberta nada; `sign-approval` produz os campos. A chave (pelo menos 16 bytes) fica num ficheiro da instalação, nunca no repositório.

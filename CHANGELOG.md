@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A plan is expressed as the common Operation of the SDK:** `POST /decompose` answers with `operation` (`kind` `execute_plan`, `status` `received`, the `target` and `priority` of the request, the steps, the goal and the fingerprint in `params`; the same plan is the same `operation_id`), the shape that the orchestrator and the job dispatcher take as a mission or a job. It does not release anything: `executable` stays `false` until `POST /release`.
 - **An out-of-range action is aborted:** `OUT_OF_RANGE` now proposes `ABORT` instead of `SWAP_TOOL`. The earlier action stays available with `recovery.out_of_range_action` set to `SWAP_TOOL` in the configuration file (`configs/semantic-planner.json`, `--config FILE` on `recover` and `serve`, or `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG`); an unknown value is refused.
 
 - **Approvals can be signed, with an expiry and a robot:** `serve --approval-key-file FILE --robot-id ROBOT` (off by default) makes `POST /release` ask for `robot_id`, `issued_at_ms`, `expires_at_ms` and an HMAC-SHA256 `signature` over the plan fingerprint, the approver, the robot and the time window (one hour at most). An approval that is unsigned, altered, expired, for another plan or for another robot releases nothing. The new `sign-approval` command produces the fields. Without the switch the behaviour is unchanged.
