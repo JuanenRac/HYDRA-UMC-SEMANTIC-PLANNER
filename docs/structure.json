@@ -310,6 +310,29 @@
           }
         },
         {
+          "name": "configs/",
+          "desc": {
+            "en": "configuration of the recovery policy",
+            "es": "configuración de la política de recuperación",
+            "de": "Konfiguration der Wiederherstellungsrichtlinie",
+            "fr": "configuration de la politique de récupération",
+            "it": "configurazione della politica di recupero",
+            "ja": "復旧ポリシーの設定",
+            "zh": "恢复策略配置",
+            "pt": "configuração da política de recuperação"
+          },
+          "tree_desc": {
+            "en": "configuration of the recovery policy",
+            "es": "configuración de la política de recuperación",
+            "de": "Konfiguration der Wiederherstellungsrichtlinie",
+            "fr": "configuration de la politique de récupération",
+            "it": "configurazione della politica di recupero",
+            "ja": "復旧ポリシーの設定",
+            "zh": "恢复策略配置",
+            "pt": "configuração da política de recuperação"
+          }
+        },
+        {
           "name": "systemd/",
           "desc": {
             "en": "service unit",

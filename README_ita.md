@@ -296,6 +296,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 ├── tests/                            Test reali: decomposizione, recupero, validazione, api, test di proprietà, CLI end-to-end
 ├── docs/                             Documentazione e base di conoscenza
 ├── images/                           Media e diagrammi
+├── configs/                          configurazione della politica di recupero
 ├── systemd/                          unità di servizio
 ├── tools/                            strumenti del progetto e controlli della CI
 ├── .github/                          workflow di CI e modelli di segnalazione

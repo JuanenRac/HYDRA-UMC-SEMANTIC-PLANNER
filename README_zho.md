@@ -222,6 +222,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 ├── tests/                            真实测试：分解、恢复、验证、api、属性测试、端到端 CLI
 ├── docs/                             文档与知识库
 ├── images/                           媒体与图表
+├── configs/                          恢复策略配置
 ├── systemd/                          服务单元
 ├── tools/                            项目工具和 CI 检查
 ├── .github/                          CI 工作流和 Issue 模板

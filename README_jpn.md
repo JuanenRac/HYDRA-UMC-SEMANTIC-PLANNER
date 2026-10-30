@@ -224,6 +224,7 @@ HYDRA-UMC-SEMANTIC-PLANNER/
 ├── tests/                            実際のテスト：分解、復旧、検証、api、プロパティテスト、エンドツーエンド CLI
 ├── docs/                             ドキュメントとナレッジベース
 ├── images/                           メディアと図表
+├── configs/                          復旧ポリシーの設定
 ├── systemd/                          サービスユニット
 ├── tools/                            プロジェクトのツールと CI の検査
 ├── .github/                          CI ワークフローと Issue テンプレート
