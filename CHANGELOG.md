@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.1.5] - A plan expressed as the common Operation of the SDK, out-of-range actions aborted, signed approvals and the universal README
+
 - **A plan is expressed as the common Operation of the SDK:** `POST /decompose` answers with `operation` (`kind` `execute_plan`, `status` `received`, the `target` and `priority` of the request, the steps, the goal and the fingerprint in `params`; the same plan is the same `operation_id`), the shape that the orchestrator and the job dispatcher take as a mission or a job. It does not release anything: `executable` stays `false` until `POST /release`.
 - **An out-of-range action is aborted:** `OUT_OF_RANGE` now proposes `ABORT` instead of `SWAP_TOOL`. The earlier action stays available with `recovery.out_of_range_action` set to `SWAP_TOOL` in the configuration file (`configs/semantic-planner.json`, `--config FILE` on `recover` and `serve`, or `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG`); an unknown value is refused.
 
