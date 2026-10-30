@@ -207,7 +207,8 @@ default, matching the `systemd/hydra-umc-semantic-planner.service` unit.
   "plan_fingerprint": "...", "capabilities": [...]}` (`capabilities` optional).
   Decomposes the goal again, recomputes the cost and the explanation, and
   answers `{"released": true|false, "reason": "..."}`; a fingerprint that is not
-  the one of this exact plan is never released. The approval is not signed.
+  the one of this exact plan is never released. By default the approval is the words of the request, not a signature.
+  With `serve --approval-key-file FILE --robot-id ROBOT` (off by default; the key file lives in the installation, never in the repository, and holds at least 16 bytes) the request must also carry `robot_id`, `issued_at_ms`, `expires_at_ms` and `signature`: an HMAC-SHA256 over the plan fingerprint, the approver, the robot and the time window, valid for at most one hour. A plan whose approval is unsigned, altered, expired, for another plan or for another robot is answered `released: false` with the reason. `sign-approval GOAL --approved-by NAME --robot-id ROBOT --key-file FILE [--valid-seconds N]` prints the fields to send. The key proves that the approval comes from someone holding the installation's key; it does not tell one person from another.
 * **`POST /recover`** — body `{"component": "...", "error_code": "...",
   "detail": "...", "attempt": 1}` (`detail` and `attempt` optional; `attempt` is
   how many times this failure was reported, and `TIMEOUT` / `GRIP_LOST_SEAL`

@@ -15,6 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
 from .approval import PlanApproval, propose, release_for_execution
+from .approval_signing import SignedApproval, verify_approval
 from .decompose import MAX_GOAL_CHARS, decompose_goal
 from .recovery import FailureContext, propose_recovery
 from .validation import validate_plan
@@ -165,10 +166,36 @@ class Handler(BaseHTTPRequestHandler):
         if plan is None:
             _write_json(self, 200, {"released": False, "reason": "the goal does not decompose into a plan"})
             return
+        if self.server.approval_key is not None:
+            # The approval must be signed, current and for this plan and this robot: the words of the request are not enough.
+            signed = self._signed_approval(body, fingerprint, approved_by)
+            if signed is None:
+                return
+            ok, why = verify_approval(
+                self.server.approval_key, signed, expected_fingerprint=propose(plan).fingerprint,
+                expected_robot_id=self.server.robot_id,
+            )
+            if not ok:
+                _write_json(self, 200, {"released": False, "reason": why})
+                return
         decision = release_for_execution(
             propose(plan), PlanApproval(fingerprint, approved_by), capabilities=capabilities
         )
         _write_json(self, 200, asdict(decision))
+
+    def _signed_approval(self, body: dict, fingerprint: str, approved_by: str) -> SignedApproval | None:
+        robot_id = body.get("robot_id", "")
+        signature = body.get("signature", "")
+        issued = body.get("issued_at_ms")
+        expires = body.get("expires_at_ms")
+        if not isinstance(robot_id, str) or not isinstance(signature, str):
+            _write_error(self, 400, "robot_id and signature must be text")
+            return None
+        if not all(isinstance(value, int) and not isinstance(value, bool) for value in (issued, expires)):
+            # a missing or malformed time is a refusal of the release, not a server error
+            _write_json(self, 200, {"released": False, "reason": "the approval is not signed with its validity window"})
+            return None
+        return SignedApproval(fingerprint, approved_by, robot_id, issued, expires, signature)
 
     def _required_text(self, body: dict, field: str) -> str | None:
         """The text value of `field`, or None after answering 400 when it is missing or not text."""
@@ -202,6 +229,11 @@ class Handler(BaseHTTPRequestHandler):
 
 
 class SemanticPlannerServer(ThreadingHTTPServer):
-    def __init__(self, address: tuple[str, int], role: str) -> None:
+    def __init__(
+        self, address: tuple[str, int], role: str, approval_key: bytes | None = None, robot_id: str = ""
+    ) -> None:
         super().__init__(address, Handler)
+        # With a key, POST /release only releases a plan whose approval is signed with it, for `robot_id`, and current.
+        self.approval_key = approval_key
+        self.robot_id = robot_id
         self.role = role

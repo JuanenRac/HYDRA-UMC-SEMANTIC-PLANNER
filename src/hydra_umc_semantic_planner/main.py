@@ -14,10 +14,12 @@ neither is the local-LLM reasoning the README's own roadmap describes.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 
 from . import __version__
 from .api import SemanticPlannerServer
+from .approval_signing import ApprovalKeyError, load_key, sign_approval
 from .decompose import decompose_goal
 from .recovery import FailureContext, propose_recovery
 from .validation import validate_plan
@@ -74,10 +76,22 @@ def _run_recover(component: str, error_code: str, detail: str) -> int:
     return 0
 
 
-def _run_serve(addr: str, port: int) -> int:
-    server = SemanticPlannerServer((addr, port), ROLE)
+def _run_serve(addr: str, port: int, approval_key_file: str | None = None, robot_id: str = "") -> int:
+    approval_key = None
+    if approval_key_file:
+        if not robot_id.strip():
+            print("error: --approval-key-file needs --robot-id: a signed approval is for one robot", file=sys.stderr)
+            return 2
+        try:
+            approval_key = load_key(approval_key_file)
+        except ApprovalKeyError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 2
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
+    if approval_key is not None:
+        print(f"[semantic-planner] POST /release needs an approval signed for robot {robot_id!r}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -112,7 +126,47 @@ def build_parser() -> argparse.ArgumentParser:
     serve_parser.add_argument("--addr", default="127.0.0.1", help="address to bind the HTTP API to")
     serve_parser.add_argument("--port", type=int, default=8109, help="port for the HTTP API")
 
+    serve_parser.add_argument(
+        "--approval-key-file", default=None,
+        help="file with the key that signs approvals; with it POST /release only releases a plan whose approval is "
+             "signed, current and for --robot-id (off by default: the approval is the words of the request)",
+    )
+    serve_parser.add_argument("--robot-id", default="", help="the robot this service releases plans for (needed with --approval-key-file)")
+
+    sign_parser = subparsers.add_parser(
+        "sign-approval",
+        help="Sign the approval of the plan of a goal, for POST /release of a service started with --approval-key-file.",
+    )
+    sign_parser.add_argument("goal", help="The goal whose plan is approved.")
+    sign_parser.add_argument("--approved-by", required=True, help="Who approves the plan.")
+    sign_parser.add_argument("--robot-id", required=True, help="The robot the approval is for.")
+    sign_parser.add_argument("--key-file", required=True, help="File with the signing key.")
+    sign_parser.add_argument("--valid-seconds", type=int, default=300, help="How long the approval is valid (default 300, at most 3600).")
+
     return parser
+
+
+def _run_sign(args: argparse.Namespace) -> int:
+    from .approval import propose
+
+    plan = decompose_goal(args.goal)
+    if plan is None:
+        print(f'error: no plan for "{args.goal}"', file=sys.stderr)
+        return 1
+    try:
+        key = load_key(args.key_file)
+        signed = sign_approval(
+            key, propose(plan).fingerprint, args.approved_by, args.robot_id, validity_ms=args.valid_seconds * 1000
+        )
+    except (ApprovalKeyError, ValueError) as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 2
+    print(json.dumps({
+        "goal": args.goal, "plan_fingerprint": signed.plan_fingerprint, "approved_by": signed.approved_by,
+        "robot_id": signed.robot_id, "issued_at_ms": signed.issued_at_ms, "expires_at_ms": signed.expires_at_ms,
+        "signature": signed.signature,
+    }, indent=2))
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -124,7 +178,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "recover":
         return _run_recover(args.component, args.error_code, args.detail)
     if args.command == "serve":
-        return _run_serve(args.addr, args.port)
+        return _run_serve(args.addr, args.port, args.approval_key_file, args.robot_id)
+    if args.command == "sign-approval":
+        return _run_sign(args)
 
     _print_identity()
     return 0

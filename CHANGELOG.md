@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Approvals can be signed, with an expiry and a robot:** `serve --approval-key-file FILE --robot-id ROBOT` (off by default) makes `POST /release` ask for `robot_id`, `issued_at_ms`, `expires_at_ms` and an HMAC-SHA256 `signature` over the plan fingerprint, the approver, the robot and the time window (one hour at most). An approval that is unsigned, altered, expired, for another plan or for another robot releases nothing. The new `sign-approval` command produces the fields. Without the switch the behaviour is unchanged.
+
 - **README in the universal layout:** the README and its seven translations follow the layout that the four families share (22 sections in a fixed order), with an architecture picture and a repository-structure picture drawn from `docs/architecture.json` and `docs/structure.json`; the CI validator checks both pictures and the file tree.
 
 - **The layout of the README is checked in the CI:** the validator runs `tools/universal_readme_check.py` and lists, as a warning, what differs from the universal layout of the README.
