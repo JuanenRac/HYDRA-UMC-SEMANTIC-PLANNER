@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-88%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-102%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,12 +39,12 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.1.4` |
 | 成熟度 | 可用 |
-| 测试 | 88 (`python -m pytest -q tests`) |
+| 测试 | 102 (`python -m pytest -q tests`) |
 | 技术栈 | Python / local LLM (Llama-3 class) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
 
-**跳转：** [概述](#-概述) · [架构](#-架构) · [快速开始](#-快速开始) · [测试](#-测试) · [仓库结构](#-仓库结构) · [相关项目](#-相关项目)
+**跳转：** [概述](#-概述) · [架构](#-架构) · [安全与防护](#-安全与防护) · [快速开始](#-快速开始) · [测试](#-测试) · [仓库结构](#-仓库结构) · [相关项目](#-相关项目)
 
 ## 🚦 项目状态
 
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 88 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 102 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🔴 | 尚未：此版本没有在真实硬件上运行的记录 |
 | 文档 | 🟢 | 八种语言的 README，每次变更都会与清单核对 |
 
@@ -121,6 +121,10 @@ flowchart TB
 * **为何 `validation.py` 依然存在，即使 `decompose.py` 的真实模板从未真正产生过无效计划。** 固定的模板可以在构造上保证参数格式良好 —— 未来基于 LLM 的规划器则不能。`validate_plan()` 是那个规划器将必须满足的真实、显式契约，在此处、现在就针对当前唯一存在的规划器进行了验证，以便在更难的东西需要满足它之前，契约本身就已被证明正确。
 * **为何 `decompose_goal()` 使用固定的随机种子进行 fuzz 测试，而不是使用 `hypothesis`。** 本项目（与生态系统的其余部分一样）仅依赖标准库 —— 一个对数百个合成目标可重现、带种子的 `random.Random` 循环，在不引入新依赖的情况下，获得了同样的真实属性（从不崩溃，从不返回格式错误的计划）。
 
+## 🔒 安全与防护
+
+批准可以签名（默认关闭）：`serve --approval-key-file 文件 --robot-id ROBOT` 会让 `POST /release` 要求 `robot_id`、`issued_at_ms`、`expires_at_ms`，以及对计划指纹、批准人、机器人和最长一小时的时间窗口计算的 HMAC-SHA256 `signature`；未签名、被篡改、已过期或属于其他机器人的批准不会放行任何内容；`sign-approval` 用于生成这些字段。密钥（至少 16 字节）放在安装目录中的文件里，绝不放进仓库。
+
 ## 🚀 快速开始
 
 需要 Python 3.10 或更高版本。
@@ -134,7 +138,7 @@ flowchart TB
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 88 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 102 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 

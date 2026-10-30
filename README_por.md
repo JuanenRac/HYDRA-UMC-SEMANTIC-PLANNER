@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-88%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-102%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.4-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,12 +39,12 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versão | `0.1.4` |
 | Maturidade | Funcional |
-| Testes | 88 (`python -m pytest -q tests`) |
+| Testes | 102 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destino | O Raspberry Pi CM5 de uma célula HYDRA-UMC |
 | Em hardware real | Ainda não: não há registo de execução em hardware real para esta versão |
 
-**Ir para:** [Visão geral](#-visão-geral) · [Arquitetura](#-arquitetura) · [Início rápido](#-início-rápido) · [Testes](#-testes) · [Estrutura do repositório](#-estrutura-do-repositório) · [Projetos relacionados](#-projetos-relacionados)
+**Ir para:** [Visão geral](#-visão-geral) · [Arquitetura](#-arquitetura) · [Segurança e proteção](#-segurança-e-proteção) · [Início rápido](#-início-rápido) · [Testes](#-testes) · [Estrutura do repositório](#-estrutura-do-repositório) · [Projetos relacionados](#-projetos-relacionados)
 
 ## 🚦 Estado do projeto
 
@@ -55,7 +55,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
-| Testes | 🟢 | 88 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 102 testes automáticos, executados a cada alteração |
 | Hardware real | 🔴 | Ainda não: não há registo de execução em hardware real para esta versão |
 | Documentação | 🟢 | README em oito idiomas, verificado contra o manifesto a cada alteração |
 
@@ -171,6 +171,10 @@ serviço no `docker-compose.yml` a par dos seus três irmãos
   (nunca falha, nunca devolve um plano malformado) sem uma nova
   dependência.
 
+## 🔒 Segurança e proteção
+
+As aprovações podem ser assinadas (desligado por predefinição): `serve --approval-key-file FICHEIRO --robot-id ROBOT` faz com que `POST /release` exija `robot_id`, `issued_at_ms`, `expires_at_ms` e uma `signature` HMAC-SHA256 sobre a impressão digital do plano, o aprovador, o robô e uma janela de tempo de uma hora no máximo, pelo que uma aprovação sem assinatura, alterada, expirada ou de outro robô não liberta nada; `sign-approval` produz os campos. A chave (pelo menos 16 bytes) fica num ficheiro da instalação, nunca no repositório.
+
 ## 🚀 Início rápido
 
 Requer Python 3.10 ou superior.
@@ -184,7 +188,7 @@ Requer Python 3.10 ou superior.
 
 ## 🧪 Testes
 
-88 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
+102 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
 
 A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
 
