@@ -16,14 +16,14 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-102%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-119%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (102 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
+**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (119 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
 
 **Known limits of the rule-based planner:** a goal that is negated or cancelled ("do not ...", "never ..."), that fits more than one template, that has no object, or that is longer than 512 characters gets no plan. The object is read from the words after the verb, not from the end of the sentence. A decomposition is a proposal, not an order: `POST /decompose` answers `executable: false` with a fingerprint, the estimated cost and a plain-language explanation, and `POST /release` (or `release_for_execution()`) recomputes the cost and the explanation from the plan and checks the approval fingerprint before anything may be executed. The approval is not signed yet: it names a person but is not a credential. `FailureContext.attempt` makes `TIMEOUT` and `GRIP_LOST_SEAL` recoveries escalate to an operator after 1 and 3 automatic attempts.
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.1.5` |
 | Maturity | Functional |
-| Tests | 102 (`python -m pytest -q tests`) |
+| Tests | 119 (`python -m pytest -q tests`) |
 | Stack | Python / local LLM (Llama-3 class) |
 | Target | The Raspberry Pi CM5 of a HYDRA-UMC cell |
 | On real hardware | Not yet: no run on real hardware is recorded for this version |
@@ -55,7 +55,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟡 | Works for its main purpose; the honesty check above lists what is still missing |
-| Tests | 🟢 | 102 automated tests, run on every change |
+| Tests | 🟢 | 119 automated tests, run on every change |
 | Real hardware | 🔴 | Not yet: no run on real hardware is recorded for this version |
 | Documentation | 🟢 | README in eight languages, checked against the manifest on every change |
 
@@ -192,7 +192,7 @@ Requires Python 3.10 or newer.
 
 ## 🧪 Testing
 
-102 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
+119 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
 
 The CI runs `HYDRA_UMC_CI=1 python tools/ci_validate.py`, which checks the manifest, the documents, the eight READMEs and the pictures.
 

@@ -16,14 +16,14 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-102%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-119%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificación de honestidad - qué funciona de verdad hoy:** el vocabulario cerrado de primitivas (`primitives.py`), la descomposición de tareas basada en reglas (`decompose.py`), la recuperación semántica de errores basada en reglas sobre una tabla fija de códigos de error de MCU (`recovery.py`), el validador de precondiciones que rechaza un plan mal formado en vez de dejarlo pasar (`validation.py`), y la superficie JSON/HTTP con `http.server` de la stdlib sobre esa misma lógica (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) son reales y están probados (102 tests, `pytest`), incluyendo un test de fuzzing que ejecuta `decompose_goal()` contra cientos de objetivos aleatorios/inválidos con una semilla fija y comprueba que nunca falla ni devuelve un plan mal formado. Lo que todavía NO es real: no hay ningún LLM local en todo este código - `decompose.py` es coincidencia de patrones/plantillas regex sobre un vocabulario de objetivos pequeño y fijo (ensamblar/pick-and-place/inspeccionar), no comprensión del lenguaje, y nunca se ha ejecutado contra un módulo Hailo-10 real (este entorno no tiene ninguno). Las viñetas "Agentic Workflow" y "Hailo-10 Optimized" más abajo están marcadas explícitamente como `(planned)` en este mismo README - describen el reemplazo eventual del núcleo actual basado en reglas de `decompose_goal()`, no algo que exista hoy. Ver `CHANGELOG.md` para lo que ya se ha entregado exactamente, y la HOJA DE RUTA más abajo para lo que sigue abierto.
+**Verificación de honestidad - qué funciona de verdad hoy:** el vocabulario cerrado de primitivas (`primitives.py`), la descomposición de tareas basada en reglas (`decompose.py`), la recuperación semántica de errores basada en reglas sobre una tabla fija de códigos de error de MCU (`recovery.py`), el validador de precondiciones que rechaza un plan mal formado en vez de dejarlo pasar (`validation.py`), y la superficie JSON/HTTP con `http.server` de la stdlib sobre esa misma lógica (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) son reales y están probados (119 tests, `pytest`), incluyendo un test de fuzzing que ejecuta `decompose_goal()` contra cientos de objetivos aleatorios/inválidos con una semilla fija y comprueba que nunca falla ni devuelve un plan mal formado. Lo que todavía NO es real: no hay ningún LLM local en todo este código - `decompose.py` es coincidencia de patrones/plantillas regex sobre un vocabulario de objetivos pequeño y fijo (ensamblar/pick-and-place/inspeccionar), no comprensión del lenguaje, y nunca se ha ejecutado contra un módulo Hailo-10 real (este entorno no tiene ninguno). Las viñetas "Agentic Workflow" y "Hailo-10 Optimized" más abajo están marcadas explícitamente como `(planned)` en este mismo README - describen el reemplazo eventual del núcleo actual basado en reglas de `decompose_goal()`, no algo que exista hoy. Ver `CHANGELOG.md` para lo que ya se ha entregado exactamente, y la HOJA DE RUTA más abajo para lo que sigue abierto.
 
 **Límites conocidos del planificador por reglas:** un objetivo negado o cancelado («no ...», «nunca ...»), que encaja en más de una plantilla, sin objeto o de más de 512 caracteres no produce plan. El objeto se lee de las palabras que siguen al verbo, no del final de la frase. Una descomposición es una propuesta, no una orden: `POST /decompose` responde `executable: false` con una huella, el coste estimado y una explicación legible, y `POST /release` (o `release_for_execution()`) recalcula el coste y la explicación a partir del plan y comprueba la huella de la aprobación antes de poder ejecutar nada. La aprobación aún no está firmada: nombra a una persona pero no es una credencial. `FailureContext.attempt` hace que las recuperaciones de `TIMEOUT` y `GRIP_LOST_SEAL` escalen a un operador tras 1 y 3 intentos automáticos.
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versión | `0.1.5` |
 | Madurez | Funcional |
-| Tests | 102 (`python -m pytest -q tests`) |
+| Tests | 119 (`python -m pytest -q tests`) |
 | Tecnología | Python / local LLM (Llama-3 class) |
 | Destino | La Raspberry Pi CM5 de una celda HYDRA-UMC |
 | En hardware real | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
@@ -55,7 +55,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟡 | Funciona para su propósito principal; la comprobación de honestidad de arriba lista lo que aún falta |
-| Pruebas | 🟢 | 102 pruebas automáticas, ejecutadas en cada cambio |
+| Pruebas | 🟢 | 119 pruebas automáticas, ejecutadas en cada cambio |
 | Hardware real | 🔴 | Todavía no: no consta ninguna ejecución en hardware real para esta versión |
 | Documentación | 🟢 | README en ocho idiomas, comprobado contra el manifiesto en cada cambio |
 
@@ -196,7 +196,7 @@ Requiere Python 3.10 o superior.
 
 ## 🧪 Pruebas
 
-102 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
+119 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
 
 El CI ejecuta `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que comprueba el manifiesto, los documentos, los ocho README y las imágenes.
 
