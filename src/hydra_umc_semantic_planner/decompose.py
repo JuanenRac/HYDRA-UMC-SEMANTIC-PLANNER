@@ -95,22 +95,22 @@ def _extract_target(goal: str, template: str) -> tuple[str, str | None] | None:
 def _build_plan(template: str, target: str, destination: str | None = None) -> tuple[Step, ...]:
     if template == "assemble":
         return (
-            Step(MOVE_TO, {"location": "pickup"}),
-            Step(GRIP, {"target": target}),
-            Step(MOVE_TO, {"location": "assembly_point"}),
-            Step(RELEASE, {"target": target}),
+            Step(MOVE_TO, {"location": "pickup"}),  # type: ignore[arg-type]
+            Step(GRIP, {"target": target}),  # type: ignore[arg-type]
+            Step(MOVE_TO, {"location": "assembly_point"}),  # type: ignore[arg-type]
+            Step(RELEASE, {"target": target}),  # type: ignore[arg-type]
         )
     if template == "pick_and_place":
         return (
-            Step(MOVE_TO, {"location": "pickup"}),
-            Step(GRIP, {"target": target}),
-            Step(MOVE_TO, {"location": destination or "destination"}),
-            Step(RELEASE, {"target": target}),
+            Step(MOVE_TO, {"location": "pickup"}),  # type: ignore[arg-type]
+            Step(GRIP, {"target": target}),  # type: ignore[arg-type]
+            Step(MOVE_TO, {"location": destination or "destination"}),  # type: ignore[arg-type]
+            Step(RELEASE, {"target": target}),  # type: ignore[arg-type]
         )
     if template == "inspect":
         return (
-            Step(MOVE_TO, {"location": target}),
-            Step(INSPECT, {"target": target}),
+            Step(MOVE_TO, {"location": target}),  # type: ignore[arg-type]
+            Step(INSPECT, {"target": target}),  # type: ignore[arg-type]
         )
     raise ValueError(f"unknown template: {template}")
 

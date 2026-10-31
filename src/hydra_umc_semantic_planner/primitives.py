@@ -35,6 +35,7 @@ class Params(Mapping[str, Any]):
     """
 
     __slots__ = ("_items",)
+    _items: dict[str, Any]
 
     def __init__(self, items: Mapping[str, Any] | None = None) -> None:
         object.__setattr__(self, "_items", dict(items or {}))

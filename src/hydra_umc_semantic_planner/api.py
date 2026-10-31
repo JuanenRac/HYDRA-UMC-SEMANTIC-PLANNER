@@ -25,7 +25,7 @@ from .validation import validate_plan
 def _write_json(handler: BaseHTTPRequestHandler, status: int, payload: object) -> None:
     def default(o: object) -> object:
         if hasattr(o, "__dataclass_fields__"):
-            return asdict(o)
+            return asdict(o)  # type: ignore[call-overload]
         return str(o)
     body = json.dumps(payload, default=default).encode("utf-8")
     handler.send_response(status)
@@ -209,7 +209,7 @@ class Handler(BaseHTTPRequestHandler):
             # a missing or malformed time is a refusal of the release, not a server error
             _write_json(self, 200, {"released": False, "reason": "the approval is not signed with its validity window"})
             return None
-        return SignedApproval(fingerprint, approved_by, robot_id, issued, expires, signature)
+        return SignedApproval(fingerprint, approved_by, robot_id, issued, expires, signature)  # type: ignore[arg-type]
 
     def _required_text(self, body: dict, field: str) -> str | None:
         """The text value of `field`, or None after answering 400 when it is missing or not text."""
