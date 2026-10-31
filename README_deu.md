@@ -16,14 +16,14 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-119%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-179%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** das geschlossene Primitiven-Vokabular (`primitives.py`), die regelbasierte Aufgabenzerlegung (`decompose.py`), die regelbasierte semantische Fehlerbehebung über eine feste MCU-Fehlercode-Tabelle (`recovery.py`), der Vorbedingungs-Validator, der einen fehlerhaft geformten Plan ablehnt statt ihn durchzulassen (`validation.py`), und die einfache JSON/HTTP-Oberfläche über `http.server` aus der Standardbibliothek über dieselbe Logik (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) sind real und getestet (119 Tests, `pytest`), einschließlich eines Fuzz-Tests, der `decompose_goal()` gegen Hunderte zufällige/ungültige Ziele mit festem Seed laufen lässt und sicherstellt, dass es nie abstürzt oder einen fehlerhaft geformten Plan zurückgibt. Was NOCH NICHT real ist: Es gibt nirgendwo in diesem Code ein lokales LLM - `decompose.py` ist Muster-/Template-Abgleich per Regex über ein kleines, festes Zielvokabular (Zusammenbauen/Pick-and-Place/Inspizieren), kein Sprachverständnis, und es lief noch nie gegen ein echtes Hailo-10-Modul (diese Umgebung besitzt keines). Die Punkte "Agentic Workflow" und "Hailo-10 Optimized" weiter unten sind in diesem selben README ausdrücklich als `(planned)` markiert - sie beschreiben den eventuellen Ersatz für den heutigen regelbasierten Kern von `decompose_goal()`, nicht etwas, das heute existiert. Siehe `CHANGELOG.md` für genau das, was bisher ausgeliefert wurde, und die ROADMAP weiter unten für das, was noch offen ist.
+**Ehrlichkeitscheck - was heute wirklich läuft:** das geschlossene Primitiven-Vokabular (`primitives.py`), die regelbasierte Aufgabenzerlegung (`decompose.py`), die regelbasierte semantische Fehlerbehebung über eine feste MCU-Fehlercode-Tabelle (`recovery.py`), der Vorbedingungs-Validator, der einen fehlerhaft geformten Plan ablehnt statt ihn durchzulassen (`validation.py`), und die einfache JSON/HTTP-Oberfläche über `http.server` aus der Standardbibliothek über dieselbe Logik (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) sind real und getestet (179 Tests, `pytest`), einschließlich eines Fuzz-Tests, der `decompose_goal()` gegen Hunderte zufällige/ungültige Ziele mit festem Seed laufen lässt und sicherstellt, dass es nie abstürzt oder einen fehlerhaft geformten Plan zurückgibt. Was NOCH NICHT real ist: Es gibt nirgendwo in diesem Code ein lokales LLM - `decompose.py` ist Muster-/Template-Abgleich per Regex über ein kleines, festes Zielvokabular (Zusammenbauen/Pick-and-Place/Inspizieren), kein Sprachverständnis, und es lief noch nie gegen ein echtes Hailo-10-Modul (diese Umgebung besitzt keines). Die Punkte "Agentic Workflow" und "Hailo-10 Optimized" weiter unten sind in diesem selben README ausdrücklich als `(planned)` markiert - sie beschreiben den eventuellen Ersatz für den heutigen regelbasierten Kern von `decompose_goal()`, nicht etwas, das heute existiert. Siehe `CHANGELOG.md` für genau das, was bisher ausgeliefert wurde, und die ROADMAP weiter unten für das, was noch offen ist.
 
 **Bekannte Grenzen des regelbasierten Planers:** Ein verneintes oder abgebrochenes Ziel („nicht ...“, „nie ...“), das zu mehr als einer Vorlage passt, kein Objekt hat oder länger als 512 Zeichen ist, ergibt keinen Plan. Das Objekt wird aus den Wörtern nach dem Verb gelesen, nicht vom Satzende. Eine Zerlegung ist ein Vorschlag, kein Befehl: `POST /decompose` antwortet mit `executable: false`, einem Fingerabdruck, den geschätzten Kosten und einer verständlichen Erklärung; `POST /release` (oder `release_for_execution()`) berechnet Kosten und Erklärung aus dem Plan neu und prüft den Fingerabdruck der Freigabe, bevor etwas ausgeführt werden darf. Die Freigabe ist noch nicht signiert: Sie nennt eine Person, ist aber kein Berechtigungsnachweis. Mit `FailureContext.attempt` eskalieren die Wiederherstellungen für `TIMEOUT` und `GRIP_LOST_SEAL` nach 1 bzw. 3 automatischen Versuchen an einen Bediener.
 
@@ -39,12 +39,12 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.1.5` |
 | Reifegrad | Funktionsfähig |
-| Tests | 119 (`python -m pytest -q tests`) |
+| Tests | 179 (`python -m pytest -q tests`) |
 | Technik | Python / local LLM (Llama-3 class) |
 | Ziel | Der Raspberry Pi CM5 einer HYDRA-UMC-Zelle |
 | Auf echter Hardware | Noch nicht: für diese Version ist kein Lauf auf echter Hardware vermerkt |
 
-**Springe zu:** [Überblick](#-überblick) · [Architektur](#-architektur) · [Sicherheit und Schutz](#-sicherheit-und-schutz) · [Schnellstart](#-schnellstart) · [Tests](#-tests) · [Struktur des Repositorys](#-struktur-des-repositorys) · [Verwandte Projekte](#-verwandte-projekte)
+**Springe zu:** [Überblick](#-überblick) · [Architektur](#-architektur) · [Sicherheit und Schutz](#-sicherheit-und-schutz) · [Konfiguration](#-konfiguration) · [Schnellstart](#-schnellstart) · [Tests](#-tests) · [Struktur des Repositorys](#-struktur-des-repositorys) · [Verwandte Projekte](#-verwandte-projekte)
 
 ## 🚦 Projektstatus
 
@@ -55,7 +55,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
 | Software | 🟡 | Funktioniert für seinen Hauptzweck; die Ehrlichkeitsprüfung oben nennt, was noch fehlt |
-| Tests | 🟢 | 119 automatische Tests, bei jeder Änderung ausgeführt |
+| Tests | 🟢 | 179 automatische Tests, bei jeder Änderung ausgeführt |
 | Echte Hardware | 🔴 | Noch nicht: für diese Version ist kein Lauf auf echter Hardware vermerkt |
 | Dokumentation | 🟢 | README in acht Sprachen, bei jeder Änderung gegen das Manifest geprüft |
 
@@ -183,6 +183,10 @@ neben seinen drei Geschwistern (VLA-Engine, Voice-UI, Docs-QA) ein:
 
 Freigaben können signiert werden (standardmäßig aus): `serve --approval-key-file DATEI --robot-id ROBOT` lässt `POST /release` `robot_id`, `issued_at_ms`, `expires_at_ms` und eine HMAC-SHA256-`signature` über den Plan-Fingerabdruck, den Freigebenden, den Roboter und ein Zeitfenster von höchstens einer Stunde verlangen; eine unsignierte, veränderte, abgelaufene oder für einen anderen Roboter gedachte Freigabe gibt nichts frei; `sign-approval` erzeugt die Felder. Der Schlüssel (mindestens 16 Bytes) liegt in einer Datei der Installation, nie im Repository.
 
+## ⚙️ Konfiguration
+
+Plansimulation (standardmäßig aus): Ist in der Konfigurationsdatei `plan_simulation.enabled` auf `true` gesetzt, prüft `POST /plan/simulate` eine Schrittliste gegen deklarierte Randbedingungen (Arbeitsraumquader, Katalog der Orte, verfügbare Roboter, maximale Schritt- und Plandauer, Ressourcen, die nur ein Schritt zugleich halten darf, Reihenfolge der Abhängigkeiten, der Greifer jedes Roboters) und spielt sie auf einer simulierten Uhr durch. Die Antwort ist ein Urteil, das JEDE verletzte Regel mit Schritt, Wert und Grenze auflistet und, wo sich eines ergibt, einen deterministischen Korrekturvorschlag; sie führt nie etwas aus und gibt nie etwas frei, und eine nicht verständliche Eingabe ergibt 400, nie ein „akzeptiert“. Bei ausgeschaltetem Schalter antwortet die Route wie zuvor mit 404. Siehe `docs/PLAN_SIMULATION.md`.
+
 ## 🚀 Schnellstart
 
 Benötigt Python 3.10 oder neuer.
@@ -196,7 +200,7 @@ Benötigt Python 3.10 oder neuer.
 
 ## 🧪 Tests
 
-119 automatische Tests laufen mit `python -m pytest -q tests`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
+179 automatische Tests laufen mit `python -m pytest -q tests`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
 
 Die CI führt `HYDRA_UMC_CI=1 python tools/ci_validate.py` aus; das prüft das Manifest, die Dokumente, die acht READMEs und die Bilder.
 

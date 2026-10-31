@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-119%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-179%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,12 +39,12 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versione | `0.1.5` |
 | Maturità | Funzionale |
-| Test | 119 (`python -m pytest -q tests`) |
+| Test | 179 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destinazione | Il Raspberry Pi CM5 di una cella HYDRA-UMC |
 | Su hardware reale | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
 
-**Vai a:** [Panoramica](#-panoramica) · [Architettura](#-architettura) · [Sicurezza e protezione](#-sicurezza-e-protezione) · [Avvio rapido](#-avvio-rapido) · [Test](#-test) · [Struttura del repository](#-struttura-del-repository) · [Progetti correlati](#-progetti-correlati)
+**Vai a:** [Panoramica](#-panoramica) · [Architettura](#-architettura) · [Sicurezza e protezione](#-sicurezza-e-protezione) · [Configurazione](#-configurazione) · [Avvio rapido](#-avvio-rapido) · [Test](#-test) · [Struttura del repository](#-struttura-del-repository) · [Progetti correlati](#-progetti-correlati)
 
 ## 🚦 Stato del progetto
 
@@ -55,7 +55,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 | Area | Stato | Cosa significa qui |
 |---|---|---|
 | Software | 🟡 | Funziona per il suo scopo principale; la verifica di onestà qui sopra elenca ciò che manca ancora |
-| Test | 🟢 | 119 test automatici, eseguiti a ogni modifica |
+| Test | 🟢 | 179 test automatici, eseguiti a ogni modifica |
 | Hardware reale | 🔴 | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
 | Documentazione | 🟢 | README in otto lingue, verificato rispetto al manifesto a ogni modifica |
 
@@ -184,6 +184,10 @@ fratelli (VLA-Engine, Voice-UI, Docs-QA):
 
 Le approvazioni possono essere firmate (spento per impostazione predefinita): `serve --approval-key-file FILE --robot-id ROBOT` fa sì che `POST /release` richieda `robot_id`, `issued_at_ms`, `expires_at_ms` e una `signature` HMAC-SHA256 sull'impronta del piano, l'approvatore, il robot e una finestra di tempo di al massimo un'ora; un'approvazione non firmata, alterata, scaduta o di un altro robot non rilascia nulla; `sign-approval` produce i campi. La chiave (almeno 16 byte) sta in un file dell'installazione, mai nel repository.
 
+## ⚙️ Configurazione
+
+Simulazione dei piani (spenta per impostazione predefinita): con `plan_simulation.enabled` impostato su `true` nel file di configurazione, `POST /plan/simulate` verifica un elenco di passi rispetto a vincoli dichiarati (riquadro dello spazio di lavoro, catalogo delle posizioni, robot disponibili, tempo massimo per passo e per piano, risorse che un solo passo può tenere alla volta, ordine delle dipendenze, la pinza di ogni robot) e lo percorre con un orologio simulato. Risponde con un verdetto che elenca OGNI regola violata con il suo passo, valore e limite e, quando ne discende una, un suggerimento deterministico; non esegue né rilascia mai nulla, e un input che non capisce dà un 400, mai un «accettato». Con l'interruttore spento la route risponde 404 come prima. Vedi `docs/PLAN_SIMULATION.md`.
+
 ## 🚀 Avvio rapido
 
 Richiede Python 3.10 o successivo.
@@ -197,7 +201,7 @@ Richiede Python 3.10 o successivo.
 
 ## 🧪 Test
 
-119 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
+179 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
 
 La CI esegue `HYDRA_UMC_CI=1 python tools/ci_validate.py`, che controlla il manifesto, i documenti, gli otto README e le immagini.
 

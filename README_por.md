@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-119%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-179%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,12 +39,12 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versão | `0.1.5` |
 | Maturidade | Funcional |
-| Testes | 119 (`python -m pytest -q tests`) |
+| Testes | 179 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destino | O Raspberry Pi CM5 de uma célula HYDRA-UMC |
 | Em hardware real | Ainda não: não há registo de execução em hardware real para esta versão |
 
-**Ir para:** [Visão geral](#-visão-geral) · [Arquitetura](#-arquitetura) · [Segurança e proteção](#-segurança-e-proteção) · [Início rápido](#-início-rápido) · [Testes](#-testes) · [Estrutura do repositório](#-estrutura-do-repositório) · [Projetos relacionados](#-projetos-relacionados)
+**Ir para:** [Visão geral](#-visão-geral) · [Arquitetura](#-arquitetura) · [Segurança e proteção](#-segurança-e-proteção) · [Configuração](#-configuração) · [Início rápido](#-início-rápido) · [Testes](#-testes) · [Estrutura do repositório](#-estrutura-do-repositório) · [Projetos relacionados](#-projetos-relacionados)
 
 ## 🚦 Estado do projeto
 
@@ -55,7 +55,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
-| Testes | 🟢 | 119 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 179 testes automáticos, executados a cada alteração |
 | Hardware real | 🔴 | Ainda não: não há registo de execução em hardware real para esta versão |
 | Documentação | 🟢 | README em oito idiomas, verificado contra o manifesto a cada alteração |
 
@@ -177,6 +177,10 @@ serviço no `docker-compose.yml` a par dos seus três irmãos
 
 As aprovações podem ser assinadas (desligado por predefinição): `serve --approval-key-file FICHEIRO --robot-id ROBOT` faz com que `POST /release` exija `robot_id`, `issued_at_ms`, `expires_at_ms` e uma `signature` HMAC-SHA256 sobre a impressão digital do plano, o aprovador, o robô e uma janela de tempo de uma hora no máximo, pelo que uma aprovação sem assinatura, alterada, expirada ou de outro robô não liberta nada; `sign-approval` produz os campos. A chave (pelo menos 16 bytes) fica num ficheiro da instalação, nunca no repositório.
 
+## ⚙️ Configuração
+
+Simulação de planos (desligada por predefinição): com `plan_simulation.enabled` a `true` no ficheiro de configuração, `POST /plan/simulate` verifica uma lista de passos contra restrições declaradas (caixa do espaço de trabalho, catálogo de localizações, robôs disponíveis, tempo máximo por passo e por plano, recursos que só um passo pode ter de cada vez, ordem das dependências, a garra de cada robô) e percorre-a com um relógio simulado. Responde com um veredicto que lista TODAS as regras violadas com o seu passo, valor e limite e, quando se deduz, uma sugestão determinista; nunca executa nem liberta nada, e uma entrada que não entende dá um 400, nunca um «aceite». Com o interruptor desligado, a rota responde 404 como antes. Veja `docs/PLAN_SIMULATION.md`.
+
 ## 🚀 Início rápido
 
 Requer Python 3.10 ou superior.
@@ -190,7 +194,7 @@ Requer Python 3.10 ou superior.
 
 ## 🧪 Testes
 
-119 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
+179 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
 
 A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
 

@@ -1,5 +1,11 @@
 {
   "recovery": {
     "out_of_range_action": "ABORT"
+  },
+  "plan_simulation": {
+    "enabled": false,
+    "max_steps": 200,
+    "speed_mm_s": 100.0,
+    "default_step_s": 1.0
   }
 }

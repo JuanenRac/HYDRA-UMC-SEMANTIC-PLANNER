@@ -21,6 +21,7 @@ from . import __version__
 from .api import SemanticPlannerServer
 from .approval_signing import ApprovalKeyError, load_key, sign_approval
 from .decompose import decompose_goal
+from .plan_simulation import SimulationConfigError, load_simulation_policy
 from .recovery import FailureContext, PolicyError, load_policy, propose_recovery
 from .validation import validate_plan
 
@@ -86,7 +87,8 @@ def _run_serve(
 ) -> int:
     try:
         policy = load_policy(config)
-    except PolicyError as error:
+        simulation = load_simulation_policy(config)
+    except (PolicyError, SimulationConfigError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     approval_key = None
@@ -99,9 +101,11 @@ def _run_serve(
         except ApprovalKeyError as error:
             print(f"error: {error}", file=sys.stderr)
             return 2
-    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy)
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
+    if simulation.enabled:
+        print("[semantic-planner] POST /plan/simulate (dry run, executes nothing)")
     if approval_key is not None:
         print(f"[semantic-planner] POST /release needs an approval signed for robot {robot_id!r}")
     try:

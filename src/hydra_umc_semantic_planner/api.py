@@ -18,6 +18,7 @@ from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
 from .decompose import MAX_GOAL_CHARS, decompose_goal
 from .operation import plan_as_operation
+from .plan_simulation import PlanRequestError, SimulationPolicy, simulate_plan
 from .recovery import FailureContext, RecoveryPolicy, propose_recovery
 from .validation import validate_plan
 
@@ -101,6 +102,8 @@ class Handler(BaseHTTPRequestHandler):
             self._handle_recover(body)
         elif path == "/release":
             self._handle_release(body)
+        elif path == "/plan/simulate" and self.server.simulation.enabled:
+            self._handle_simulate(body)
         else:
             _write_error(self, 404, "not found")
 
@@ -155,6 +158,19 @@ class Handler(BaseHTTPRequestHandler):
             # the same proposal as the common Operation of the SDK (status "received"): what the orchestrator and the job dispatcher read
             "operation": plan_as_operation(plan, proposal, target=target, priority=priority),
         })
+
+    def _handle_simulate(self, body: dict) -> None:
+        # A dry run only: the verdict says what would break and why; nothing is executed or released. Anything that cannot be understood
+        # is a 400, never an "accepted".
+        try:
+            verdict = simulate_plan(body, self.server.simulation)
+        except PlanRequestError as error:
+            _write_error(self, 400, str(error))
+            return
+        except Exception:  # noqa: BLE001 - fail closed: an unexpected failure is a refusal, not a verdict
+            _write_error(self, 500, "the plan could not be simulated")
+            return
+        _write_json(self, 200, verdict)
 
     def _handle_release(self, body: dict) -> None:
         goal = self._required_text(body, "goal")
@@ -250,6 +266,7 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         approval_key: bytes | None = None,
         robot_id: str = "",
         policy: RecoveryPolicy | None = None,
+        simulation: SimulationPolicy | None = None,
     ) -> None:
         super().__init__(address, Handler)
         # With a key, POST /release only releases a plan whose approval is signed with it, for `robot_id`, and current.
@@ -257,3 +274,5 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         self.robot_id = robot_id
         self.policy = policy if policy is not None else RecoveryPolicy()
         self.role = role
+        # Off by default: with the switch off POST /plan/simulate does not exist (404), exactly as before it was added.
+        self.simulation = simulation if simulation is not None else SimulationPolicy()

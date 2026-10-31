@@ -193,6 +193,7 @@ stdlib `http.server` JSON API. Binds to loopback (`127.0.0.1:8109`) by
 default, matching the `systemd/hydra-umc-semantic-planner.service` unit.
 
 * **`GET /stats`** — `{"role": "..."}`, a liveness/identity check.
+* **`POST /plan/simulate`** — only when `plan_simulation.enabled` is `true` in the configuration file (otherwise `404`). A dry run of a list of steps against declared constraints on a simulated clock; answers a verdict with every broken rule and a suggestion, and executes nothing. See `PLAN_SIMULATION.md`.
 * **`POST /decompose`** — body `{"goal": "...", "capabilities"?: ["..."]}`.
   Responds `200` with `{"matched", "goal", "steps", "issues", "valid"}` —
   `matched: false` for an honest miss (same as the CLI's own "no matching

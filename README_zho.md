@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-119%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-179%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.5-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,12 +39,12 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.1.5` |
 | 成熟度 | 可用 |
-| 测试 | 119 (`python -m pytest -q tests`) |
+| 测试 | 179 (`python -m pytest -q tests`) |
 | 技术栈 | Python / local LLM (Llama-3 class) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 尚未：此版本没有在真实硬件上运行的记录 |
 
-**跳转：** [概述](#-概述) · [架构](#-架构) · [安全与防护](#-安全与防护) · [快速开始](#-快速开始) · [测试](#-测试) · [仓库结构](#-仓库结构) · [相关项目](#-相关项目)
+**跳转：** [概述](#-概述) · [架构](#-架构) · [安全与防护](#-安全与防护) · [配置](#-配置) · [快速开始](#-快速开始) · [测试](#-测试) · [仓库结构](#-仓库结构) · [相关项目](#-相关项目)
 
 ## 🚦 项目状态
 
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 119 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 179 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🔴 | 尚未：此版本没有在真实硬件上运行的记录 |
 | 文档 | 🟢 | 八种语言的 README，每次变更都会与清单核对 |
 
@@ -127,6 +127,10 @@ flowchart TB
 
 批准可以签名（默认关闭）：`serve --approval-key-file 文件 --robot-id ROBOT` 会让 `POST /release` 要求 `robot_id`、`issued_at_ms`、`expires_at_ms`，以及对计划指纹、批准人、机器人和最长一小时的时间窗口计算的 HMAC-SHA256 `signature`；未签名、被篡改、已过期或属于其他机器人的批准不会放行任何内容；`sign-approval` 用于生成这些字段。密钥（至少 16 字节）放在安装目录中的文件里，绝不放进仓库。
 
+## ⚙️ 配置
+
+计划模拟（默认关闭）：在配置文件中把 `plan_simulation.enabled` 设为 `true` 后，`POST /plan/simulate` 会根据已声明的约束（工作空间范围、位置目录、可用机器人、单步和整个计划的最长时间、同一时刻只能由一步占用的资源、依赖顺序、每个机器人的夹爪）检查一组步骤，并在模拟时钟上逐步走一遍。它返回的结论会列出每一条被违反的规则及其步骤、数值和限值，并在可推导时给出确定性的修正建议；它从不执行或放行任何东西，无法理解的输入返回 400，绝不会是“通过”。开关关闭时，该路由与以前一样返回 404。参见 `docs/PLAN_SIMULATION.md`。
+
 ## 🚀 快速开始
 
 需要 Python 3.10 或更高版本。
@@ -140,7 +144,7 @@ flowchart TB
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 119 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 179 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 

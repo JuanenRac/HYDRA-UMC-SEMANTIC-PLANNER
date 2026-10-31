@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Plans can be simulated before they are run:** `POST /plan/simulate` checks a list of steps (robot, dependencies, resources, duration) against declared constraints (workspace box, catalogue of locations, robots available, maximum step and plan time) and walks it on a simulated clock with a small state per robot (position, gripper). The answer is a verdict with EVERY broken rule (rule, step, value, limit) and, where one follows, a deterministic suggestion; it never executes or releases anything (`executable: false`). The route is off by default (`plan_simulation.enabled` in the configuration file): with the switch off it answers `404` as before. An input that is not understood is a `400`, never an `accepted`. See `docs/PLAN_SIMULATION.md`.
+
 ## [0.1.5] - A plan expressed as the common Operation of the SDK, out-of-range actions aborted, signed approvals and the universal README
 
 - **A plan is expressed as the common Operation of the SDK:** `POST /decompose` answers with `operation` (`kind` `execute_plan`, `status` `received`, the `target` and `priority` of the request, the steps, the goal and the fingerprint in `params`; the same plan is the same `operation_id`), the shape that the orchestrator and the job dispatcher take as a mission or a job. It does not release anything: `executable` stays `false` until `POST /release`.
