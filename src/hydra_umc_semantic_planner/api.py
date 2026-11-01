@@ -14,6 +14,8 @@ from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
+from . import __version__
+from .service_metrics import MetricsHandlerMixin
 from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
 from .decompose import MAX_GOAL_CHARS, decompose_goal
@@ -72,8 +74,10 @@ def _read_json_body(handler: BaseHTTPRequestHandler) -> dict:
     return parsed
 
 
-class Handler(BaseHTTPRequestHandler):
+class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
     server: "SemanticPlannerServer"
+    metrics_service = "hydra-umc-semantic-planner"
+    metrics_version = __version__
 
     # Seconds a client may stay silent on its connection before the server
     # drops it, so a client that connects and sends nothing cannot hold a
@@ -84,6 +88,8 @@ class Handler(BaseHTTPRequestHandler):
         pass  # quiet by default, same reasoning as this family's other api.py files
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.serve_metrics():
+            return
         if urlparse(self.path).path == "/stats":
             _write_json(self, 200, {"role": self.server.role})
         else:

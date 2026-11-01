@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **`GET /metrics` in the text format of Prometheus:** the version, the uptime, the responses by class of status (2xx to 5xx) and the health, the aggregate of the checks of the service; only numbers about the service, never a path, an address, a token or a body. Open like `/stats`. The code is the canonical `service_metrics.py` of HYDRA-UMC-SDK, copied byte for byte. 3 tests against a real server.
+
 ## [0.1.6] - Plans that can be simulated before they are run
 
 - **Plans can be simulated before they are run:** `POST /plan/simulate` checks a list of steps (robot, dependencies, resources, duration) against declared constraints (workspace box, catalogue of locations, robots available, maximum step and plan time) and walks it on a simulated clock with a small state per robot (position, gripper). The answer is a verdict with EVERY broken rule (rule, step, value, limit) and, where one follows, a deterministic suggestion; it never executes or releases anything (`executable: false`). The route is off by default (`plan_simulation.enabled` in the configuration file): with the switch off it answers `404` as before. An input that is not understood is a `400`, never an `accepted`. See `docs/PLAN_SIMULATION.md`.
