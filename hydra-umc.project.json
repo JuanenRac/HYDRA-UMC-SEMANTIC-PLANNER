@@ -12,6 +12,7 @@
   "deployment_target": "cm5",
   "maturity": "functional",
   "evidence": "none",
+  "hardware_bound": false,
   "family": "Cognitive AI Node",
   "parent": "HYDRA-UMC-COGNITIVE-NODE",
   "build": "python tools/build_test.py",

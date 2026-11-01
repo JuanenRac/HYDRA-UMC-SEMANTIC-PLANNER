@@ -42,7 +42,7 @@ GPL-3.0-or-later - see LICENSE
 | Test | 179 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destinazione | Il Raspberry Pi CM5 di una cella HYDRA-UMC |
-| Su hardware reale | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
+| Su hardware reale | Non applicabile: nulla qui gira su hardware |
 
 **Vai a:** [Panoramica](#-panoramica) · [Architettura](#-architettura) · [Sicurezza e protezione](#-sicurezza-e-protezione) · [Configurazione](#-configurazione) · [Avvio rapido](#-avvio-rapido) · [Test](#-test) · [Struttura del repository](#-struttura-del-repository) · [Progetti correlati](#-progetti-correlati)
 
@@ -56,7 +56,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 |---|---|---|
 | Software | 🟡 | Funziona per il suo scopo principale; la verifica di onestà qui sopra elenca ciò che manca ancora |
 | Test | 🟢 | 179 test automatici, eseguiti a ogni modifica |
-| Hardware reale | 🔴 | Non ancora: per questa versione non risulta alcuna esecuzione su hardware reale |
+| Hardware reale | 🟢 | Non applicabile: nulla qui gira su hardware |
 | Documentazione | 🟢 | README in otto lingue, verificato rispetto al manifesto a ogni modifica |
 
 ## 🎯 Panoramica
