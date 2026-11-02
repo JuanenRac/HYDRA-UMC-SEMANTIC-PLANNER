@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.1.8] - A safety gate before the release of a plan that is on in the deployment profile of the CM5, a memory of recoveries that can be kept in the data lake, a symbolic planner, a voice intent route and a recovery that only tightens
+
 - **Symbolic planning behind `decompose_goal()` (off by default).** With `symbolic_planner.enabled` set to `true` in the configuration file, the goal that the rules understood becomes a small PDDL-lite problem (preconditions, negated preconditions, add and delete effects over a closed set of operators) and the steps come from a deterministic breadth-first search bounded by `max_nodes` and `max_plan_length`. The plan is replayed from the start state and discarded if any precondition breaks; when nothing is found the answer is a miss, never the template. It only proposes: validation, the fingerprint, the person's approval and the safety gate of `POST /release` are unchanged. The start, pickup, assembly and destination locations are configuration values. 11 tests.
 
 - **A bounded memory of how recoveries ended (off by default).** With `failure_memory.enabled` set to `true`, `POST /recover/outcome` records the component, the error code, the action and SUCCESS or FAILURE of a proposed recovery, and nothing else (never the free text of a failure). The memory keeps at most `max_entries` records for at most `ttl_s` seconds and may be kept in a file (`path`). An action that failed `min_failures` times and never worked is proposed as `ESCALATE_TO_OPERATOR`; the memory can only make a recovery more cautious, never relax an escalation or an abort. Without the switch the route answers 404 and `POST /recover` is unchanged.
