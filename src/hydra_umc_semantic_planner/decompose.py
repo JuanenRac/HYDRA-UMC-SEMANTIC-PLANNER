@@ -14,8 +14,12 @@ behind the same `decompose_goal()` contract.
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
 from .primitives import GRIP, INSPECT, MOVE_TO, RELEASE, Plan, Step
+
+if TYPE_CHECKING:
+    from .symbolic import SymbolicPolicy
 
 # Longest goal this planner will look at. A goal is a short sentence; anything
 # longer is refused (an honest miss) instead of being scanned.
@@ -115,7 +119,7 @@ def _build_plan(template: str, target: str, destination: str | None = None) -> t
     raise ValueError(f"unknown template: {template}")
 
 
-def decompose_goal(goal: str) -> Plan | None:
+def decompose_goal(goal: str, symbolic: "SymbolicPolicy | None" = None) -> Plan | None:
     """Real rule-based decomposition of `goal` into a sequence of Steps.
 
     Returns `None` for a real, honest miss - a goal outside this v0's
@@ -123,6 +127,9 @@ def decompose_goal(goal: str) -> Plan | None:
     That includes a goal that is negated or cancelled, one that matches more
     than one template, one without a real object, and one longer than
     `MAX_GOAL_CHARS`.
+
+    With an enabled `symbolic` policy the goal that the rules understood becomes a symbolic problem and the steps come from a verified
+    search (see `symbolic.py`); when that search finds nothing the answer is a miss, never the template. Without it, nothing changes.
     """
     if len(goal) > MAX_GOAL_CHARS or _NEGATIONS.search(goal):
         return None
@@ -133,4 +140,8 @@ def decompose_goal(goal: str) -> Plan | None:
     if extracted is None:
         return None
     target, destination = extracted
+    if symbolic is not None and symbolic.enabled:
+        from .symbolic import plan_symbolically
+
+        return plan_symbolically(goal, matched[0], target, destination, symbolic)
     return Plan(goal=goal, steps=_build_plan(matched[0], target, destination))

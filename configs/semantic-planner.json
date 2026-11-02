@@ -22,5 +22,21 @@
   "voice_intents": {
     "enabled": false,
     "mission_goals": {}
+  },
+  "symbolic_planner": {
+    "enabled": false,
+    "max_nodes": 5000,
+    "max_plan_length": 12,
+    "start_location": "home",
+    "pickup_location": "pickup",
+    "assembly_location": "assembly_point",
+    "destination_location": "destination"
+  },
+  "failure_memory": {
+    "enabled": false,
+    "max_entries": 200,
+    "ttl_s": 604800,
+    "min_failures": 3,
+    "path": ""
   }
 }

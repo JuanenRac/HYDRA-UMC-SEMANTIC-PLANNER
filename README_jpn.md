@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-228%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.1.7` |
 | 成熟度 | 機能する |
-| テスト | 210 (`python -m pytest -q tests`) |
+| テスト | 228 (`python -m pytest -q tests`) |
 | 技術 | Python / local LLM (Llama-3 class) |
 | 対象 | HYDRA-UMC セルの Raspberry Pi CM5 |
 | 実機での確認 | 対象外：ここにあるものはハードウェア上では動きません |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 210 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 228 件。変更のたびに実行されます |
 | 実機 | 🟢 | 対象外：ここにあるものはハードウェア上では動きません |
 | インターフェースとプロトコル | 🟡 | 提供するルートやメッセージは文書化され、クライアントで試験済みです。すべてのクライアントがまだ使ったわけではありません |
 | 連携 | 🟡 | CM5 のテストベンチで他のサービスと一緒に動作し、メッセージは SDK の共通契約に従います |
@@ -142,6 +142,8 @@ flowchart TB
 
 解放前の安全ゲート（既定ではオフ）：`safety_gate.enabled` を `true` にすると、`POST /release` は HYDRA-UMC-SAFETY-ZONES にも直近の判定（`GET /state`）を問い合わせ、それが READY で、新しく（`max_age_ms`）、既定では署名付き（`require_signature`、`algorithm`、`key_file`）でない限り何も解放しません。安全側に倒れます：安全サービスが応答しない、判定ではない応答、古い・署名のない・偽造された・再送された判定、READY 以外のすべての状態は、理由とともに計画の解放を止め、人による承認も引き続き必要です。音声インテント（既定ではオフ）：`voice_intents.enabled` を `true` にすると、`POST /voice/intent` は HYDRA-UMC-VOICE-UI が解析済みのインテントを受け取り、`start_mission` では `voice_intents.mission_goals` からミッションを引きます。目標は `POST /decompose` と同じ経路をたどり、応答は引き続き `POST /release` を必要とする提案です。`stop` と `status` が計画になることはありません。スイッチがオフのときは、どちらもこれまでどおりに動作します。値はすべて `configs/semantic-planner.json` にあります。
 
+記号的計画（既定ではオフ）：`symbolic_planner.enabled` を `true` にすると、ルールが理解した目標は小さな PDDL-lite の問題（前提条件、否定の前提条件、追加・削除の効果）になり、`decompose_goal()` は `max_nodes` と `max_plan_length` で上限を決めた決定的な幅優先探索から手順を得ます。計画は開始状態から再生され、前提条件が一つでも崩れれば破棄されます。提案するだけです。`POST /release` の検証、フィンガープリント、担当者の承認は変わらず、何も見つからなければ答えは「不一致」であり、テンプレートにはなりません。復旧の記憶（既定ではオフ）：`failure_memory.enabled` を `true` にすると、`POST /recover/outcome` は提案された復旧の結末（コンポーネント、エラーコード、アクション、SUCCESS または FAILURE のみで、障害の自由記述は決して保存しません）を、`max_entries` と `ttl_s` で上限を決めた記憶に記録します。`min_failures` 回失敗して一度も成功しなかったアクションは `ESCALATE_TO_OPERATOR` になります。記憶は復旧をより慎重にすることしかできません。すべての値は `configs/semantic-planner.json` にあります。
+
 ## 🚀 クイックスタート
 
 Python 3.10 以上が必要です。
@@ -155,7 +157,7 @@ Python 3.10 以上が必要です。
 
 ## 🧪 テスト
 
-`python -m pytest -q tests` で自動テスト 210 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`python -m pytest -q tests` で自動テスト 228 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 

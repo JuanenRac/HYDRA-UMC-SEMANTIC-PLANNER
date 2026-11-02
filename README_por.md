@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-228%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versão | `0.1.7` |
 | Maturidade | Funcional |
-| Testes | 210 (`python -m pytest -q tests`) |
+| Testes | 228 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destino | O Raspberry Pi CM5 de uma célula HYDRA-UMC |
 | Em hardware real | Não aplicável: nada aqui corre em hardware |
@@ -55,7 +55,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
-| Testes | 🟢 | 210 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 228 testes automáticos, executados a cada alteração |
 | Hardware real | 🟢 | Não aplicável: nada aqui corre em hardware |
 | Interface e protocolos | 🟡 | As rotas ou mensagens que oferece estão documentadas e testadas com um cliente; ainda nem todos os clientes as usaram |
 | Integração | 🟡 | Funciona em conjunto com os outros serviços na bancada de testes da CM5 e as suas mensagens seguem os contratos partilhados do SDK |
@@ -190,6 +190,8 @@ Simulação de planos (desligada por predefinição): com `plan_simulation.enabl
 
 Porta de segurança antes de libertar (desligada por predefinição): com `safety_gate.enabled` a `true`, `POST /release` consulta também o HYDRA-UMC-SAFETY-ZONES sobre o seu último veredicto (`GET /state`) e não liberta nada a não ser que seja READY, recente (`max_age_ms`) e, por predefinição, assinado (`require_signature`, `algorithm`, `key_file`). Falha fechada: um serviço de segurança que não responde, uma resposta que não é um veredicto, um veredicto antigo, sem assinatura, falsificado ou repetido e qualquer estado diferente de READY impedem a libertação do plano, com o motivo; a aprovação da pessoa continua a ser necessária. Intents de voz (desligado por predefinição): com `voice_intents.enabled` a `true`, `POST /voice/intent` recebe um intent já interpretado pelo HYDRA-UMC-VOICE-UI e, para `start_mission`, procura a missão em `voice_intents.mission_goals`; o objetivo segue então o caminho de `POST /decompose` e a resposta é uma proposta que ainda precisa de `POST /release`. `stop` e `status` nunca se tornam planos. Com os interruptores desligados ambos comportam-se como antes. Todos os valores vivem em `configs/semantic-planner.json`.
 
+Planeamento simbólico (desligado por predefinição): com `symbolic_planner.enabled` a `true`, o objetivo que as regras entenderam passa a ser um pequeno problema PDDL-lite (pré-condições, pré-condições negadas, efeitos de adição e remoção) e `decompose_goal()` obtém os passos de uma pesquisa em largura determinista limitada por `max_nodes` e `max_plan_length`; o plano é reproduzido a partir do estado inicial e descartado se alguma pré-condição se quebrar. Apenas propõe: a validação, a impressão digital e a aprovação da pessoa em `POST /release` não mudam, e se não encontrar nada a resposta é uma falha de correspondência, nunca o modelo. Memória das recuperações (desligada por predefinição): com `failure_memory.enabled` a `true`, `POST /recover/outcome` regista como terminou uma recuperação proposta (componente, código de erro, ação, SUCCESS ou FAILURE, e mais nada: nunca o texto livre de uma falha) numa memória limitada por `max_entries` e `ttl_s`; uma ação que falhou `min_failures` vezes sem nunca resultar passa a `ESCALATE_TO_OPERATOR`. A memória só pode tornar uma recuperação mais cautelosa. Todos os valores estão em `configs/semantic-planner.json`.
+
 ## 🚀 Início rápido
 
 Requer Python 3.10 ou superior.
@@ -203,7 +205,7 @@ Requer Python 3.10 ou superior.
 
 ## 🧪 Testes
 
-210 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
+228 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
 
 A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
 

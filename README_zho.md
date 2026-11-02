@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-228%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.1.7` |
 | 成熟度 | 可用 |
-| 测试 | 210 (`python -m pytest -q tests`) |
+| 测试 | 228 (`python -m pytest -q tests`) |
 | 技术栈 | Python / local LLM (Llama-3 class) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 不适用：这里的内容不在硬件上运行 |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 210 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 228 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟢 | 不适用：这里的内容不在硬件上运行 |
 | 接口与协议 | 🟡 | 提供的路由或消息已有文档，并用客户端测试过；尚未被所有客户端使用 |
 | 集成 | 🟡 | 在 CM5 测试台上与其他服务一起运行，其消息遵循 SDK 的共享契约 |
@@ -140,6 +140,8 @@ flowchart TB
 
 放行前的安全闸门（默认关闭）：把 `safety_gate.enabled` 设为 `true` 后，`POST /release` 还会向 HYDRA-UMC-SAFETY-ZONES 请求其最近一次结论（`GET /state`），只有该结论是 READY、足够新（`max_age_ms`）且默认已签名（`require_signature`、`algorithm`、`key_file`）时才会放行。它失败即关闭：安全服务无响应、响应不是结论、结论过旧、未签名、被伪造或被重放，以及任何非 READY 的状态，都会带着原因阻止计划放行；仍然需要人的批准。语音意图（默认关闭）：把 `voice_intents.enabled` 设为 `true` 后，`POST /voice/intent` 接收 HYDRA-UMC-VOICE-UI 已解析的意图，对 `start_mission` 在 `voice_intents.mission_goals` 中查找任务；目标随后走 `POST /decompose` 的路径，返回的是仍需 `POST /release` 的提案。`stop` 和 `status` 永远不会变成计划。开关关闭时两者与以前一样。所有数值都在 `configs/semantic-planner.json` 中。
 
+符号规划（默认关闭）：将 `symbolic_planner.enabled` 设为 `true` 后，规则所理解的目标会变成一个小型 PDDL-lite 问题（前置条件、否定的前置条件、添加与删除效果），`decompose_goal()` 的步骤来自由 `max_nodes` 和 `max_plan_length` 限定的确定性广度优先搜索；计划会从初始状态重放，任何前置条件被破坏就丢弃。它只提出建议：`POST /release` 的校验、指纹和人员批准都不变，找不到结果时答复是未匹配，绝不会退回模板。恢复记忆（默认关闭）：将 `failure_memory.enabled` 设为 `true` 后，`POST /recover/outcome` 会记录所建议的恢复如何结束（组件、错误码、动作、SUCCESS 或 FAILURE，仅此而已，绝不保存故障的自由文本），存入由 `max_entries` 和 `ttl_s` 限定的记忆；失败 `min_failures` 次且从未成功的动作会变为 `ESCALATE_TO_OPERATOR`。记忆只能让恢复更加谨慎。所有数值都在 `configs/semantic-planner.json` 中。
+
 ## 🚀 快速开始
 
 需要 Python 3.10 或更高版本。
@@ -153,7 +155,7 @@ flowchart TB
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 210 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 228 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 

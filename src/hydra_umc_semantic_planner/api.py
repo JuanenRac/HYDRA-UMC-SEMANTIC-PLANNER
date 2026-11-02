@@ -19,10 +19,12 @@ from .service_metrics import MetricsHandlerMixin
 from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
 from .decompose import MAX_GOAL_CHARS, decompose_goal
+from .failure_memory import OUTCOMES, FailureMemory, OutcomeError
 from .operation import plan_as_operation
 from .plan_simulation import PlanRequestError, SimulationPolicy, simulate_plan
 from .recovery import FailureContext, RecoveryPolicy, propose_recovery
 from .safety_gate import SafetyGate
+from .symbolic import SymbolicPolicy
 from .validation import validate_plan
 from .voice_intents import VoiceIntentPolicy, goal_for_intent
 
@@ -108,6 +110,8 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
             self._handle_decompose(body)
         elif path == "/recover":
             self._handle_recover(body)
+        elif path == "/recover/outcome" and self.server.memory is not None:
+            self._handle_outcome(body)
         elif path == "/release":
             self._handle_release(body)
         elif path == "/plan/simulate" and self.server.simulation.enabled:
@@ -159,7 +163,7 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
         if isinstance(priority, bool) or not isinstance(priority, int):
             _write_error(self, 400, "priority must be an integer")
             return
-        plan = decompose_goal(goal)
+        plan = decompose_goal(goal, self.server.symbolic)
         if plan is None:
             _write_json(self, 200, {"matched": False, "goal": goal, "steps": [], "issues": [], **({"source": source} if source else {})})
             return
@@ -216,7 +220,7 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
                 _write_error(self, 400, "capabilities must be a list of strings")
                 return
             capabilities = frozenset(raw)
-        plan = decompose_goal(goal)
+        plan = decompose_goal(goal, self.server.symbolic)
         if plan is None:
             _write_json(self, 200, {"released": False, "reason": "the goal does not decompose into a plan"})
             return
@@ -288,8 +292,25 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
             _write_error(self, 400, "attempt must be an integer of at least 1")
             return
         failure = FailureContext(component=component, error_code=error_code, detail=detail, attempt=attempt)
-        strategy = propose_recovery(failure, self.server.policy)
+        memory = self.server.memory
+        strategy = memory.propose(failure, self.server.policy) if memory is not None else propose_recovery(failure, self.server.policy)
         _write_json(self, 200, asdict(strategy))
+
+    def _handle_outcome(self, body: dict) -> None:
+        # How a proposed recovery ended. Only five short fields are kept (never the free text of a failure) and the memory can only make
+        # a later proposal more cautious.
+        fields = []
+        for name in ("component", "error_code", "action", "outcome"):
+            value = self._required_text(body, name)
+            if value is None:
+                return
+            fields.append(value)
+        try:
+            self.server.memory.record(*fields)  # type: ignore[union-attr]
+        except OutcomeError as error:
+            _write_error(self, 400, f"{error}; outcome is one of {', '.join(OUTCOMES)}" if "outcome" in str(error) else str(error))
+            return
+        _write_json(self, 200, {"recorded": True, "entries": self.server.memory.size()})  # type: ignore[union-attr]
 
 
 class SemanticPlannerServer(ThreadingHTTPServer):
@@ -303,6 +324,8 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         simulation: SimulationPolicy | None = None,
         safety_gate: SafetyGate | None = None,
         voice: VoiceIntentPolicy | None = None,
+        symbolic: SymbolicPolicy | None = None,
+        memory: FailureMemory | None = None,
     ) -> None:
         super().__init__(address, Handler)
         # With a key, POST /release only releases a plan whose approval is signed with it, for `robot_id`, and current.
@@ -316,3 +339,7 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         self.safety_gate = safety_gate
         # Off by default: with the switch off POST /voice/intent does not exist (404).
         self.voice = voice if voice is not None else VoiceIntentPolicy()
+        # Off by default: without it decompose_goal() uses the rules alone; with it the steps come from a verified symbolic search.
+        self.symbolic = symbolic if symbolic is not None else SymbolicPolicy()
+        # Off by default (None): without it POST /recover/outcome does not exist (404) and recovery has no memory.
+        self.memory = memory
