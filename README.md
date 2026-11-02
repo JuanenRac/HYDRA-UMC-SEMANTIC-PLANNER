@@ -16,14 +16,14 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-179%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (179 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
+**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (210 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
 
 **Known limits of the rule-based planner:** a goal that is negated or cancelled ("do not ...", "never ..."), that fits more than one template, that has no object, or that is longer than 512 characters gets no plan. The object is read from the words after the verb, not from the end of the sentence. A decomposition is a proposal, not an order: `POST /decompose` answers `executable: false` with a fingerprint, the estimated cost and a plain-language explanation, and `POST /release` (or `release_for_execution()`) recomputes the cost and the explanation from the plan and checks the approval fingerprint before anything may be executed. The approval is not signed yet: it names a person but is not a credential. `FailureContext.attempt` makes `TIMEOUT` and `GRIP_LOST_SEAL` recoveries escalate to an operator after 1 and 3 automatic attempts.
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.1.6` |
 | Maturity | Functional |
-| Tests | 179 (`python -m pytest -q tests`) |
+| Tests | 210 (`python -m pytest -q tests`) |
 | Stack | Python / local LLM (Llama-3 class) |
 | Target | The Raspberry Pi CM5 of a HYDRA-UMC cell |
 | On real hardware | Not applicable: nothing here runs on hardware |
@@ -55,7 +55,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟡 | Works for its main purpose; the honesty check above lists what is still missing |
-| Tests | 🟢 | 179 automated tests, run on every change |
+| Tests | 🟢 | 210 automated tests, run on every change |
 | Real hardware | 🟢 | Not applicable: nothing here runs on hardware |
 | Interface and protocols | 🟡 | The routes or messages it offers are documented and tested with a client; not every client has used them yet |
 | Integration | 🟡 | It runs together with the other services on the CM5 test bench and its messages follow the shared contracts of the SDK |
@@ -190,6 +190,8 @@ Approvals can be signed (off by default): `serve --approval-key-file FILE --robo
 
 Plan simulation (off by default): with `plan_simulation.enabled` set to `true` in the configuration file, `POST /plan/simulate` checks a list of steps against declared constraints (workspace box, catalogue of locations, robots available, maximum step and plan time, resources held by one step at a time, order of dependencies, the gripper of each robot) and walks it on a simulated clock. It answers a verdict that lists EVERY broken rule with its step, value and limit and, where one follows, a deterministic suggestion; it never executes or releases anything, and an input it cannot understand is a 400, never an "accepted". With the switch off the route answers 404 as before. See `docs/PLAN_SIMULATION.md`.
 
+Safety gate before a release (off by default): with `safety_gate.enabled` set to `true`, `POST /release` also asks HYDRA-UMC-SAFETY-ZONES for its last verdict (`GET /state`) and releases nothing unless it is READY, fresh (`max_age_ms`) and, by default, signed (`require_signature`, `algorithm`, `key_file`). It fails closed: a safety service that does not answer, an answer that is not a verdict, an old, unsigned, forged or replayed verdict, and every state other than READY keep the plan from being released, with the reason; the person's approval is still needed. Voice intents (off by default): with `voice_intents.enabled` set to `true`, `POST /voice/intent` takes an intent already parsed by HYDRA-UMC-VOICE-UI and, for `start_mission`, looks the mission up in `voice_intents.mission_goals`; the goal then follows the path of `POST /decompose` and the answer is a proposal that still needs `POST /release`. `stop` and `status` never become plans. With the switches off both behave as before. Every value lives in `configs/semantic-planner.json`.
+
 ## 🚀 Quick start
 
 Requires Python 3.10 or newer.
@@ -203,7 +205,7 @@ Requires Python 3.10 or newer.
 
 ## 🧪 Testing
 
-179 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
+210 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
 
 The CI runs `HYDRA_UMC_CI=1 python tools/ci_validate.py`, which checks the manifest, the documents, the eight READMEs and the pictures.
 

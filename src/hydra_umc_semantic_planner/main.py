@@ -23,7 +23,9 @@ from .approval_signing import ApprovalKeyError, load_key, sign_approval
 from .decompose import decompose_goal
 from .plan_simulation import SimulationConfigError, load_simulation_policy
 from .recovery import FailureContext, PolicyError, load_policy, propose_recovery
+from .safety_gate import SafetyGate, SafetyGateConfigError, load_gate_policy
 from .validation import validate_plan
+from .voice_intents import VoiceIntentConfigError, load_voice_policy
 
 PROJECT_NAME = "HYDRA-UMC-SEMANTIC-PLANNER"
 ROLE = (
@@ -88,7 +90,9 @@ def _run_serve(
     try:
         policy = load_policy(config)
         simulation = load_simulation_policy(config)
-    except (PolicyError, SimulationConfigError) as error:
+        gate = SafetyGate.from_policy(load_gate_policy(config))
+        voice = load_voice_policy(config)
+    except (PolicyError, SimulationConfigError, SafetyGateConfigError, VoiceIntentConfigError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     approval_key = None
@@ -101,11 +105,15 @@ def _run_serve(
         except ApprovalKeyError as error:
             print(f"error: {error}", file=sys.stderr)
             return 2
-    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation)
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
     if simulation.enabled:
         print("[semantic-planner] POST /plan/simulate (dry run, executes nothing)")
+    if voice.enabled:
+        print("[semantic-planner] POST /voice/intent (an intent of the voice service becomes a proposal, never an order)")
+    if gate is not None:
+        print("[semantic-planner] POST /release also needs the safety service to say READY (a plan is never released otherwise)")
     if approval_key is not None:
         print(f"[semantic-planner] POST /release needs an approval signed for robot {robot_id!r}")
     try:

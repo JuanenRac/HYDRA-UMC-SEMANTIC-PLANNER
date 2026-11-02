@@ -22,7 +22,9 @@ from .decompose import MAX_GOAL_CHARS, decompose_goal
 from .operation import plan_as_operation
 from .plan_simulation import PlanRequestError, SimulationPolicy, simulate_plan
 from .recovery import FailureContext, RecoveryPolicy, propose_recovery
+from .safety_gate import SafetyGate
 from .validation import validate_plan
+from .voice_intents import VoiceIntentPolicy, goal_for_intent
 
 
 def _write_json(handler: BaseHTTPRequestHandler, status: int, payload: object) -> None:
@@ -110,10 +112,25 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
             self._handle_release(body)
         elif path == "/plan/simulate" and self.server.simulation.enabled:
             self._handle_simulate(body)
+        elif path == "/voice/intent" and self.server.voice.enabled:
+            self._handle_voice_intent(body)
         else:
             _write_error(self, 404, "not found")
 
-    def _handle_decompose(self, body: dict) -> None:
+    def _handle_voice_intent(self, body: dict) -> None:
+        # An intent already parsed by the voice service becomes the goal of the mission catalogue and then takes the exact path of
+        # POST /decompose: a proposal that still needs POST /release. Anything that is not a catalogued mission is an honest miss.
+        if "intent" not in body:
+            _write_error(self, 400, "missing required field: 'intent'")
+            return
+        goal, reason = goal_for_intent(body["intent"], self.server.voice)
+        if goal is None:
+            _write_json(self, 200, {"matched": False, "source": "voice", "steps": [], "issues": [], "reason": reason})
+            return
+        forwarded = {key: body[key] for key in ("capabilities", "target", "priority") if key in body}
+        self._handle_decompose({**forwarded, "goal": goal}, source="voice")
+
+    def _handle_decompose(self, body: dict, source: str | None = None) -> None:
         goal = self._required_text(body, "goal")
         if goal is None:
             return
@@ -144,7 +161,7 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
             return
         plan = decompose_goal(goal)
         if plan is None:
-            _write_json(self, 200, {"matched": False, "goal": goal, "steps": [], "issues": []})
+            _write_json(self, 200, {"matched": False, "goal": goal, "steps": [], "issues": [], **({"source": source} if source else {})})
             return
         issues = validate_plan(plan, capabilities)
         proposal = propose(plan)
@@ -163,6 +180,7 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
             "explanation": proposal.explanation,
             # the same proposal as the common Operation of the SDK (status "received"): what the orchestrator and the job dispatcher read
             "operation": plan_as_operation(plan, proposal, target=target, priority=priority),
+            **({"source": source} if source else {}),
         })
 
     def _handle_simulate(self, body: dict) -> None:
@@ -217,7 +235,17 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
         decision = release_for_execution(
             propose(plan), PlanApproval(fingerprint, approved_by), capabilities=capabilities
         )
-        _write_json(self, 200, asdict(decision))
+        payload = asdict(decision)
+        gate = self.server.safety_gate
+        if gate is not None and decision.released:
+            # Second condition after the person's approval: the safety service must say READY, fresh and (by default) signed.
+            # Whatever else it says, or nothing, keeps the plan from being released.
+            verdict = gate.check()
+            if not verdict.allowed:
+                payload = {"released": False, "reason": f"safety gate: {verdict.reason}", "safety_gate": {"allowed": False, "state": verdict.state}}
+            else:
+                payload["safety_gate"] = {"allowed": True, "state": verdict.state}
+        _write_json(self, 200, payload)
 
     def _signed_approval(self, body: dict, fingerprint: str, approved_by: str) -> SignedApproval | None:
         robot_id = body.get("robot_id", "")
@@ -273,6 +301,8 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         robot_id: str = "",
         policy: RecoveryPolicy | None = None,
         simulation: SimulationPolicy | None = None,
+        safety_gate: SafetyGate | None = None,
+        voice: VoiceIntentPolicy | None = None,
     ) -> None:
         super().__init__(address, Handler)
         # With a key, POST /release only releases a plan whose approval is signed with it, for `robot_id`, and current.
@@ -282,3 +312,7 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         self.role = role
         # Off by default: with the switch off POST /plan/simulate does not exist (404), exactly as before it was added.
         self.simulation = simulation if simulation is not None else SimulationPolicy()
+        # Off by default: without a gate /release answers as before; with one, a plan is released only while the safety service says READY.
+        self.safety_gate = safety_gate
+        # Off by default: with the switch off POST /voice/intent does not exist (404).
+        self.voice = voice if voice is not None else VoiceIntentPolicy()

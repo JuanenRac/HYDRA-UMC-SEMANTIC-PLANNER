@@ -4,6 +4,10 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Safety gate before a release (off by default).** With `safety_gate.enabled` set to `true` in the configuration file, `POST /release` also asks HYDRA-UMC-SAFETY-ZONES for its last verdict (`GET /state`) and releases nothing unless that verdict is READY, fresh (`max_age_ms`, default 2000) and, by default, signed (`require_signature`; HMAC-SHA256 with `key_file`, or Ed25519 with a public key). It fails closed: a safety service that does not answer, an answer that is not a verdict, an old, unsigned, forged or replayed verdict and every state other than READY keep the plan from being released, with the reason in the answer, and a person's approval is still required. The gate is asked only after that approval has passed. A planner started with the gate on and no key refuses to start. Without the switch `/release` answers exactly as before. 28 tests, including one against the real signer of the safety service.
+
+- **A voice intent becomes a proposal (off by default).** With `voice_intents.enabled` set to `true`, `POST /voice/intent` takes an intent already parsed by HYDRA-UMC-VOICE-UI (`{"name": "start_mission", "entities": {"mission_id": "..."}}`), looks the mission up in the catalogue `voice_intents.mission_goals` of the configuration file and answers the same proposal as `POST /decompose` (`executable` false, `requires_approval` true, `source` `voice`), which only `POST /release` can release. A mission that is not in the catalogue is a miss, never a guess; `stop`, `status` and any other intent never become plans. With the switch off the route answers 404.
+
 - **`GET /metrics` in the text format of Prometheus:** the version, the uptime, the responses by class of status (2xx to 5xx) and the health, the aggregate of the checks of the service; only numbers about the service, never a path, an address, a token or a body. Open like `/stats`. The code is the canonical `service_metrics.py` of HYDRA-UMC-SDK, copied byte for byte. 3 tests against a real server.
 
 ## [0.1.6] - Plans that can be simulated before they are run

@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-179%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versão | `0.1.6` |
 | Maturidade | Funcional |
-| Testes | 179 (`python -m pytest -q tests`) |
+| Testes | 210 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destino | O Raspberry Pi CM5 de uma célula HYDRA-UMC |
 | Em hardware real | Não aplicável: nada aqui corre em hardware |
@@ -55,7 +55,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
-| Testes | 🟢 | 179 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 210 testes automáticos, executados a cada alteração |
 | Hardware real | 🟢 | Não aplicável: nada aqui corre em hardware |
 | Interface e protocolos | 🟡 | As rotas ou mensagens que oferece estão documentadas e testadas com um cliente; ainda nem todos os clientes as usaram |
 | Integração | 🟡 | Funciona em conjunto com os outros serviços na bancada de testes da CM5 e as suas mensagens seguem os contratos partilhados do SDK |
@@ -188,6 +188,8 @@ As aprovações podem ser assinadas (desligado por predefinição): `serve --app
 
 Simulação de planos (desligada por predefinição): com `plan_simulation.enabled` a `true` no ficheiro de configuração, `POST /plan/simulate` verifica uma lista de passos contra restrições declaradas (caixa do espaço de trabalho, catálogo de localizações, robôs disponíveis, tempo máximo por passo e por plano, recursos que só um passo pode ter de cada vez, ordem das dependências, a garra de cada robô) e percorre-a com um relógio simulado. Responde com um veredicto que lista TODAS as regras violadas com o seu passo, valor e limite e, quando se deduz, uma sugestão determinista; nunca executa nem liberta nada, e uma entrada que não entende dá um 400, nunca um «aceite». Com o interruptor desligado, a rota responde 404 como antes. Veja `docs/PLAN_SIMULATION.md`.
 
+Porta de segurança antes de libertar (desligada por predefinição): com `safety_gate.enabled` a `true`, `POST /release` consulta também o HYDRA-UMC-SAFETY-ZONES sobre o seu último veredicto (`GET /state`) e não liberta nada a não ser que seja READY, recente (`max_age_ms`) e, por predefinição, assinado (`require_signature`, `algorithm`, `key_file`). Falha fechada: um serviço de segurança que não responde, uma resposta que não é um veredicto, um veredicto antigo, sem assinatura, falsificado ou repetido e qualquer estado diferente de READY impedem a libertação do plano, com o motivo; a aprovação da pessoa continua a ser necessária. Intents de voz (desligado por predefinição): com `voice_intents.enabled` a `true`, `POST /voice/intent` recebe um intent já interpretado pelo HYDRA-UMC-VOICE-UI e, para `start_mission`, procura a missão em `voice_intents.mission_goals`; o objetivo segue então o caminho de `POST /decompose` e a resposta é uma proposta que ainda precisa de `POST /release`. `stop` e `status` nunca se tornam planos. Com os interruptores desligados ambos comportam-se como antes. Todos os valores vivem em `configs/semantic-planner.json`.
+
 ## 🚀 Início rápido
 
 Requer Python 3.10 ou superior.
@@ -201,7 +203,7 @@ Requer Python 3.10 ou superior.
 
 ## 🧪 Testes
 
-179 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
+210 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
 
 A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
 

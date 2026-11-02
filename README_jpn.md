@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-179%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.1.6` |
 | 成熟度 | 機能する |
-| テスト | 179 (`python -m pytest -q tests`) |
+| テスト | 210 (`python -m pytest -q tests`) |
 | 技術 | Python / local LLM (Llama-3 class) |
 | 対象 | HYDRA-UMC セルの Raspberry Pi CM5 |
 | 実機での確認 | 対象外：ここにあるものはハードウェア上では動きません |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 179 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 210 件。変更のたびに実行されます |
 | 実機 | 🟢 | 対象外：ここにあるものはハードウェア上では動きません |
 | インターフェースとプロトコル | 🟡 | 提供するルートやメッセージは文書化され、クライアントで試験済みです。すべてのクライアントがまだ使ったわけではありません |
 | 連携 | 🟡 | CM5 のテストベンチで他のサービスと一緒に動作し、メッセージは SDK の共通契約に従います |
@@ -140,6 +140,8 @@ flowchart TB
 
 計画のシミュレーション（既定ではオフ）：設定ファイルで `plan_simulation.enabled` を `true` にすると、`POST /plan/simulate` は宣言された制約（作業空間の範囲、場所のカタログ、利用可能なロボット、ステップと計画の最大時間、同時に 1 つのステップしか保持できないリソース、依存関係の順序、各ロボットのグリッパー）に対してステップの一覧を検査し、シミュレートされた時計の上で順に進めます。応答は、破られた規則を「すべて」、そのステップ・値・限界とともに列挙した判定で、該当する場合は決定的な修正案も付きます。何かを実行したり解放したりすることはなく、理解できない入力は 400 になり、「承認」になることはありません。スイッチがオフのときは、これまでどおりルートは 404 を返します。`docs/PLAN_SIMULATION.md` を参照してください。
 
+解放前の安全ゲート（既定ではオフ）：`safety_gate.enabled` を `true` にすると、`POST /release` は HYDRA-UMC-SAFETY-ZONES にも直近の判定（`GET /state`）を問い合わせ、それが READY で、新しく（`max_age_ms`）、既定では署名付き（`require_signature`、`algorithm`、`key_file`）でない限り何も解放しません。安全側に倒れます：安全サービスが応答しない、判定ではない応答、古い・署名のない・偽造された・再送された判定、READY 以外のすべての状態は、理由とともに計画の解放を止め、人による承認も引き続き必要です。音声インテント（既定ではオフ）：`voice_intents.enabled` を `true` にすると、`POST /voice/intent` は HYDRA-UMC-VOICE-UI が解析済みのインテントを受け取り、`start_mission` では `voice_intents.mission_goals` からミッションを引きます。目標は `POST /decompose` と同じ経路をたどり、応答は引き続き `POST /release` を必要とする提案です。`stop` と `status` が計画になることはありません。スイッチがオフのときは、どちらもこれまでどおりに動作します。値はすべて `configs/semantic-planner.json` にあります。
+
 ## 🚀 クイックスタート
 
 Python 3.10 以上が必要です。
@@ -153,7 +155,7 @@ Python 3.10 以上が必要です。
 
 ## 🧪 テスト
 
-`python -m pytest -q tests` で自動テスト 179 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`python -m pytest -q tests` で自動テスト 210 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 

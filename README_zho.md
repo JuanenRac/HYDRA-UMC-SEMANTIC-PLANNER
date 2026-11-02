@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-179%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-210%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.6-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.1.6` |
 | 成熟度 | 可用 |
-| 测试 | 179 (`python -m pytest -q tests`) |
+| 测试 | 210 (`python -m pytest -q tests`) |
 | 技术栈 | Python / local LLM (Llama-3 class) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 不适用：这里的内容不在硬件上运行 |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 179 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 210 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟢 | 不适用：这里的内容不在硬件上运行 |
 | 接口与协议 | 🟡 | 提供的路由或消息已有文档，并用客户端测试过；尚未被所有客户端使用 |
 | 集成 | 🟡 | 在 CM5 测试台上与其他服务一起运行，其消息遵循 SDK 的共享契约 |
@@ -138,6 +138,8 @@ flowchart TB
 
 计划模拟（默认关闭）：在配置文件中把 `plan_simulation.enabled` 设为 `true` 后，`POST /plan/simulate` 会根据已声明的约束（工作空间范围、位置目录、可用机器人、单步和整个计划的最长时间、同一时刻只能由一步占用的资源、依赖顺序、每个机器人的夹爪）检查一组步骤，并在模拟时钟上逐步走一遍。它返回的结论会列出每一条被违反的规则及其步骤、数值和限值，并在可推导时给出确定性的修正建议；它从不执行或放行任何东西，无法理解的输入返回 400，绝不会是“通过”。开关关闭时，该路由与以前一样返回 404。参见 `docs/PLAN_SIMULATION.md`。
 
+放行前的安全闸门（默认关闭）：把 `safety_gate.enabled` 设为 `true` 后，`POST /release` 还会向 HYDRA-UMC-SAFETY-ZONES 请求其最近一次结论（`GET /state`），只有该结论是 READY、足够新（`max_age_ms`）且默认已签名（`require_signature`、`algorithm`、`key_file`）时才会放行。它失败即关闭：安全服务无响应、响应不是结论、结论过旧、未签名、被伪造或被重放，以及任何非 READY 的状态，都会带着原因阻止计划放行；仍然需要人的批准。语音意图（默认关闭）：把 `voice_intents.enabled` 设为 `true` 后，`POST /voice/intent` 接收 HYDRA-UMC-VOICE-UI 已解析的意图，对 `start_mission` 在 `voice_intents.mission_goals` 中查找任务；目标随后走 `POST /decompose` 的路径，返回的是仍需 `POST /release` 的提案。`stop` 和 `status` 永远不会变成计划。开关关闭时两者与以前一样。所有数值都在 `configs/semantic-planner.json` 中。
+
 ## 🚀 快速开始
 
 需要 Python 3.10 或更高版本。
@@ -151,7 +153,7 @@ flowchart TB
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 179 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 210 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 
