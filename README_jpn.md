@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-228%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-244%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.1.7` |
 | 成熟度 | 機能する |
-| テスト | 228 (`python -m pytest -q tests`) |
+| テスト | 244 (`python -m pytest -q tests`) |
 | 技術 | Python / local LLM (Llama-3 class) |
 | 対象 | HYDRA-UMC セルの Raspberry Pi CM5 |
 | 実機での確認 | 対象外：ここにあるものはハードウェア上では動きません |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 228 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 244 件。変更のたびに実行されます |
 | 実機 | 🟢 | 対象外：ここにあるものはハードウェア上では動きません |
 | インターフェースとプロトコル | 🟡 | 提供するルートやメッセージは文書化され、クライアントで試験済みです。すべてのクライアントがまだ使ったわけではありません |
 | 連携 | 🟡 | CM5 のテストベンチで他のサービスと一緒に動作し、メッセージは SDK の共通契約に従います |
@@ -144,6 +144,8 @@ flowchart TB
 
 記号的計画（既定ではオフ）：`symbolic_planner.enabled` を `true` にすると、ルールが理解した目標は小さな PDDL-lite の問題（前提条件、否定の前提条件、追加・削除の効果）になり、`decompose_goal()` は `max_nodes` と `max_plan_length` で上限を決めた決定的な幅優先探索から手順を得ます。計画は開始状態から再生され、前提条件が一つでも崩れれば破棄されます。提案するだけです。`POST /release` の検証、フィンガープリント、担当者の承認は変わらず、何も見つからなければ答えは「不一致」であり、テンプレートにはなりません。復旧の記憶（既定ではオフ）：`failure_memory.enabled` を `true` にすると、`POST /recover/outcome` は提案された復旧の結末（コンポーネント、エラーコード、アクション、SUCCESS または FAILURE のみで、障害の自由記述は決して保存しません）を、`max_entries` と `ttl_s` で上限を決めた記憶に記録します。`min_failures` 回失敗して一度も成功しなかったアクションは `ESCALATE_TO_OPERATOR` になります。記憶は復旧をより慎重にすることしかできません。すべての値は `configs/semantic-planner.json` にあります。
 
+配備プロファイルと開発（安全ゲート）：共通の `configs/semantic-planner.json` は `safety_gate.enabled` を `false` のままにするので、開発のために手で起動したプランナーはこれまでどおり動きます。systemd ユニットが `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG` で選ぶプロファイル `configs/deploy-cm5.json` はゲートを有効にします。HYDRA-UMC-SAFETY-ZONES が新しく、READY で、署名が正しい判定を返している間だけ計画が解放され、検証鍵はリポジトリ外のファイル（`/etc/hydra-umc/safety-state.key`、決して表示されません）から読み込まれます。`safety_gate.start_without_key` を `true`（プロファイルはそうしています）にすると、鍵ファイルがない、または使えなくてもプランナーは起動し、`/decompose` と提案は動き続け、`POST /release` は理由を添えて拒否します。記憶のエクスポート（既定ではオフ）：`failure_memory.export.enabled` を `true` にすると、記録された各結果は専用スレッドが、上限付きのキューと上限付きの再試行で、ローカルの HYDRA-UMC-DATALAKE に送ります（`POST /ingest/batch`、種別 `recovery_outcome`、フィールド `コンポーネント/エラーコード/アクション`、値は 1 または 0。それ以外はマシンの外に出ません）。起動時には、データレイクが保持している失敗を読み戻し（`load_on_start`）、各レコードを検証して壊れたものは無視するため、再読み込みは復旧をより慎重にすることしかできません。このマシン上にないデータレイクには `token_file` と https、または意図的な `allow_plaintext` が必要です。
+
 ## 🚀 クイックスタート
 
 Python 3.10 以上が必要です。
@@ -157,7 +159,7 @@ Python 3.10 以上が必要です。
 
 ## 🧪 テスト
 
-`python -m pytest -q tests` で自動テスト 228 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`python -m pytest -q tests` で自動テスト 244 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 

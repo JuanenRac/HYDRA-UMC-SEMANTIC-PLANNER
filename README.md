@@ -16,14 +16,14 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-228%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-244%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (228 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
+**Honesty check - what actually runs today:** the closed primitive vocabulary (`primitives.py`), the rule-based task decomposition (`decompose.py`), the rule-based semantic error recovery over a fixed MCU error-code table (`recovery.py`), the precondition validator that refuses a malformed plan rather than passing it on (`validation.py`), and the plain stdlib `http.server` JSON/HTTP surface over the same logic (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) are real and tested (244 tests, `pytest`), including a fuzz test that runs `decompose_goal()` against hundreds of random/invalid goals with a fixed seed and asserts it never crashes or returns a malformed plan. What is NOT real yet: there is no local LLM anywhere in this codebase - `decompose.py` is regex/template matching over a small, fixed goal vocabulary (assemble/pick-and-place/inspect), not language understanding, and it has never been run against a real Hailo-10 module (this environment doesn't have one). The "Agentic Workflow" and "Hailo-10 Optimized" bullets below are explicitly marked `(planned)` in this same README - they describe the eventual replacement for `decompose_goal()`'s current rule-based kernel, not something that exists today. See `CHANGELOG.md` for exactly what has shipped so far, and the ROADMAP below for what remains open.
 
 **Known limits of the rule-based planner:** a goal that is negated or cancelled ("do not ...", "never ..."), that fits more than one template, that has no object, or that is longer than 512 characters gets no plan. The object is read from the words after the verb, not from the end of the sentence. A decomposition is a proposal, not an order: `POST /decompose` answers `executable: false` with a fingerprint, the estimated cost and a plain-language explanation, and `POST /release` (or `release_for_execution()`) recomputes the cost and the explanation from the plan and checks the approval fingerprint before anything may be executed. The approval is not signed yet: it names a person but is not a credential. `FailureContext.attempt` makes `TIMEOUT` and `GRIP_LOST_SEAL` recoveries escalate to an operator after 1 and 3 automatic attempts.
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.1.7` |
 | Maturity | Functional |
-| Tests | 228 (`python -m pytest -q tests`) |
+| Tests | 244 (`python -m pytest -q tests`) |
 | Stack | Python / local LLM (Llama-3 class) |
 | Target | The Raspberry Pi CM5 of a HYDRA-UMC cell |
 | On real hardware | Not applicable: nothing here runs on hardware |
@@ -55,7 +55,7 @@ Each line is one part of this repository and the light says how far it is today.
 | Area | State | What it means here |
 |---|---|---|
 | Software | 🟡 | Works for its main purpose; the honesty check above lists what is still missing |
-| Tests | 🟢 | 228 automated tests, run on every change |
+| Tests | 🟢 | 244 automated tests, run on every change |
 | Real hardware | 🟢 | Not applicable: nothing here runs on hardware |
 | Interface and protocols | 🟡 | The routes or messages it offers are documented and tested with a client; not every client has used them yet |
 | Integration | 🟡 | It runs together with the other services on the CM5 test bench and its messages follow the shared contracts of the SDK |
@@ -194,6 +194,8 @@ Safety gate before a release (off by default): with `safety_gate.enabled` set to
 
 Symbolic planning (off by default): with `symbolic_planner.enabled` set to `true`, the goal that the rules understood becomes a small PDDL-lite problem (preconditions, negated preconditions, add and delete effects) and `decompose_goal()` takes its steps from a deterministic breadth-first search bounded by `max_nodes` and `max_plan_length`; the plan is replayed from the start state and discarded if any precondition breaks. It only proposes: validation, the fingerprint and the person's approval of `POST /release` are unchanged, and when it finds nothing the answer is a miss, never the template. Memory of recoveries (off by default): with `failure_memory.enabled` set to `true`, `POST /recover/outcome` records how a proposed recovery ended (component, error code, action, SUCCESS or FAILURE, and nothing else - never the free text of a failure) in a memory bounded by `max_entries` and `ttl_s`; an action that failed `min_failures` times and never worked becomes `ESCALATE_TO_OPERATOR`. The memory can only make a recovery more cautious. Every value lives in `configs/semantic-planner.json`.
 
+Deployment profile versus development (safety gate): the general file `configs/semantic-planner.json` keeps `safety_gate.enabled` at `false`, so a planner started by hand for development behaves as it always did. The profile `configs/deploy-cm5.json`, which the systemd unit selects through `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG`, turns the gate ON: a plan is released only while HYDRA-UMC-SAFETY-ZONES answers with a fresh, READY and validly signed verdict, and the verification key is read from a file outside the repository (`/etc/hydra-umc/safety-state.key`, never printed). With `safety_gate.start_without_key` set to `true` (the profile does), a missing or unusable key file does not stop the planner: `/decompose` and the proposals keep working, and `POST /release` refuses with the reason. Memory export (off by default): with `failure_memory.export.enabled` set to `true`, every recorded outcome is sent to a local HYDRA-UMC-DATALAKE (`POST /ingest/batch`, kind `recovery_outcome`, field `component/error_code/action`, value 1 or 0; nothing else leaves the machine) by a thread of its own with a bounded queue and bounded retries; at start the memory reads back the failures the data lake still holds (`load_on_start`), validating every record and ignoring the corrupt ones, so a reload can only make a recovery more cautious. A data lake that is not on this machine needs `token_file` and https, or `allow_plaintext` said on purpose.
+
 ## 🚀 Quick start
 
 Requires Python 3.10 or newer.
@@ -207,7 +209,7 @@ Requires Python 3.10 or newer.
 
 ## 🧪 Testing
 
-228 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
+244 automated tests run with `python -m pytest -q tests`. They need no hardware and nothing outside this machine.
 
 The CI runs `HYDRA_UMC_CI=1 python tools/ci_validate.py`, which checks the manifest, the documents, the eight READMEs and the pictures.
 

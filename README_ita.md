@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-228%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-244%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versione | `0.1.7` |
 | Maturità | Funzionale |
-| Test | 228 (`python -m pytest -q tests`) |
+| Test | 244 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destinazione | Il Raspberry Pi CM5 di una cella HYDRA-UMC |
 | Su hardware reale | Non applicabile: nulla qui gira su hardware |
@@ -55,7 +55,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 | Area | Stato | Cosa significa qui |
 |---|---|---|
 | Software | 🟡 | Funziona per il suo scopo principale; la verifica di onestà qui sopra elenca ciò che manca ancora |
-| Test | 🟢 | 228 test automatici, eseguiti a ogni modifica |
+| Test | 🟢 | 244 test automatici, eseguiti a ogni modifica |
 | Hardware reale | 🟢 | Non applicabile: nulla qui gira su hardware |
 | Interfaccia e protocolli | 🟡 | Le rotte o i messaggi offerti sono documentati e provati con un client; non tutti i client li hanno ancora usati |
 | Integrazione | 🟡 | Funziona insieme agli altri servizi sul banco prova CM5 e i suoi messaggi seguono i contratti condivisi dell'SDK |
@@ -199,6 +199,8 @@ Porta di sicurezza prima del rilascio (spenta per impostazione predefinita): con
 
 Pianificazione simbolica (spenta per impostazione predefinita): con `symbolic_planner.enabled` su `true`, l'obiettivo capito dalle regole diventa un piccolo problema PDDL-lite (precondizioni, precondizioni negate, effetti di aggiunta e rimozione) e `decompose_goal()` ricava i passi da una ricerca in ampiezza deterministica limitata da `max_nodes` e `max_plan_length`; il piano viene rieseguito dallo stato iniziale e scartato se una precondizione si rompe. Si limita a proporre: validazione, impronta e approvazione della persona in `POST /release` non cambiano, e se non trova nulla la risposta è un mancato riconoscimento, mai il modello. Memoria dei ripristini (spenta per impostazione predefinita): con `failure_memory.enabled` su `true`, `POST /recover/outcome` registra come è finito un ripristino proposto (componente, codice di errore, azione, SUCCESS o FAILURE, e nient'altro: mai il testo libero di un guasto) in una memoria limitata da `max_entries` e `ttl_s`; un'azione fallita `min_failures` volte senza mai riuscire diventa `ESCALATE_TO_OPERATOR`. La memoria può solo rendere un ripristino più prudente. Tutti i valori stanno in `configs/semantic-planner.json`.
 
+Profilo di distribuzione e sviluppo (porta di sicurezza): il file generale `configs/semantic-planner.json` mantiene `safety_gate.enabled` a `false`, quindi un pianificatore avviato a mano per sviluppare si comporta come sempre. Il profilo `configs/deploy-cm5.json`, scelto dall'unità systemd tramite `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG`, ATTIVA la porta: un piano viene rilasciato solo finché HYDRA-UMC-SAFETY-ZONES risponde con un verdetto fresco, READY e firmato in modo valido, e la chiave di verifica è letta da un file fuori dal repository (`/etc/hydra-umc/safety-state.key`, mai stampata). Con `safety_gate.start_without_key` a `true` (come fa il profilo), un file di chiave mancante o inutilizzabile non impedisce l'avvio: `/decompose` e le proposte continuano a funzionare e `POST /release` rifiuta indicando il motivo. Esportazione della memoria (spenta per impostazione predefinita): con `failure_memory.export.enabled` su `true`, ogni esito registrato viene inviato a un HYDRA-UMC-DATALAKE locale (`POST /ingest/batch`, tipo `recovery_outcome`, campo `componente/codice_errore/azione`, valore 1 o 0; nient'altro lascia la macchina) da un thread proprio con coda limitata e tentativi limitati; all'avvio la memoria rilegge i fallimenti che il data lake conserva (`load_on_start`), convalida ogni record e ignora quelli corrotti, così un ricaricamento può solo rendere un ripristino più prudente. Un data lake non presente su questa macchina richiede `token_file` e https, oppure `allow_plaintext` impostato di proposito.
+
 ## 🚀 Avvio rapido
 
 Richiede Python 3.10 o successivo.
@@ -212,7 +214,7 @@ Richiede Python 3.10 o successivo.
 
 ## 🧪 Test
 
-228 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
+244 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
 
 La CI esegue `HYDRA_UMC_CI=1 python tools/ci_validate.py`, che controlla il manifesto, i documenti, gli otto README e le immagini.
 

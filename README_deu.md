@@ -16,14 +16,14 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-228%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-244%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.7-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Ehrlichkeitscheck - was heute wirklich läuft:** das geschlossene Primitiven-Vokabular (`primitives.py`), die regelbasierte Aufgabenzerlegung (`decompose.py`), die regelbasierte semantische Fehlerbehebung über eine feste MCU-Fehlercode-Tabelle (`recovery.py`), der Vorbedingungs-Validator, der einen fehlerhaft geformten Plan ablehnt statt ihn durchzulassen (`validation.py`), und die einfache JSON/HTTP-Oberfläche über `http.server` aus der Standardbibliothek über dieselbe Logik (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) sind real und getestet (228 Tests, `pytest`), einschließlich eines Fuzz-Tests, der `decompose_goal()` gegen Hunderte zufällige/ungültige Ziele mit festem Seed laufen lässt und sicherstellt, dass es nie abstürzt oder einen fehlerhaft geformten Plan zurückgibt. Was NOCH NICHT real ist: Es gibt nirgendwo in diesem Code ein lokales LLM - `decompose.py` ist Muster-/Template-Abgleich per Regex über ein kleines, festes Zielvokabular (Zusammenbauen/Pick-and-Place/Inspizieren), kein Sprachverständnis, und es lief noch nie gegen ein echtes Hailo-10-Modul (diese Umgebung besitzt keines). Die Punkte "Agentic Workflow" und "Hailo-10 Optimized" weiter unten sind in diesem selben README ausdrücklich als `(planned)` markiert - sie beschreiben den eventuellen Ersatz für den heutigen regelbasierten Kern von `decompose_goal()`, nicht etwas, das heute existiert. Siehe `CHANGELOG.md` für genau das, was bisher ausgeliefert wurde, und die ROADMAP weiter unten für das, was noch offen ist.
+**Ehrlichkeitscheck - was heute wirklich läuft:** das geschlossene Primitiven-Vokabular (`primitives.py`), die regelbasierte Aufgabenzerlegung (`decompose.py`), die regelbasierte semantische Fehlerbehebung über eine feste MCU-Fehlercode-Tabelle (`recovery.py`), der Vorbedingungs-Validator, der einen fehlerhaft geformten Plan ablehnt statt ihn durchzulassen (`validation.py`), und die einfache JSON/HTTP-Oberfläche über `http.server` aus der Standardbibliothek über dieselbe Logik (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) sind real und getestet (244 Tests, `pytest`), einschließlich eines Fuzz-Tests, der `decompose_goal()` gegen Hunderte zufällige/ungültige Ziele mit festem Seed laufen lässt und sicherstellt, dass es nie abstürzt oder einen fehlerhaft geformten Plan zurückgibt. Was NOCH NICHT real ist: Es gibt nirgendwo in diesem Code ein lokales LLM - `decompose.py` ist Muster-/Template-Abgleich per Regex über ein kleines, festes Zielvokabular (Zusammenbauen/Pick-and-Place/Inspizieren), kein Sprachverständnis, und es lief noch nie gegen ein echtes Hailo-10-Modul (diese Umgebung besitzt keines). Die Punkte "Agentic Workflow" und "Hailo-10 Optimized" weiter unten sind in diesem selben README ausdrücklich als `(planned)` markiert - sie beschreiben den eventuellen Ersatz für den heutigen regelbasierten Kern von `decompose_goal()`, nicht etwas, das heute existiert. Siehe `CHANGELOG.md` für genau das, was bisher ausgeliefert wurde, und die ROADMAP weiter unten für das, was noch offen ist.
 
 **Bekannte Grenzen des regelbasierten Planers:** Ein verneintes oder abgebrochenes Ziel („nicht ...“, „nie ...“), das zu mehr als einer Vorlage passt, kein Objekt hat oder länger als 512 Zeichen ist, ergibt keinen Plan. Das Objekt wird aus den Wörtern nach dem Verb gelesen, nicht vom Satzende. Eine Zerlegung ist ein Vorschlag, kein Befehl: `POST /decompose` antwortet mit `executable: false`, einem Fingerabdruck, den geschätzten Kosten und einer verständlichen Erklärung; `POST /release` (oder `release_for_execution()`) berechnet Kosten und Erklärung aus dem Plan neu und prüft den Fingerabdruck der Freigabe, bevor etwas ausgeführt werden darf. Die Freigabe ist noch nicht signiert: Sie nennt eine Person, ist aber kein Berechtigungsnachweis. Mit `FailureContext.attempt` eskalieren die Wiederherstellungen für `TIMEOUT` und `GRIP_LOST_SEAL` nach 1 bzw. 3 automatischen Versuchen an einen Bediener.
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Version | `0.1.7` |
 | Reifegrad | Funktionsfähig |
-| Tests | 228 (`python -m pytest -q tests`) |
+| Tests | 244 (`python -m pytest -q tests`) |
 | Technik | Python / local LLM (Llama-3 class) |
 | Ziel | Der Raspberry Pi CM5 einer HYDRA-UMC-Zelle |
 | Auf echter Hardware | Nicht zutreffend: nichts hiervon läuft auf Hardware |
@@ -55,7 +55,7 @@ Jede Zeile ist ein Teil dieses Repositorys, und die Ampel sagt, wie weit er heut
 | Bereich | Stand | Was das hier bedeutet |
 |---|---|---|
 | Software | 🟡 | Funktioniert für seinen Hauptzweck; die Ehrlichkeitsprüfung oben nennt, was noch fehlt |
-| Tests | 🟢 | 228 automatische Tests, bei jeder Änderung ausgeführt |
+| Tests | 🟢 | 244 automatische Tests, bei jeder Änderung ausgeführt |
 | Echte Hardware | 🟢 | Nicht zutreffend: nichts hiervon läuft auf Hardware |
 | Schnittstelle und Protokolle | 🟡 | Die angebotenen Routen oder Nachrichten sind dokumentiert und mit einem Client getestet; noch nicht jeder Client hat sie benutzt |
 | Integration | 🟡 | Es läuft zusammen mit den anderen Diensten auf dem CM5-Prüfstand, und seine Nachrichten folgen den gemeinsamen Verträgen des SDK |
@@ -198,6 +198,8 @@ Sicherheitstor vor der Freigabe (standardmäßig aus): Ist `safety_gate.enabled`
 
 Symbolische Planung (standardmäßig aus): Ist `symbolic_planner.enabled` auf `true`, wird das von den Regeln verstandene Ziel zu einem kleinen PDDL-lite-Problem (Vorbedingungen, negierte Vorbedingungen, Hinzufüge- und Löscheffekte), und `decompose_goal()` bezieht seine Schritte aus einer deterministischen Breitensuche, begrenzt durch `max_nodes` und `max_plan_length`; der Plan wird vom Startzustand aus nachgespielt und verworfen, wenn eine Vorbedingung bricht. Er schlägt nur vor: Validierung, Fingerabdruck und die Freigabe durch die Person bei `POST /release` bleiben unverändert, und findet er nichts, ist die Antwort ein Fehlschlag, nie die Vorlage. Gedächtnis der Wiederherstellungen (standardmäßig aus): Ist `failure_memory.enabled` auf `true`, hält `POST /recover/outcome` fest, wie eine vorgeschlagene Wiederherstellung endete (Komponente, Fehlercode, Aktion, SUCCESS oder FAILURE und sonst nichts - nie den Freitext eines Fehlers), in einem durch `max_entries` und `ttl_s` begrenzten Speicher; eine Aktion, die `min_failures`-mal scheiterte und nie funktionierte, wird zu `ESCALATE_TO_OPERATOR`. Das Gedächtnis kann eine Wiederherstellung nur vorsichtiger machen. Alle Werte stehen in `configs/semantic-planner.json`.
 
+Einsatzprofil gegenüber Entwicklung (Sicherheitstor): Die allgemeine Datei `configs/semantic-planner.json` lässt `safety_gate.enabled` auf `false`, ein von Hand zur Entwicklung gestarteter Planer verhält sich also wie immer. Das Profil `configs/deploy-cm5.json`, das die systemd-Unit über `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG` wählt, schaltet das Tor EIN: Ein Plan wird nur freigegeben, solange HYDRA-UMC-SAFETY-ZONES mit einem frischen, READY-Urteil und gültiger Signatur antwortet; der Prüfschlüssel wird aus einer Datei außerhalb des Repositorys gelesen (`/etc/hydra-umc/safety-state.key`, nie ausgegeben). Mit `safety_gate.start_without_key` auf `true` (das Profil setzt es) hindert eine fehlende oder unbrauchbare Schlüsseldatei den Planer nicht am Start: `/decompose` und die Vorschläge funktionieren weiter, und `POST /release` lehnt mit Begründung ab. Export des Gedächtnisses (standardmäßig aus): Ist `failure_memory.export.enabled` auf `true`, wird jedes erfasste Ergebnis von einem eigenen Thread mit begrenzter Warteschlange und begrenzten Wiederholungen an einen lokalen HYDRA-UMC-DATALAKE gesendet (`POST /ingest/batch`, Art `recovery_outcome`, Feld `Komponente/Fehlercode/Aktion`, Wert 1 oder 0; nichts sonst verlässt die Maschine); beim Start liest das Gedächtnis die Fehlschläge zurück, die der Data Lake noch hält (`load_on_start`), prüft jeden Eintrag und ignoriert beschädigte, sodass ein Neuladen eine Wiederherstellung nur vorsichtiger machen kann. Ein Data Lake außerhalb dieser Maschine braucht `token_file` und https oder ein bewusst gesetztes `allow_plaintext`.
+
 ## 🚀 Schnellstart
 
 Benötigt Python 3.10 oder neuer.
@@ -211,7 +213,7 @@ Benötigt Python 3.10 oder neuer.
 
 ## 🧪 Tests
 
-228 automatische Tests laufen mit `python -m pytest -q tests`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
+244 automatische Tests laufen mit `python -m pytest -q tests`. Sie brauchen weder Hardware noch etwas außerhalb dieses Rechners.
 
 Die CI führt `HYDRA_UMC_CI=1 python tools/ci_validate.py` aus; das prüft das Manifest, die Dokumente, die acht READMEs und die Bilder.
 

@@ -43,7 +43,7 @@ DOMAIN = b"hydra-umc-safety-state-v1\n"
 MIN_KEY_CHARS = 32
 MAX_RESPONSE_BYTES = 64 * 1024
 READY = "READY"
-_KNOWN_KEYS = {"enabled", "url", "token_file", "timeout_s", "max_age_ms", "require_signature", "algorithm", "key_file", "key_id"}
+_KNOWN_KEYS = {"enabled", "url", "token_file", "timeout_s", "max_age_ms", "require_signature", "algorithm", "key_file", "key_id", "start_without_key"}
 
 
 class SafetyGateConfigError(ValueError):
@@ -63,9 +63,12 @@ class SafetyGatePolicy:
     algorithm: str = HMAC
     key_file: str = ""
     key_id: str = ""
+    # Deployment profile: when true, a key or token file that cannot be read does not stop the planner from starting; the gate then
+    # refuses every release with the reason (the planner keeps answering /decompose and the proposals). Off: a bad file is an error at start.
+    start_without_key: bool = False
 
     def __post_init__(self) -> None:
-        for name in ("enabled", "require_signature"):
+        for name in ("enabled", "require_signature", "start_without_key"):
             if not isinstance(getattr(self, name), bool):
                 raise SafetyGateConfigError(f"safety_gate.{name} must be true or false")
         if not isinstance(self.url, str) or urlparse(self.url).scheme not in ("http", "https") or not urlparse(self.url).hostname:
@@ -174,6 +177,15 @@ class SafetyGate:
         """The gate of a policy, or None while the switch is off. Reads the key and the token once; a file that cannot be used is an error at start."""
         if not policy.enabled:
             return None
+        try:
+            return cls._build(policy)
+        except SafetyGateConfigError as error:
+            if policy.start_without_key:
+                return ClosedGate(policy, str(error))
+            raise
+
+    @classmethod
+    def _build(cls, policy: SafetyGatePolicy) -> "SafetyGate":
         key: bytes | None = None
         public_key: object | None = None
         if policy.key_file:
@@ -267,3 +279,14 @@ class SafetyGate:
             if counter < self._last_counter:
                 return False, "the verdict is older than one already seen (replay)", 0
         return True, "", counter
+
+
+class ClosedGate(SafetyGate):
+    """The gate of a deployment whose key or token file cannot be used: it exists, so /release is still guarded, and it refuses every release."""
+
+    def __init__(self, policy: SafetyGatePolicy, why: str) -> None:
+        super().__init__(policy)
+        self.why = why
+
+    def check(self) -> GateResult:
+        return GateResult(False, f"the safety gate cannot verify verdicts: {self.why}")

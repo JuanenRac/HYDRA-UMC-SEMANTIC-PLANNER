@@ -26,6 +26,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from .recovery_export import ExportPolicy, RecoveryExporter, parse_export_policy
 from .recovery import (
     CONFIG_ENV,
     ESCALATE_TO_OPERATOR,
@@ -39,7 +40,7 @@ OUTCOME_SUCCESS = "SUCCESS"
 OUTCOME_FAILURE = "FAILURE"
 OUTCOMES = (OUTCOME_SUCCESS, OUTCOME_FAILURE)
 _NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
-_KNOWN_KEYS = {"enabled", "max_entries", "ttl_s", "min_failures", "path"}
+_KNOWN_KEYS = {"enabled", "max_entries", "ttl_s", "min_failures", "path", "export"}
 HARD_MAX_ENTRIES = 10000
 
 
@@ -55,8 +56,12 @@ class FailureMemoryPolicy:
     min_failures: int = 3
     # Optional file that keeps the records between runs; empty means memory only.
     path: str = ""
+    # Off by default: where the outcomes go and come back from (a local HYDRA-UMC-DATALAKE). See recovery_export.py.
+    export: ExportPolicy = ExportPolicy()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.export, ExportPolicy):
+            raise FailureMemoryConfigError("failure_memory.export must be a JSON object")
         if not isinstance(self.enabled, bool):
             raise FailureMemoryConfigError("failure_memory.enabled must be true or false")
         for name in ("max_entries", "ttl_s", "min_failures"):
@@ -86,6 +91,8 @@ def load_memory_policy(path: str | os.PathLike[str] | None = None) -> FailureMem
     unknown = sorted(set(section) - _KNOWN_KEYS)
     if unknown:
         raise FailureMemoryConfigError(f"failure_memory has unknown keys: {', '.join(unknown)}")
+    section = dict(section)
+    section["export"] = parse_export_policy(section.get("export"))
     return FailureMemoryPolicy(**section)
 
 
@@ -102,6 +109,7 @@ class FailureMemory:
         self._lock = threading.Lock()
         # (timestamp, component, error_code, action, outcome), oldest first
         self._records: list[tuple[float, str, str, str, str]] = []
+        self.exporter: RecoveryExporter | None = None
         self._load()
 
     def _prune(self, now: float) -> None:
@@ -124,6 +132,30 @@ class FailureMemory:
             self._records.append((now, component, error_code, action, outcome))
             self._prune(now)
             self._save()
+        exporter = self.exporter
+        if exporter is not None:
+            exporter.enqueue(component, error_code, action, outcome, now)
+
+    def merge_failures(self, records: list[tuple[float, str, str, str, str]]) -> int:
+        """Adds FAILURE records that came from outside (the data lake) and are already validated; returns how many were new.
+
+        Only failures are taken and a record already held (same second to the millisecond) is not counted twice, so what is read back
+        can make a proposal more cautious and can never relax one.
+        """
+        with self._lock:
+            held = {(int(r[0] * 1000), r[1], r[2], r[3]) for r in self._records}
+            added = 0
+            for stamp, comp, code, act, outcome in records:
+                key = (int(stamp * 1000), comp, code, act)
+                if outcome != OUTCOME_FAILURE or key in held:
+                    continue
+                held.add(key)
+                self._records.append((stamp, comp, code, act, outcome))
+                added += 1
+            self._records.sort(key=lambda r: r[0])
+            self._prune(self._clock())
+            self._save()
+            return added
 
     def counts(self, component: str, error_code: str, action: str) -> tuple[int, int]:
         """(successes, failures) of `action` for this component and code among the live records."""

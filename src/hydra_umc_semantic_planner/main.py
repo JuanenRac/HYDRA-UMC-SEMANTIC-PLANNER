@@ -21,6 +21,7 @@ from . import __version__
 from .api import SemanticPlannerServer
 from .approval_signing import ApprovalKeyError, load_key, sign_approval
 from .decompose import decompose_goal
+from .recovery_export import ExportConfigError, RecoveryExporter
 from .failure_memory import FailureMemory, FailureMemoryConfigError, load_memory_policy
 from .plan_simulation import SimulationConfigError, load_simulation_policy
 from .recovery import FailureContext, PolicyError, load_policy, propose_recovery
@@ -97,7 +98,8 @@ def _run_serve(
         symbolic = load_symbolic_policy(config)
         memory_policy = load_memory_policy(config)
     except (
-        PolicyError, SimulationConfigError, SafetyGateConfigError, VoiceIntentConfigError, SymbolicConfigError, FailureMemoryConfigError
+        PolicyError, SimulationConfigError, SafetyGateConfigError, VoiceIntentConfigError, SymbolicConfigError, FailureMemoryConfigError,
+        ExportConfigError,
     ) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -112,6 +114,19 @@ def _run_serve(
             print(f"error: {error}", file=sys.stderr)
             return 2
     memory = FailureMemory(memory_policy) if memory_policy.enabled else None
+    exporter = None
+    if memory is not None:
+        try:
+            exporter = RecoveryExporter.from_policy(memory_policy.export)
+        except ExportConfigError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 2
+    if memory is not None and exporter is not None:
+        if memory_policy.export.load_on_start:
+            added = memory.merge_failures(exporter.load(memory_policy.ttl_s, memory_policy.max_entries))
+            print(f"[semantic-planner] recovery memory: {added} failures read back from the data lake, {exporter.ignored_on_load} records ignored")
+        memory.exporter = exporter
+        exporter.start()
     server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
@@ -133,6 +148,8 @@ def _run_serve(
         pass
     finally:
         server.server_close()
+        if exporter is not None:
+            exporter.stop()
         print("[semantic-planner] shutting down")
     return 0
 

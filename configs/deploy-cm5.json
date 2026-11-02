@@ -1,0 +1,56 @@
+{
+  "recovery": {
+    "out_of_range_action": "ABORT"
+  },
+  "plan_simulation": {
+    "enabled": false,
+    "max_steps": 200,
+    "speed_mm_s": 100.0,
+    "default_step_s": 1.0
+  },
+  "safety_gate": {
+    "enabled": true,
+    "url": "http://127.0.0.1:8108",
+    "token_file": "",
+    "timeout_s": 2.0,
+    "max_age_ms": 2000,
+    "require_signature": true,
+    "algorithm": "HMAC-SHA256",
+    "key_file": "/etc/hydra-umc/safety-state.key",
+    "key_id": "",
+    "start_without_key": true
+  },
+  "voice_intents": {
+    "enabled": false,
+    "mission_goals": {}
+  },
+  "symbolic_planner": {
+    "enabled": false,
+    "max_nodes": 5000,
+    "max_plan_length": 12,
+    "start_location": "home",
+    "pickup_location": "pickup",
+    "assembly_location": "assembly_point",
+    "destination_location": "destination"
+  },
+  "failure_memory": {
+    "enabled": false,
+    "max_entries": 200,
+    "ttl_s": 604800,
+    "min_failures": 3,
+    "path": "",
+    "export": {
+      "enabled": false,
+      "url": "http://127.0.0.1:8095",
+      "token_file": "",
+      "allow_plaintext": false,
+      "source_id": "semantic-planner",
+      "kind": "recovery_outcome",
+      "timeout_s": 3.0,
+      "queue_max": 500,
+      "retries": 3,
+      "retry_delay_s": 2.0,
+      "load_on_start": true
+    }
+  }
+}

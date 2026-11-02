@@ -17,7 +17,8 @@
     "require_signature": true,
     "algorithm": "HMAC-SHA256",
     "key_file": "",
-    "key_id": ""
+    "key_id": "",
+    "start_without_key": false
   },
   "voice_intents": {
     "enabled": false,
@@ -37,6 +38,19 @@
     "max_entries": 200,
     "ttl_s": 604800,
     "min_failures": 3,
-    "path": ""
+    "path": "",
+    "export": {
+      "enabled": false,
+      "url": "http://127.0.0.1:8095",
+      "token_file": "",
+      "allow_plaintext": false,
+      "source_id": "semantic-planner",
+      "kind": "recovery_outcome",
+      "timeout_s": 3.0,
+      "queue_max": 500,
+      "retries": 3,
+      "retry_delay_s": 2.0,
+      "load_on_start": true
+    }
   }
 }
