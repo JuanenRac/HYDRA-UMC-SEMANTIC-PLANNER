@@ -86,6 +86,7 @@ Er handhabt hochgradige Ambiguität und bietet eine semantische Fehlerbehebung: 
   (neben VLA-Engine, Voice-UI und Docs-QA) und teilt sich das
   HydraOS-Image und die Modellgewichte des Elternteils, statt eigene
   Kopien vorzuhalten.
+* 🩺 **Ein einheitliches `GET /health`, standardmäßig geschlossen:** `serve --health-open` (oder `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`) lässt den Dienst auf `GET /health` mit `{"status": "ok", "service": ..., "version": ...}` antworten, derselbe Inhalt in jedem Dienst der Familie; ohne den Schalter antwortet die Route mit `404` wie eine nicht vorhandene Route. Ein Aufrufer außerhalb von Loopback muss das Bearer-Token des Dienstes vorlegen, und der Inhalt enthält keinen Pfad, keine Konfiguration und kein Geheimnis.
 
 ## 🧩 Rolle in HYDRA-UMC
 

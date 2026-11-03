@@ -88,6 +88,7 @@ GPL-3.0-or-later - see LICENSE
 * ⚡ **Hailo-10 最適化：** 40 TOPS を活用した高速な多段階推論。*（計画中——実際のローカル LLM が必要です）*
 * 👨‍👩‍👧 **認知 AI ノードの子プロジェクト：**
   [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE) の下で 4 つの兄弟サービスの 1 つとして動作します（VLA-Engine、Voice-UI、Docs-QA と並んで）。独自のコピーを保持するのではなく、親プロジェクトの HydraOS イメージとモデルの重みを共有します。
+* 🩺 **統一された `GET /health`（既定では閉じています）：** `serve --health-open`（または `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`）を指定すると、サービスは `GET /health` に `{"status": "ok", "service": ..., "version": ...}` で応答します。ファミリーのすべてのサービスで同じ本文です。スイッチがなければ、ルートは存在しないルートと同じく `404` を返します。ループバック以外の呼び出し元はサービスのベアラートークンが必要で、本文にはパス・設定・秘密情報は含まれません。
 
 ## 🧩 HYDRA-UMC での役割
 

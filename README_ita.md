@@ -87,6 +87,7 @@ Gestisce l'ambiguità di alto livello e fornisce il recupero semantico degli err
   HydraOS e i pesi dei modelli del padre invece di mantenere copie
   proprie.
 * 📦 **Versionamento Contachilometri:** La versione di `pyproject.toml` viene alzata solo dal comando `bump` esplicito (`python tools/hydra_project_tool.py bump`, che esegue `bump_version.py`) - compilare non la cambia mai.
+* 🩺 **Un `GET /health` uniforme, chiuso per impostazione predefinita:** `serve --health-open` (o `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`) fa rispondere il servizio a `GET /health` con `{"status": "ok", "service": ..., "version": ...}`, lo stesso corpo in ogni servizio della famiglia; senza l'interruttore la route risponde `404` come una route inesistente. Chi non è in loopback deve presentare il token bearer del servizio, e il corpo non contiene percorsi, configurazione né segreti.
 
 ## 🧩 Ruolo in HYDRA-UMC
 

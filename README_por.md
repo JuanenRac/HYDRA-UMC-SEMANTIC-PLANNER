@@ -86,6 +86,7 @@ Trata a ambiguidade de alto nível e fornece recuperação semântica de erros: 
   (a par do VLA-Engine, Voice-UI e Docs-QA), partilhando a imagem HydraOS e os pesos
   de modelos do pai em vez de manter cópias próprias.
 * 📦 **Versionamento ao estilo conta-quilómetros:** A versão do `pyproject.toml` só é subida pelo comando `bump` explícito (`python tools/hydra_project_tool.py bump`, que executa o `bump_version.py`) - compilar nunca a altera.
+* 🩺 **Um `GET /health` uniforme, fechado por predefinição:** `serve --health-open` (ou `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`) faz o serviço responder a `GET /health` com `{"status": "ok", "service": ..., "version": ...}`, o mesmo corpo em todos os serviços da família; sem o interruptor a rota responde `404` como uma rota que não existe. Quem não estiver em loopback tem de apresentar o token bearer do serviço, e o corpo não contém caminhos, configuração nem segredos.
 
 ## 🧩 Papel no HYDRA-UMC
 

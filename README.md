@@ -85,6 +85,7 @@ It handles high-level ambiguity and provides semantic error recovery: if a task 
   under [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE)
   (alongside VLA-Engine, Voice-UI and Docs-QA), sharing its parent's
   HydraOS image and model weights instead of keeping its own copies.
+* 🩺 **A uniform `GET /health`, closed by default:** `serve --health-open` (or `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`) makes the service answer `GET /health` with `{"status": "ok", "service": ..., "version": ...}`, the same body in every service of the family; without the switch the route answers `404` like a route that does not exist. A caller that is not on loopback must present the bearer token of the service, and the body carries no path, configuration or secret.
 
 ## 🧩 Role in HYDRA-UMC
 
