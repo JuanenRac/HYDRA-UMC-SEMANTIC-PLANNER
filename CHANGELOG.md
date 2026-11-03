@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **A uniform `GET /health`, closed by default:** `serve --health-open` (or `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`) makes the service answer `GET /health` with `{"status": "ok", "service": ..., "version": ...}`, the same body in every service of the family, so a watchdog reads the health of any of them the same way. Without the switch the route answers `404` like a route that does not exist. This service has no bearer token, so it answers only a caller on loopback. The body carries no path, configuration or secret; the health path the manifest declares does not change.
+
 ## [0.1.8] - A safety gate before the release of a plan that is on in the deployment profile of the CM5, a memory of recoveries that can be kept in the data lake, a symbolic planner, a voice intent route and a recovery that only tightens
 
 - **Symbolic planning behind `decompose_goal()` (off by default).** With `symbolic_planner.enabled` set to `true` in the configuration file, the goal that the rules understood becomes a small PDDL-lite problem (preconditions, negated preconditions, add and delete effects over a closed set of operators) and the steps come from a deterministic breadth-first search bounded by `max_nodes` and `max_plan_length`. The plan is replayed from the start state and discarded if any precondition breaks; when nothing is found the answer is a miss, never the template. It only proposes: validation, the fingerprint, the person's approval and the safety gate of `POST /release` are unchanged. The start, pickup, assembly and destination locations are configuration values. 11 tests.

@@ -18,6 +18,7 @@ import json
 import sys
 
 from . import __version__
+from .health_route import health_open_requested
 from .api import SemanticPlannerServer
 from .approval_signing import ApprovalKeyError, load_key, sign_approval
 from .decompose import decompose_goal
@@ -143,6 +144,7 @@ def _run_serve(
     if approval_key is not None:
         print(f"[semantic-planner] POST /release needs an approval signed for robot {robot_id!r}")
     try:
+        server.health_open = health_open_requested(args.health_open)
         server.serve_forever()
     except KeyboardInterrupt:
         pass
@@ -178,6 +180,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     serve_parser.add_argument("--config", default=None, help="Configuration file with the recovery policy (default: the file named by HYDRA_UMC_SEMANTIC_PLANNER_CONFIG, else the safe defaults).")
     serve_parser.add_argument("--addr", default="127.0.0.1", help="address to bind the HTTP API to")
+    serve_parser.add_argument("--health-open", action="store_true", help="answer GET /health (open to loopback, to other callers only with the bearer token); closed by default, or set HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1")
     serve_parser.add_argument("--port", type=int, default=8109, help="port for the HTTP API")
 
     serve_parser.add_argument(

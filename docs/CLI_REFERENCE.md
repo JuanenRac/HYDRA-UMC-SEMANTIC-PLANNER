@@ -288,3 +288,10 @@ not wired up. Both subcommands here are real, explicit, rule-based
 kernels (a small goal-template table, an explicit error-code lookup
 table) that a future LLM-based planner is meant to sit behind, not
 replace at the CLI surface.
+
+
+## `GET /health` (off by default)
+
+A uniform health route, the same in every service of the family. It is closed unless the operator opens it with `serve --health-open` or `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`: closed, it answers `404 {"error": "not found"}` like any route that does not exist.
+
+Open, it answers `200` with `{"status": "ok", "service": "hydra-umc-semantic-planner", "version": "<version>"}` to a caller on loopback. This service has no bearer token, so it answers only a caller on loopback. The body never carries a path, a setting or a secret. The health path of the project manifest (`health_path`) is unchanged.

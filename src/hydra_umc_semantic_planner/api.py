@@ -15,6 +15,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
 from . import __version__
+from .health_route import HealthRouteMixin
 from .service_metrics import MetricsHandlerMixin
 from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
@@ -78,7 +79,7 @@ def _read_json_body(handler: BaseHTTPRequestHandler) -> dict:
     return parsed
 
 
-class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
+class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
     server: "SemanticPlannerServer"
     metrics_service = "hydra-umc-semantic-planner"
     metrics_version = __version__
@@ -92,6 +93,8 @@ class Handler(MetricsHandlerMixin, BaseHTTPRequestHandler):
         pass  # quiet by default, same reasoning as this family's other api.py files
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.serve_health():
+            return
         if self.serve_metrics():
             return
         if urlparse(self.path).path == "/stats":
