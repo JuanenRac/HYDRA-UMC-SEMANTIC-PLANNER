@@ -89,7 +89,7 @@ def _run_recover(component: str, error_code: str, detail: str, config: str | Non
 
 
 def _run_serve(
-    addr: str, port: int, approval_key_file: str | None = None, robot_id: str = "", config: str | None = None
+    addr: str, port: int, approval_key_file: str | None = None, robot_id: str = "", config: str | None = None, health_open: bool = False
 ) -> int:
     try:
         policy = load_policy(config)
@@ -144,7 +144,7 @@ def _run_serve(
     if approval_key is not None:
         print(f"[semantic-planner] POST /release needs an approval signed for robot {robot_id!r}")
     try:
-        server.health_open = health_open_requested(args.health_open)
+        server.health_open = health_open_requested(health_open)
         server.serve_forever()
     except KeyboardInterrupt:
         pass
@@ -235,7 +235,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "recover":
         return _run_recover(args.component, args.error_code, args.detail, args.config)
     if args.command == "serve":
-        return _run_serve(args.addr, args.port, args.approval_key_file, args.robot_id, args.config)
+        return _run_serve(args.addr, args.port, args.approval_key_file, args.robot_id, args.config, health_open=args.health_open)
     if args.command == "sign-approval":
         return _run_sign(args)
 
