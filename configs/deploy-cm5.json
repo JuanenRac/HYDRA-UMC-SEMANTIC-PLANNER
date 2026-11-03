@@ -2,6 +2,13 @@
   "recovery": {
     "out_of_range_action": "ABORT"
   },
+  "plan_approval": {
+    "require_signed": true,
+    "algorithm": "HMAC-SHA256",
+    "key_file": "/etc/hydra-umc/plan-approval.key",
+    "robot_id": "robot-1",
+    "start_without_key": true
+  },
   "plan_simulation": {
     "enabled": false,
     "max_steps": 200,

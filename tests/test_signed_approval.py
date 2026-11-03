@@ -152,3 +152,115 @@ def test_the_command_signs_and_the_service_needs_a_robot_with_a_key(tmp_path: Pa
     assert code == 0 and len(printed["signature"]) == 64 and printed["robot_id"] == "robot-1"
     assert main_module.main(["serve", "--approval-key-file", str(key_file)]) == 2
     assert main_module.main(["serve", "--approval-key-file", str(tmp_path / "none"), "--robot-id", "r"]) == 2
+
+
+# -- signed by default ------------------------------------------------------------------------------------------------------------
+def _config(tmp_path: Path, section: dict | None) -> Path:
+    path = tmp_path / "planner.json"
+    path.write_text(json.dumps({} if section is None else {"plan_approval": section}), encoding="utf-8")
+    return path
+
+
+def test_the_default_policy_is_signed() -> None:
+    from hydra_umc_semantic_planner.approval_policy import ApprovalPolicy
+
+    assert ApprovalPolicy().require_signed is True
+
+
+def test_serve_refuses_to_start_unsigned_unless_development_switches_it_off(tmp_path: Path, capsys) -> None:
+    # no section at all: signed is the default, and there is no robot or key, so the service does not start
+    assert main_module._run_serve("127.0.0.1", 0, config=str(_config(tmp_path, None))) == 2  # noqa: SLF001
+    assert "robot" in capsys.readouterr().err
+    assert main_module._run_serve("127.0.0.1", 0, config=str(_config(tmp_path, {"robot_id": "robot-1"}))) == 2  # noqa: SLF001
+    assert "key" in capsys.readouterr().err
+    # a key but no robot: still refused
+    key_file = tmp_path / "approval.key"
+    key_file.write_bytes(KEY)
+    assert main_module._run_serve("127.0.0.1", 0, config=str(_config(tmp_path, {"key_file": str(key_file)}))) == 2  # noqa: SLF001
+    assert "robot" in capsys.readouterr().err
+
+
+def test_the_development_switch_starts_unsigned(tmp_path: Path) -> None:
+    seen: dict = {}
+
+    class Stop(Exception):
+        pass
+
+    def fake_server(*args: object, **kwargs: object) -> None:
+        seen.update(kwargs)
+        seen["key"] = args[2]
+        raise Stop
+
+    original = main_module.SemanticPlannerServer
+    main_module.SemanticPlannerServer = fake_server  # type: ignore[assignment,misc]
+    try:
+        with pytest.raises(Stop):
+            main_module._run_serve("127.0.0.1", 0, config=str(_config(tmp_path, {"require_signed": False})))  # noqa: SLF001
+    finally:
+        main_module.SemanticPlannerServer = original  # type: ignore[misc]
+    assert seen["require_signed"] is False and seen["key"] is None
+
+
+def test_the_configuration_names_the_key_and_the_robot(tmp_path: Path) -> None:
+    seen: dict = {}
+
+    class Stop(Exception):
+        pass
+
+    def fake_server(*args: object, **kwargs: object) -> None:
+        seen.update(kwargs)
+        seen["key"], seen["robot"] = args[2], args[3]
+        raise Stop
+
+    key_file = tmp_path / "approval.key"
+    key_file.write_bytes(KEY)
+    original = main_module.SemanticPlannerServer
+    main_module.SemanticPlannerServer = fake_server  # type: ignore[assignment,misc]
+    try:
+        with pytest.raises(Stop):
+            main_module._run_serve("127.0.0.1", 0, config=str(_config(tmp_path, {"key_file": str(key_file), "robot_id": "robot-1"})))  # noqa: SLF001
+    finally:
+        main_module.SemanticPlannerServer = original  # type: ignore[misc]
+    assert seen["require_signed"] is True and seen["key"] == KEY and seen["robot"] == "robot-1"
+
+
+def test_a_missing_key_with_the_deployment_option_refuses_every_release(tmp_path: Path) -> None:
+    section = {"key_file": str(tmp_path / "absent.key"), "robot_id": "robot-1", "start_without_key": True}
+    with _server(require_signed=True, robot_id="robot-1") as base:
+        fingerprint = _post(f"{base}/decompose", {"goal": "inspect the weld"})["fingerprint"]
+        body = {"goal": "inspect the weld", "approved_by": "ana", "plan_fingerprint": fingerprint}
+        answer = _post(f"{base}/release", body)
+        assert answer["released"] is False and "no approval key" in answer["reason"]
+    assert _config(tmp_path, section).exists()
+
+
+def test_the_policy_rejects_unknown_keys_and_bad_values(tmp_path: Path) -> None:
+    from hydra_umc_semantic_planner.approval_policy import ApprovalConfigError, load_approval_policy
+
+    for section in ({"nope": 1}, {"require_signed": "yes"}, {"algorithm": "RSA"}, {"key_file": 3}):
+        with pytest.raises(ApprovalConfigError):
+            load_approval_policy(_config(tmp_path, section))
+
+
+def test_ed25519_approvals_sign_with_the_private_key_and_verify_with_the_public_one(tmp_path: Path) -> None:
+    pytest.importorskip("cryptography")
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    from hydra_umc_semantic_planner.approval_signing import load_ed25519_key
+
+    private = ed25519.Ed25519PrivateKey.generate()
+    private_file, public_file = tmp_path / "private.pem", tmp_path / "public.pem"
+    private_file.write_bytes(private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
+    public_file.write_bytes(private.public_key().public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
+    signer, verifier = load_ed25519_key(private_file, private=True), load_ed25519_key(public_file, private=False)
+    signed = sign_approval(signer, FP, "ana", "robot-1", validity_ms=60_000, now_ms=NOW)
+    arguments = {"expected_fingerprint": FP, "expected_robot_id": "robot-1", "now_ms": NOW + 1000}
+    assert verify_approval(verifier, signed, **arguments) == (True, "")
+    assert "does not match" in verify_approval(verifier, replace(signed, approved_by="mallory"), **arguments)[1]
+    assert "does not match" in verify_approval(verifier, replace(signed, signature="zz"), **arguments)[1]
+    # a key of the wrong kind is an error at load, not a silent downgrade
+    with pytest.raises(ApprovalKeyError):
+        load_ed25519_key(public_file, private=True)
+    with pytest.raises(ApprovalKeyError):
+        load_ed25519_key(tmp_path / "missing.pem", private=False)

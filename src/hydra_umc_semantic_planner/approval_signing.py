@@ -32,6 +32,34 @@ class ApprovalKeyError(ValueError):
     """The key file is missing, unreadable or too short."""
 
 
+ED25519 = "Ed25519"
+HMAC = "HMAC-SHA256"
+ALGORITHMS = (HMAC, ED25519)
+
+
+def _cryptography():
+    try:
+        from cryptography.hazmat.primitives import serialization  # noqa: PLC0415
+        from cryptography.hazmat.primitives.asymmetric import ed25519  # noqa: PLC0415
+    except ImportError as error:
+        raise ApprovalKeyError("Ed25519 needs the cryptography package (pip install cryptography)") from error
+    return serialization, ed25519
+
+
+def load_ed25519_key(path: str | Path, *, private: bool):
+    """The Ed25519 key of a PEM file: the private key to sign, the public key to verify."""
+    serialization, ed25519 = _cryptography()
+    try:
+        raw = Path(path).read_bytes()
+        key = serialization.load_pem_private_key(raw, password=None) if private else serialization.load_pem_public_key(raw)
+    except (OSError, ValueError, TypeError) as error:
+        raise ApprovalKeyError(f"the Ed25519 {'private' if private else 'public'} key file cannot be read as PEM") from error
+    expected = ed25519.Ed25519PrivateKey if private else ed25519.Ed25519PublicKey
+    if not isinstance(key, expected):
+        raise ApprovalKeyError("the key file does not hold an Ed25519 key")
+    return key
+
+
 def load_key(path: str | Path) -> bytes:
     try:
         raw = Path(path).read_bytes().strip()
@@ -66,7 +94,7 @@ def _message(approval: SignedApproval) -> bytes:
 
 
 def sign_approval(
-    key: bytes,
+    key,
     plan_fingerprint: str,
     approved_by: str,
     robot_id: str,
@@ -82,12 +110,15 @@ def sign_approval(
         raise ValueError(f"the validity must be between 1 and {MAX_VALIDITY_MS} ms")
     issued = int(time.time() * 1000) if now_ms is None else now_ms
     unsigned = SignedApproval(plan_fingerprint, approved_by, robot_id, issued, issued + validity_ms)
-    signature = hmac.new(key, _message(unsigned), hashlib.sha256).hexdigest()
+    if isinstance(key, bytes):
+        signature = hmac.new(key, _message(unsigned), hashlib.sha256).hexdigest()
+    else:
+        signature = key.sign(_message(unsigned)).hex()
     return SignedApproval(plan_fingerprint, approved_by, robot_id, unsigned.issued_at_ms, unsigned.expires_at_ms, signature)
 
 
 def verify_approval(
-    key: bytes,
+    key,
     approval: SignedApproval,
     *,
     expected_fingerprint: str,
@@ -101,8 +132,16 @@ def verify_approval(
             return False, f"the approval has no valid {name}"
     if not approval.signature:
         return False, "the approval is not signed"
-    expected = hmac.new(key, _message(approval), hashlib.sha256).hexdigest()
-    if not hmac.compare_digest(expected.encode("ascii"), approval.signature.encode("utf-8", "replace")):
+    if isinstance(key, bytes):
+        expected = hmac.new(key, _message(approval), hashlib.sha256).hexdigest()
+        genuine = hmac.compare_digest(expected.encode("ascii"), approval.signature.encode("utf-8", "replace"))
+    else:
+        try:
+            key.verify(bytes.fromhex(approval.signature), _message(approval))
+            genuine = True
+        except Exception:  # noqa: BLE001 - a bad signature of any kind is a refusal
+            genuine = False
+    if not genuine:
         return False, "the signature of the approval does not match"
     if approval.expires_at_ms <= approval.issued_at_ms or approval.expires_at_ms - approval.issued_at_ms > MAX_VALIDITY_MS:
         return False, "the validity window of the approval is not acceptable"

@@ -2,6 +2,13 @@
   "recovery": {
     "out_of_range_action": "ABORT"
   },
+  "plan_approval": {
+    "require_signed": false,
+    "algorithm": "HMAC-SHA256",
+    "key_file": "",
+    "robot_id": "",
+    "start_without_key": false
+  },
   "plan_simulation": {
     "enabled": false,
     "max_steps": 200,

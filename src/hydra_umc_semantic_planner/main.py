@@ -20,7 +20,8 @@ import sys
 from . import __version__
 from .health_route import health_open_requested
 from .api import SemanticPlannerServer
-from .approval_signing import ApprovalKeyError, load_key, sign_approval
+from .approval_policy import ApprovalConfigError, load_approval_policy
+from .approval_signing import ED25519, ApprovalKeyError, load_ed25519_key, load_key, sign_approval
 from .decompose import decompose_goal
 from .recovery_export import ExportConfigError, RecoveryExporter
 from .failure_memory import FailureMemory, FailureMemoryConfigError, load_memory_policy
@@ -98,22 +99,33 @@ def _run_serve(
         voice = load_voice_policy(config)
         symbolic = load_symbolic_policy(config)
         memory_policy = load_memory_policy(config)
+        approval_policy = load_approval_policy(config)
     except (
         PolicyError, SimulationConfigError, SafetyGateConfigError, VoiceIntentConfigError, SymbolicConfigError, FailureMemoryConfigError,
-        ExportConfigError,
+        ExportConfigError, ApprovalConfigError,
     ) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
+    # Approvals are signed unless the configuration switches that off (development only). The command line can name the key and the robot.
+    key_file = approval_key_file or approval_policy.key_file
+    robot_id = robot_id or approval_policy.robot_id
+    require_signed = approval_policy.require_signed or bool(approval_key_file)
     approval_key = None
-    if approval_key_file:
-        if not robot_id.strip():
-            print("error: --approval-key-file needs --robot-id: a signed approval is for one robot", file=sys.stderr)
-            return 2
+    if require_signed:
         try:
-            approval_key = load_key(approval_key_file)
+            if not robot_id.strip():
+                raise ApprovalKeyError("a signed approval is for one robot: set plan_approval.robot_id (or --robot-id)")
+            if not key_file:
+                raise ApprovalKeyError("signed approvals need a key: set plan_approval.key_file (or --approval-key-file), or set plan_approval.require_signed to false for development")
+            approval_key = (
+                load_ed25519_key(key_file, private=False) if approval_policy.algorithm == ED25519 else load_key(key_file)
+            )
         except ApprovalKeyError as error:
-            print(f"error: {error}", file=sys.stderr)
-            return 2
+            if approval_policy.start_without_key and not approval_key_file:
+                print(f"[semantic-planner] warning: {error}; every release is refused until the key is in place", file=sys.stderr)
+            else:
+                print(f"error: {error}", file=sys.stderr)
+                return 2
     memory = FailureMemory(memory_policy) if memory_policy.enabled else None
     exporter = None
     if memory is not None:
@@ -128,7 +140,7 @@ def _run_serve(
             print(f"[semantic-planner] recovery memory: {added} failures read back from the data lake, {exporter.ignored_on_load} records ignored")
         memory.exporter = exporter
         exporter.start()
-    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory)
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
     if simulation.enabled:
@@ -141,8 +153,10 @@ def _run_serve(
         print("[semantic-planner] POST /recover/outcome (bounded, expiring memory that can only make a recovery more cautious)")
     if gate is not None:
         print("[semantic-planner] POST /release also needs the safety service to say READY (a plan is never released otherwise)")
-    if approval_key is not None:
+    if require_signed:
         print(f"[semantic-planner] POST /release needs an approval signed for robot {robot_id!r}")
+    else:
+        print("[semantic-planner] warning: plan_approval.require_signed is false (development): the approval is the words of the request", file=sys.stderr)
     try:
         server.health_open = health_open_requested(health_open)
         server.serve_forever()
@@ -185,10 +199,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     serve_parser.add_argument(
         "--approval-key-file", default=None,
-        help="file with the key that signs approvals; with it POST /release only releases a plan whose approval is "
-             "signed, current and for --robot-id (off by default: the approval is the words of the request)",
+        help="file with the key that verifies approvals (default: plan_approval.key_file). POST /release only releases a plan "
+             "whose approval is signed, current and for the robot (signed is the default; plan_approval.require_signed=false is for development only)",
     )
-    serve_parser.add_argument("--robot-id", default="", help="the robot this service releases plans for (needed with --approval-key-file)")
+    serve_parser.add_argument("--robot-id", default="", help="the robot this service releases plans for (default: plan_approval.robot_id)")
 
     sign_parser = subparsers.add_parser(
         "sign-approval",
@@ -197,7 +211,8 @@ def build_parser() -> argparse.ArgumentParser:
     sign_parser.add_argument("goal", help="The goal whose plan is approved.")
     sign_parser.add_argument("--approved-by", required=True, help="Who approves the plan.")
     sign_parser.add_argument("--robot-id", required=True, help="The robot the approval is for.")
-    sign_parser.add_argument("--key-file", required=True, help="File with the signing key.")
+    sign_parser.add_argument("--key-file", required=True, help="File with the signing key (HMAC-SHA256: the shared key; Ed25519: the PEM private key).")
+    sign_parser.add_argument("--algorithm", default="HMAC-SHA256", choices=["HMAC-SHA256", "Ed25519"], help="How the approval is signed; the service must verify with the same one.")
     sign_parser.add_argument("--valid-seconds", type=int, default=300, help="How long the approval is valid (default 300, at most 3600).")
 
     return parser
@@ -211,7 +226,7 @@ def _run_sign(args: argparse.Namespace) -> int:
         print(f'error: no plan for "{args.goal}"', file=sys.stderr)
         return 1
     try:
-        key = load_key(args.key_file)
+        key = load_ed25519_key(args.key_file, private=True) if args.algorithm == ED25519 else load_key(args.key_file)
         signed = sign_approval(
             key, propose(plan).fingerprint, args.approved_by, args.robot_id, validity_ms=args.valid_seconds * 1000
         )

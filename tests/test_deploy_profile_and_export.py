@@ -95,7 +95,7 @@ def test_main_starts_with_the_profile_and_a_missing_key(tmp_path: Path, capsys: 
     class Stop(Exception):
         pass
 
-    def fake_server(*args: object) -> None:
+    def fake_server(*args: object, **kwargs: object) -> None:
         seen["gate"] = args[6]
         raise Stop
 

@@ -227,6 +227,10 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
         if plan is None:
             _write_json(self, 200, {"released": False, "reason": "the goal does not decompose into a plan"})
             return
+        if self.server.require_signed and self.server.approval_key is None:
+            # Signed approvals are required and no key is loaded: nothing is released, and the reason says why.
+            _write_json(self, 200, {"released": False, "reason": "signed approvals are required and no approval key is loaded"})
+            return
         if self.server.approval_key is not None:
             # The approval must be signed, current and for this plan and this robot: the words of the request are not enough.
             signed = self._signed_approval(body, fingerprint, approved_by)
@@ -322,7 +326,7 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         self,
         address: tuple[str, int],
         role: str,
-        approval_key: bytes | None = None,
+        approval_key: object | None = None,  # bytes (HMAC-SHA256 key) or an Ed25519 public key
         robot_id: str = "",
         policy: RecoveryPolicy | None = None,
         simulation: SimulationPolicy | None = None,
@@ -330,8 +334,11 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         voice: VoiceIntentPolicy | None = None,
         symbolic: SymbolicPolicy | None = None,
         memory: FailureMemory | None = None,
+        require_signed: bool = False,
     ) -> None:
         super().__init__(address, Handler)
+        # `serve` passes True unless the configuration switches signed approvals off (development only); direct callers keep the old default.
+        self.require_signed = require_signed
         # With a key, POST /release only releases a plan whose approval is signed with it, for `robot_id`, and current.
         self.approval_key = approval_key
         self.robot_id = robot_id
