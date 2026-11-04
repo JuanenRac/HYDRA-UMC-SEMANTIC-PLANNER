@@ -15,7 +15,7 @@ authors = [
 keywords = ["hydra-umc", "hailo-10", "llm", "planner", "robotics", "edge-ai"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "hydra-umc-sdk @ git+https://github.com/JuanenRac/HYDRA-UMC-SDK.git@v0.5.2#subdirectory=clients/python"]
 
 [project.urls]
 Homepage = "https://github.com/JuanenRac/HYDRA-UMC-SEMANTIC-PLANNER"

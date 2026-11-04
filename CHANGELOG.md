@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The recovery table is checked against the shared vocabulary of the SDK:** `tests/test_recovery_sdk_vocabulary.py` compares every code and default action of the planner with `hydra_umc_sdk.mcu_errors` (4 tests), so a code added or changed in one place and not in the other fails the CI. The service itself still runs with no dependency; the `dev` extra installs the SDK client from its published tag.
+
 - **The manifest declares the uniform `GET /health` route:** `service.health_path` is `/health` now. The route stays closed (404) until the service switch opens it, and the health checks of the server and of the family ask `/stats` after a 404 on `/health`.
 
 ## [0.1.9] - Behaviour change: approvals are signed by default. serve now requires a signed approval (HMAC-SHA256 over the plan fingerprint, the approver, the robot and the time window; Ed25519 optional with planapproval.algorithm) and... (and 2 more changes)

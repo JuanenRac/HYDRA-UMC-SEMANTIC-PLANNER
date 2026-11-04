@@ -28,6 +28,10 @@ Unknown codes always produce `ESCALATE_TO_OPERATOR`. The planner proposes a
 recovery; it never clears an emergency stop, changes a physical safety system
 or sends motion directly.
 
+## Shared vocabulary
+
+The seven codes and their default actions are defined once in the SDK (`hydra_umc_sdk.mcu_errors`). The planner keeps its own table so that it runs without any dependency, and `tests/test_recovery_sdk_vocabulary.py` fails when the table and the SDK vocabulary differ (the `dev` extra installs the SDK client; the test is skipped where it is not installed).
+
 ## Configuration
 
 `configs/semantic-planner.json` holds the recovery policy. It is read from the
