@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The manifest declares the uniform `GET /health` route:** `service.health_path` is `/health` now. The route stays closed (404) until the service switch opens it, and the health checks of the server and of the family ask `/stats` after a 404 on `/health`.
+
 ## [0.1.9] - Behaviour change: approvals are signed by default. serve now requires a signed approval (HMAC-SHA256 over the plan fingerprint, the approver, the robot and the time window; Ed25519 optional with planapproval.algorithm) and... (and 2 more changes)
 
 - **Behaviour change: approvals are signed by default.** `serve` now requires a signed approval (HMAC-SHA256 over the plan fingerprint, the approver, the robot and the time window; Ed25519 optional with `plan_approval.algorithm`) and refuses to start without a key and a robot, instead of accepting the words of the request. The new `plan_approval` section of the configuration file sets `require_signed` (true by default; `false` is for development only and is announced at start), `algorithm`, `key_file` (outside the repository), `robot_id` and `start_without_key` (the service starts without the key and refuses every release with the reason). The deployment profile turns it on with `/etc/hydra-umc/plan-approval.key`; the general file keeps it off for a planner started by hand. `sign-approval` takes `--algorithm`. 7 new tests.
