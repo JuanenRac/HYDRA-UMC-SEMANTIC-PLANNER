@@ -10,6 +10,7 @@ the CLI's own `decompose`/`recover` subcommands already run."""
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
@@ -18,6 +19,7 @@ from . import __version__
 from .health_route import HealthRouteMixin
 from .server_identity import accepts
 from .service_metrics import MetricsHandlerMixin
+from .approval_policy import ApprovalConfigError, write_require_identity
 from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
 from .decompose import MAX_GOAL_CHARS, decompose_goal
@@ -107,6 +109,8 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
             return
         if urlparse(self.path).path == "/stats":
             _write_json(self, 200, {"role": self.server.role})
+        elif urlparse(self.path).path == "/settings":
+            _write_json(self, 200, self.server.settings_view())
         else:
             _write_error(self, 404, "not found")
 
@@ -120,7 +124,9 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
         except (json.JSONDecodeError, ValueError) as e:
             _write_error(self, 400, f"malformed JSON body: {e}")
             return
-        if path == "/decompose":
+        if path == "/settings":
+            self._handle_settings(body)
+        elif path == "/decompose":
             self._handle_decompose(body)
         elif path == "/recover":
             self._handle_recover(body)
@@ -134,6 +140,32 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
             self._handle_voice_intent(body)
         else:
             _write_error(self, 404, "not found")
+
+    def _handle_settings(self, body: dict) -> None:
+        """`POST /settings` with `{"requireIdentity": true|false, "confirm": true}`: the one switch of the approval that can be changed while the planner runs.
+        Only an administrator with a signed token of the SERVER; relaxing it (false) needs `confirm: true`; the change is written to the configuration file."""
+        identity = getattr(self, "identity", None)
+        if self.server.identity_key is None or identity is None or identity.role != "admin":
+            _write_error(self, 403, "the settings can be changed only with the signed token of an administrator of HYDRA-UMC-SERVER")
+            return
+        if set(body) - {"requireIdentity", "confirm"} or not isinstance(body.get("requireIdentity"), bool):
+            _write_error(self, 400, "the body must be an object with requireIdentity (true or false) and, to relax it, confirm: true")
+            return
+        wanted = body["requireIdentity"]
+        if not wanted and self.server.require_identity and body.get("confirm") is not True:
+            _write_json(self, 400, {"error": "relaxing the identity of the approval needs confirm: true", "code": "CONFIRMATION_REQUIRED"})
+            return
+        before = self.server.require_identity
+        if wanted != before and self.server.settings_file:
+            try:
+                write_require_identity(self.server.settings_file, wanted)
+            except ApprovalConfigError as error:
+                _write_json(self, 409, {"error": str(error), "code": "SETTING_REFUSED"})
+                return
+        self.server.require_identity = wanted
+        if wanted != before:
+            print(f"[semantic-planner] {'notice' if wanted else 'WARNING'}: plan_approval.require_identity was set to {str(wanted).lower()} through the settings route by {identity.username}", file=sys.stderr)
+        _write_json(self, 200, dict(self.server.settings_view(), changed=wanted != before))
 
     def _handle_voice_intent(self, body: dict) -> None:
         # An intent already parsed by the voice service becomes the goal of the mission catalogue and then takes the exact path of
@@ -344,6 +376,7 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
 
 
 class SemanticPlannerServer(ThreadingHTTPServer):
+    settings_file: str | None = None
     health_open: bool = False  # GET /health answers only when the operator opens it (health_route.py)
     identity_key: bytes | None = None  # the signing key of HYDRA-UMC-SERVER, when the operator turned its identity on (server_identity.py)
     def __init__(
@@ -360,10 +393,13 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         memory: FailureMemory | None = None,
         require_signed: bool = False,
         require_identity: bool = False,
+        settings_file: str | None = None,
     ) -> None:
         super().__init__(address, Handler)
         # `serve` passes True unless the configuration relaxes it: POST /release then needs the token of the SERVER of an operator, and approved_by is that person.
         self.require_identity = require_identity
+        # The configuration file `POST /settings` writes to (None: the change lasts until the planner restarts).
+        self.settings_file = settings_file
         # `serve` passes True unless the configuration switches signed approvals off (development only); direct callers keep the old default.
         self.require_signed = require_signed
         # With a key, POST /release only releases a plan whose approval is signed with it, for `robot_id`, and current.
@@ -381,3 +417,6 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         self.symbolic = symbolic if symbolic is not None else SymbolicPolicy()
         # Off by default (None): without it POST /recover/outcome does not exist (404) and recovery has no memory.
         self.memory = memory
+
+    def settings_view(self) -> dict:
+        return {"requireIdentity": self.require_identity, "verifiesTokens": self.identity_key is not None, "persisted": bool(self.settings_file)}

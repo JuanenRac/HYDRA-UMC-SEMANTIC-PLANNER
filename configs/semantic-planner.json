@@ -7,7 +7,8 @@
     "algorithm": "HMAC-SHA256",
     "key_file": "",
     "robot_id": "",
-    "start_without_key": false
+    "start_without_key": false,
+    "require_identity": true
   },
   "plan_simulation": {
     "enabled": false,

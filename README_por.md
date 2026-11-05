@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-283%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-294%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.9-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versão | `0.1.9` |
 | Maturidade | Funcional |
-| Testes | 283 (`python -m pytest -q tests`) |
+| Testes | 294 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destino | O Raspberry Pi CM5 de uma célula HYDRA-UMC |
 | Em hardware real | Não aplicável: nada aqui corre em hardware |
@@ -55,7 +55,7 @@ Cada linha é uma parte deste repositório e a luz diz até onde chega hoje. É 
 | Área | Estado | O que significa aqui |
 |---|---|---|
 | Software | 🟡 | Funciona para o seu propósito principal; a verificação de honestidade acima lista o que ainda falta |
-| Testes | 🟢 | 283 testes automáticos, executados a cada alteração |
+| Testes | 🟢 | 294 testes automáticos, executados a cada alteração |
 | Hardware real | 🟢 | Não aplicável: nada aqui corre em hardware |
 | Interface e protocolos | 🟡 | As rotas ou mensagens que oferece estão documentadas e testadas com um cliente; ainda nem todos os clientes as usaram |
 | Integração | 🟡 | Funciona em conjunto com os outros serviços na bancada de testes da CM5 e as suas mensagens seguem os contratos partilhados do SDK |
@@ -184,7 +184,7 @@ serviço no `docker-compose.yml` a par dos seus três irmãos
 
 ## 🔒 Segurança e proteção
 
-As aprovações são assinadas por predefinição: `serve` precisa de `plan_approval.key_file` e `plan_approval.robot_id` (ou de `--approval-key-file FICHEIRO --robot-id ROBOT`) e faz com que `POST /release` exija `robot_id`, `issued_at_ms`, `expires_at_ms` e uma `signature` HMAC-SHA256 (ou Ed25519, com `plan_approval.algorithm` definido como `Ed25519`) sobre a impressão digital do plano, o aprovador, o robô e uma janela de tempo de uma hora no máximo, pelo que uma aprovação sem assinatura, alterada, expirada ou de outro robô não liberta nada; `sign-approval` produz os campos. A chave (pelo menos 16 bytes) fica num ficheiro da instalação, nunca no repositório; `plan_approval.require_signed` em `false` é um interruptor apenas para desenvolvimento. A aprovação é também dada por uma pessoa com sessão iniciada: com a identidade do HYDRA-UMC-SERVER (`--identity-key-file`), `POST /release` exige o token assinado de um operador ou administrador e `approved_by` tem de ser essa pessoa; sem a chave, toda a libertação é recusada com o motivo. `plan_approval.require_identity` em `false` relaxa isto (uma bancada sem o SERVER).
+As aprovações são assinadas por predefinição: `serve` precisa de `plan_approval.key_file` e `plan_approval.robot_id` (ou de `--approval-key-file FICHEIRO --robot-id ROBOT`) e faz com que `POST /release` exija `robot_id`, `issued_at_ms`, `expires_at_ms` e uma `signature` HMAC-SHA256 (ou Ed25519, com `plan_approval.algorithm` definido como `Ed25519`) sobre a impressão digital do plano, o aprovador, o robô e uma janela de tempo de uma hora no máximo, pelo que uma aprovação sem assinatura, alterada, expirada ou de outro robô não liberta nada; `sign-approval` produz os campos. A chave (pelo menos 16 bytes) fica num ficheiro da instalação, nunca no repositório; `plan_approval.require_signed` em `false` é um interruptor apenas para desenvolvimento. A aprovação é também dada por uma pessoa com sessão iniciada: com a identidade do HYDRA-UMC-SERVER (`--identity-key-file`), `POST /release` exige o token assinado de um operador ou administrador e `approved_by` tem de ser essa pessoa; sem a chave, toda a libertação é recusada com o motivo. `plan_approval.require_identity` em `false` relaxa isto (uma bancada sem o SERVER). Um administrador pode alterá-lo com o planeador em execução (`GET`/`POST /settings`, com confirmação para o relaxar) e o STUDIO mostra o interruptor.
 
 ## ⚙️ Configuração
 
@@ -209,7 +209,7 @@ Requer Python 3.10 ou superior.
 
 ## 🧪 Testes
 
-283 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
+294 testes automáticos correm com `python -m pytest -q tests`. Não precisam de hardware nem de nada fora desta máquina.
 
 A CI executa `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que verifica o manifesto, os documentos, os oito README e as imagens.
 

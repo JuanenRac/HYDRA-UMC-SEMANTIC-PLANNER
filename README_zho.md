@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-283%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-294%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.9-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.1.9` |
 | 成熟度 | 可用 |
-| 测试 | 283 (`python -m pytest -q tests`) |
+| 测试 | 294 (`python -m pytest -q tests`) |
 | 技术栈 | Python / local LLM (Llama-3 class) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 不适用：这里的内容不在硬件上运行 |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 283 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 294 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟢 | 不适用：这里的内容不在硬件上运行 |
 | 接口与协议 | 🟡 | 提供的路由或消息已有文档，并用客户端测试过；尚未被所有客户端使用 |
 | 集成 | 🟡 | 在 CM5 测试台上与其他服务一起运行，其消息遵循 SDK 的共享契约 |
@@ -134,7 +134,7 @@ flowchart TB
 
 ## 🔒 安全与防护
 
-批准默认需要签名：`serve` 需要 `plan_approval.key_file` 和 `plan_approval.robot_id`（或 `--approval-key-file 文件 --robot-id ROBOT`），并让 `POST /release` 要求 `robot_id`、`issued_at_ms`、`expires_at_ms`，以及对计划指纹、批准人、机器人和最长一小时的时间窗口计算的 HMAC-SHA256（`plan_approval.algorithm` 设为 `Ed25519` 时为 Ed25519）`signature`；未签名、被篡改、已过期或属于其他机器人的批准不会放行任何内容；`sign-approval` 用于生成这些字段。密钥（至少 16 字节）放在安装目录中的文件里，绝不放进仓库（`plan_approval.require_signed` 设为 `false` 仅用于开发）。批准还须由已登录的人作出：使用 HYDRA-UMC-SERVER 的身份（`--identity-key-file`）时，`POST /release` 需要操作员或管理员的签名令牌，且 `approved_by` 必须是该人；没有密钥时所有放行都会被拒绝并给出原因。`plan_approval.require_identity` 设为 `false` 可放宽（用于没有 SERVER 的台架）。
+批准默认需要签名：`serve` 需要 `plan_approval.key_file` 和 `plan_approval.robot_id`（或 `--approval-key-file 文件 --robot-id ROBOT`），并让 `POST /release` 要求 `robot_id`、`issued_at_ms`、`expires_at_ms`，以及对计划指纹、批准人、机器人和最长一小时的时间窗口计算的 HMAC-SHA256（`plan_approval.algorithm` 设为 `Ed25519` 时为 Ed25519）`signature`；未签名、被篡改、已过期或属于其他机器人的批准不会放行任何内容；`sign-approval` 用于生成这些字段。密钥（至少 16 字节）放在安装目录中的文件里，绝不放进仓库（`plan_approval.require_signed` 设为 `false` 仅用于开发）。批准还须由已登录的人作出：使用 HYDRA-UMC-SERVER 的身份（`--identity-key-file`）时，`POST /release` 需要操作员或管理员的签名令牌，且 `approved_by` 必须是该人；没有密钥时所有放行都会被拒绝并给出原因。`plan_approval.require_identity` 设为 `false` 可放宽（用于没有 SERVER 的台架）。管理员可在运行时修改（`GET`/`POST /settings`，放宽时需确认），STUDIO 会显示该开关。
 
 ## ⚙️ 配置
 
@@ -159,7 +159,7 @@ flowchart TB
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 283 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 294 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 

@@ -51,6 +51,28 @@ class ApprovalPolicy:
             raise ApprovalConfigError(f"plan_approval.algorithm must be one of {', '.join(ALGORITHMS)}")
 
 
+def write_require_identity(path: str | os.PathLike[str], value: bool) -> None:
+    """Writes `plan_approval.require_identity` into the configuration file `path` so that a change made while the planner runs survives a restart.
+    Atomic (temporary file, then replace); the rest of the file is kept as it is. Raises ApprovalConfigError (nothing is written) when the file cannot be used."""
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("the file must hold a JSON object")
+        section = data.setdefault("plan_approval", {})
+        if not isinstance(section, dict):
+            raise ValueError("plan_approval must be a JSON object")
+        section["require_identity"] = bool(value)
+        temporary = f"{path}.tmp"
+        with open(temporary, "w", encoding="utf-8") as handle:
+            json.dump(data, handle, indent=2)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+    except (OSError, ValueError) as error:
+        raise ApprovalConfigError(f"the configuration file cannot be written: {error}") from error
+
+
 def load_approval_policy(path: str | os.PathLike[str] | None = None) -> ApprovalPolicy:
     """The `plan_approval` policy of the file `path`, or of the file named by the planner's configuration variable, or the default (signed)."""
     chosen = str(path) if path else os.environ.get(CONFIG_ENV, "")

@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-283%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-294%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.1.9-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | バージョン | `0.1.9` |
 | 成熟度 | 機能する |
-| テスト | 283 (`python -m pytest -q tests`) |
+| テスト | 294 (`python -m pytest -q tests`) |
 | 技術 | Python / local LLM (Llama-3 class) |
 | 対象 | HYDRA-UMC セルの Raspberry Pi CM5 |
 | 実機での確認 | 対象外：ここにあるものはハードウェア上では動きません |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 領域 | 状態 | ここでの意味 |
 |---|---|---|
 | ソフトウェア | 🟡 | 主な目的では動作します。足りない点は上の正直さの確認に書かれています |
-| テスト | 🟢 | 自動テスト 283 件。変更のたびに実行されます |
+| テスト | 🟢 | 自動テスト 294 件。変更のたびに実行されます |
 | 実機 | 🟢 | 対象外：ここにあるものはハードウェア上では動きません |
 | インターフェースとプロトコル | 🟡 | 提供するルートやメッセージは文書化され、クライアントで試験済みです。すべてのクライアントがまだ使ったわけではありません |
 | 連携 | 🟡 | CM5 のテストベンチで他のサービスと一緒に動作し、メッセージは SDK の共通契約に従います |
@@ -136,7 +136,7 @@ flowchart TB
 
 ## 🔒 セキュリティと安全
 
-承認は既定で署名されます。`serve` には `plan_approval.key_file` と `plan_approval.robot_id`（または `--approval-key-file FILE --robot-id ROBOT`）が必要で、`POST /release` は `robot_id`、`issued_at_ms`、`expires_at_ms`、そして計画のフィンガープリント・承認者・ロボット・最長 1 時間の有効時間にわたる HMAC-SHA256（`plan_approval.algorithm` を `Ed25519` にすると Ed25519）の `signature` を要求します。署名のない、改変された、期限切れの、または別のロボット向けの承認では何も解放されません。`sign-approval` がこれらのフィールドを生成します。鍵（16 バイト以上）はインストール先のファイルに置き、リポジトリには決して置きません（`plan_approval.require_signed` を `false` にするのは開発専用のスイッチです）。承認はサインイン済みの人も行います。HYDRA-UMC-SERVER の ID（`--identity-key-file`）を使うと、`POST /release` にはオペレーターまたは管理者の署名付きトークンが必要で、`approved_by` はその人でなければなりません。鍵がなければすべての解放が理由付きで拒否されます。`plan_approval.require_identity` を `false` にすると緩和されます（SERVER のないベンチ用）。
+承認は既定で署名されます。`serve` には `plan_approval.key_file` と `plan_approval.robot_id`（または `--approval-key-file FILE --robot-id ROBOT`）が必要で、`POST /release` は `robot_id`、`issued_at_ms`、`expires_at_ms`、そして計画のフィンガープリント・承認者・ロボット・最長 1 時間の有効時間にわたる HMAC-SHA256（`plan_approval.algorithm` を `Ed25519` にすると Ed25519）の `signature` を要求します。署名のない、改変された、期限切れの、または別のロボット向けの承認では何も解放されません。`sign-approval` がこれらのフィールドを生成します。鍵（16 バイト以上）はインストール先のファイルに置き、リポジトリには決して置きません（`plan_approval.require_signed` を `false` にするのは開発専用のスイッチです）。承認はサインイン済みの人も行います。HYDRA-UMC-SERVER の ID（`--identity-key-file`）を使うと、`POST /release` にはオペレーターまたは管理者の署名付きトークンが必要で、`approved_by` はその人でなければなりません。鍵がなければすべての解放が理由付きで拒否されます。`plan_approval.require_identity` を `false` にすると緩和されます（SERVER のないベンチ用）。管理者は実行中に変更できます（`GET`/`POST /settings`、緩和には確認が必要）。STUDIO にそのスイッチが表示されます。
 
 ## ⚙️ 設定
 
@@ -161,7 +161,7 @@ Python 3.10 以上が必要です。
 
 ## 🧪 テスト
 
-`python -m pytest -q tests` で自動テスト 283 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
+`python -m pytest -q tests` で自動テスト 294 件を実行します。 ハードウェアも、このマシンの外にあるものも必要ありません。
 
 CI は `HYDRA_UMC_CI=1 python tools/ci_validate.py` を実行し、マニフェスト、文書、8 つの README、図を検査します。
 
