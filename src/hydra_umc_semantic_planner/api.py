@@ -252,8 +252,12 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
     def _handle_trajectory_check(self, body: dict) -> None:
         # A dry run only: the plan becomes a trajectory and the physics replica checks it; nothing is executed or released. The replica
         # not answering is a 502, never an "accepted".
+        replica = self.server.replica
+        if replica is None:
+            _write_error(self, 502, "the physics replica is not configured")
+            return
         try:
-            verdict = check_plan_trajectory(body, self.server.trajectory, self.server.replica, self.server.simulation)
+            verdict = check_plan_trajectory(body, self.server.trajectory, replica, self.server.simulation)
         except PlanRequestError as error:
             _write_error(self, 400, str(error))
             return
