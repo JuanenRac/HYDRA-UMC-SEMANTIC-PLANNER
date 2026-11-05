@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.2.0] - A plan as a trajectory, checked by the physics replica before anyone approves it (POST /plan/trajectory-check, off by default, plantrajectory in the configuration file): each MOVETO of the configured robot becomes a goal for... (and 7 more changes)
+
 - **A plan as a trajectory, checked by the physics replica before anyone approves it (`POST /plan/trajectory-check`, off by default, `plan_trajectory` in the configuration file):** each MOVE_TO of the configured robot becomes a goal for the position of the tool frame (the locations of the request, in millimetres), `POST /ik` of HYDRA-UMC-PHYSICS-REPLICA solves it starting from the joints reached by the previous move, the joint positions are joined by straight lines in joint space and sampled over the time of the step, and `POST /check-trajectory` checks limits of position, speed and acceleration. The verdict is `accepted` only when every goal was reached and the replica says the trajectory is `ok` and `complete`; a goal out of reach, a limit broken (with the step it belongs to) or a check that could not run is `rejected`, and the replica not answering is a `502`, never a verdict. It executes and releases nothing. Address, bearer token file, tool joint, starting joints, sampling and timeout are configuration values. 14 tests.
 
 - **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.
