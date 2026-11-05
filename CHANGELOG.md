@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **The build test of the repository compiles only on CI or when allowed:** for the stacks that compile (`rust`, `go`, `android`, `flutter`, `firmware-c`), `tools/build_test.py` prints `BUILD_TEST=SKIPPED` with exit status 2 on a plain PC, never a pass; `ALLOW_LOCAL_BUILD=1` allows it and a CI runner always may. The `python` and `node` stacks are not locked.
+
 - **An administrator reads and changes the identity switch of the approval while the planner runs (`GET /settings`, `POST /settings`):** `GET /settings` answers `requireIdentity`, `verifiesTokens` and `persisted` to anyone signed in; `POST /settings` takes `{"requireIdentity": true|false, "confirm": true}` from an administrator with a signed token of HYDRA-UMC-SERVER only (an operator or a viewer is refused), needs `confirm: true` to relax it, writes the change to the configuration file (`plan_approval.require_identity`, atomically, the rest of the file kept) and prints a notice. Tightening it again needs no confirmation. The default stays `true`; without the identity key nothing can be changed. HYDRA-UMC-SERVER relays the two routes for STUDIO.
 
 - **The approval of a plan is made by a person who is signed in (on by default, `plan_approval.require_identity`):** `POST /release` needs the signed token of HYDRA-UMC-SERVER of an operator or an administrator (`serve --identity-key-file FILE`) and `approved_by` must be that person, so the body cannot name somebody else. Without the identity key every release is refused with the reason. `plan_approval.require_identity` set to `false` relaxes it for a bench without the SERVER; it is read from the configuration file like the rest of `plan_approval`.
