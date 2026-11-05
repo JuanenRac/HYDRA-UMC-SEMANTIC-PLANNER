@@ -28,6 +28,7 @@ from .decompose import decompose_goal
 from .recovery_export import ExportConfigError, RecoveryExporter
 from .failure_memory import FailureMemory, FailureMemoryConfigError, load_memory_policy
 from .plan_simulation import SimulationConfigError, load_simulation_policy
+from .plan_trajectory import ReplicaClient, TrajectoryConfigError, load_trajectory_policy
 from .recovery import FailureContext, PolicyError, load_policy, propose_recovery
 from .safety_gate import SafetyGate, SafetyGateConfigError, load_gate_policy
 from .symbolic import SymbolicConfigError, load_symbolic_policy
@@ -99,13 +100,15 @@ def _run_serve(
         identity_key = identity_key_from(identity_key_file)
         policy = load_policy(config)
         simulation = load_simulation_policy(config)
+        trajectory = load_trajectory_policy(config)
+        replica = ReplicaClient.from_policy(trajectory)
         gate = SafetyGate.from_policy(load_gate_policy(config))
         voice = load_voice_policy(config)
         symbolic = load_symbolic_policy(config)
         memory_policy = load_memory_policy(config)
         approval_policy = load_approval_policy(config)
     except (
-        PolicyError, SimulationConfigError, SafetyGateConfigError, VoiceIntentConfigError, SymbolicConfigError, FailureMemoryConfigError,
+        PolicyError, SimulationConfigError, TrajectoryConfigError, SafetyGateConfigError, VoiceIntentConfigError, SymbolicConfigError, FailureMemoryConfigError,
         ExportConfigError, ApprovalConfigError,
     ) as error:
         print(f"error: {error}", file=sys.stderr)
@@ -144,11 +147,13 @@ def _run_serve(
             print(f"[semantic-planner] recovery memory: {added} failures read back from the data lake, {exporter.ignored_on_load} records ignored")
         memory.exporter = exporter
         exporter.start()
-    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed, require_identity=approval_policy.require_identity, settings_file=(config or os.environ.get("HYDRA_UMC_SEMANTIC_PLANNER_CONFIG") or None))
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed, require_identity=approval_policy.require_identity, settings_file=(config or os.environ.get("HYDRA_UMC_SEMANTIC_PLANNER_CONFIG") or None), trajectory=trajectory, replica=replica)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
     if simulation.enabled:
         print("[semantic-planner] POST /plan/simulate (dry run, executes nothing)")
+    if trajectory.enabled:
+        print("[semantic-planner] POST /plan/trajectory-check (the plan as a trajectory, checked by the physics replica; executes nothing)")
     if voice.enabled:
         print("[semantic-planner] POST /voice/intent (an intent of the voice service becomes a proposal, never an order)")
     if symbolic.enabled:

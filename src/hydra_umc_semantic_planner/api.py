@@ -26,6 +26,7 @@ from .decompose import MAX_GOAL_CHARS, decompose_goal
 from .failure_memory import OUTCOMES, FailureMemory, OutcomeError
 from .operation import plan_as_operation
 from .plan_simulation import PlanRequestError, SimulationPolicy, simulate_plan
+from .plan_trajectory import ReplicaClient, TrajectoryPolicy, TrajectoryServiceError, check_plan_trajectory
 from .recovery import FailureContext, RecoveryPolicy, propose_recovery
 from .safety_gate import SafetyGate
 from .symbolic import SymbolicPolicy
@@ -136,6 +137,8 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
             self._handle_release(body)
         elif path == "/plan/simulate" and self.server.simulation.enabled:
             self._handle_simulate(body)
+        elif path == "/plan/trajectory-check" and self.server.trajectory.enabled:
+            self._handle_trajectory_check(body)
         elif path == "/voice/intent" and self.server.voice.enabled:
             self._handle_voice_intent(body)
         else:
@@ -243,6 +246,22 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
             return
         except Exception:  # noqa: BLE001 - fail closed: an unexpected failure is a refusal, not a verdict
             _write_error(self, 500, "the plan could not be simulated")
+            return
+        _write_json(self, 200, verdict)
+
+    def _handle_trajectory_check(self, body: dict) -> None:
+        # A dry run only: the plan becomes a trajectory and the physics replica checks it; nothing is executed or released. The replica
+        # not answering is a 502, never an "accepted".
+        try:
+            verdict = check_plan_trajectory(body, self.server.trajectory, self.server.replica, self.server.simulation)
+        except PlanRequestError as error:
+            _write_error(self, 400, str(error))
+            return
+        except TrajectoryServiceError as error:
+            _write_error(self, 502, str(error))
+            return
+        except Exception:  # noqa: BLE001 - fail closed: an unexpected failure is a refusal, not a verdict
+            _write_error(self, 500, "the trajectory of the plan could not be checked")
             return
         _write_json(self, 200, verdict)
 
@@ -394,6 +413,8 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         require_signed: bool = False,
         require_identity: bool = False,
         settings_file: str | None = None,
+        trajectory: TrajectoryPolicy | None = None,
+        replica: ReplicaClient | None = None,
     ) -> None:
         super().__init__(address, Handler)
         # `serve` passes True unless the configuration relaxes it: POST /release then needs the token of the SERVER of an operator, and approved_by is that person.
@@ -409,6 +430,9 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         self.role = role
         # Off by default: with the switch off POST /plan/simulate does not exist (404), exactly as before it was added.
         self.simulation = simulation if simulation is not None else SimulationPolicy()
+        # Off by default: with the switch off POST /plan/trajectory-check does not exist (404).
+        self.trajectory = trajectory if trajectory is not None else TrajectoryPolicy()
+        self.replica = replica
         # Off by default: without a gate /release answers as before; with one, a plan is released only while the safety service says READY.
         self.safety_gate = safety_gate
         # Off by default: with the switch off POST /voice/intent does not exist (404).

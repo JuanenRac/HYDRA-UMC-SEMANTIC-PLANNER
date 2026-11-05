@@ -16,6 +16,18 @@
     "speed_mm_s": 100.0,
     "default_step_s": 1.0
   },
+  "plan_trajectory": {
+    "enabled": false,
+    "url": "http://127.0.0.1:8118",
+    "token_file": "",
+    "timeout_s": 5.0,
+    "robot": "",
+    "target": "tool",
+    "start_joints": {},
+    "samples_per_segment": 10,
+    "max_moves": 100,
+    "mm_to_m": 0.001
+  },
   "safety_gate": {
     "enabled": false,
     "url": "http://127.0.0.1:8108",

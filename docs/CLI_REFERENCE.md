@@ -194,6 +194,7 @@ default, matching the `systemd/hydra-umc-semantic-planner.service` unit.
 
 * **`GET /stats`** — `{"role": "..."}`, a liveness/identity check.
 * **`POST /plan/simulate`** — only when `plan_simulation.enabled` is `true` in the configuration file (otherwise `404`). A dry run of a list of steps against declared constraints on a simulated clock; answers a verdict with every broken rule and a suggestion, and executes nothing. See `PLAN_SIMULATION.md`.
+* **`POST /plan/trajectory-check`** — only when `plan_trajectory.enabled` is `true` (otherwise `404`). The MOVE_TO steps of the robot become goals for the tool position, HYDRA-UMC-PHYSICS-REPLICA solves them and checks the sampled trajectory; answers a verdict and executes nothing. See `PLAN_TRAJECTORY.md`.
 * **`POST /decompose`** — body `{"goal": "...", "capabilities"?: ["..."]}`.
   Responds `200` with `{"matched", "goal", "steps", "issues", "valid"}` —
   `matched: false` for an honest miss (same as the CLI's own "no matching
