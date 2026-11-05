@@ -238,6 +238,18 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
         if plan is None:
             _write_json(self, 200, {"released": False, "reason": "the goal does not decompose into a plan"})
             return
+        if self.server.require_identity:
+            # The approval is made by a person who is signed in with the common identity: the token of the SERVER says who, and the body cannot say otherwise.
+            if self.server.identity_key is None:
+                _write_json(self, 200, {"released": False, "reason": "an operator identity is required and no identity key is loaded"})
+                return
+            identity = getattr(self, "identity", None)
+            if identity is None:
+                _write_json(self, 200, {"released": False, "reason": "the approval needs the signed token of an operator of HYDRA-UMC-SERVER"})
+                return
+            if approved_by != identity.username:
+                _write_json(self, 200, {"released": False, "reason": "approved_by is not the person who is signed in"})
+                return
         if self.server.require_signed and self.server.approval_key is None:
             # Signed approvals are required and no key is loaded: nothing is released, and the reason says why.
             _write_json(self, 200, {"released": False, "reason": "signed approvals are required and no approval key is loaded"})
@@ -347,8 +359,11 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         symbolic: SymbolicPolicy | None = None,
         memory: FailureMemory | None = None,
         require_signed: bool = False,
+        require_identity: bool = False,
     ) -> None:
         super().__init__(address, Handler)
+        # `serve` passes True unless the configuration relaxes it: POST /release then needs the token of the SERVER of an operator, and approved_by is that person.
+        self.require_identity = require_identity
         # `serve` passes True unless the configuration switches signed approvals off (development only); direct callers keep the old default.
         self.require_signed = require_signed
         # With a key, POST /release only releases a plan whose approval is signed with it, for `robot_id`, and current.

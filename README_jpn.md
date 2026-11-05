@@ -136,7 +136,7 @@ flowchart TB
 
 ## 🔒 セキュリティと安全
 
-承認は既定で署名されます。`serve` には `plan_approval.key_file` と `plan_approval.robot_id`（または `--approval-key-file FILE --robot-id ROBOT`）が必要で、`POST /release` は `robot_id`、`issued_at_ms`、`expires_at_ms`、そして計画のフィンガープリント・承認者・ロボット・最長 1 時間の有効時間にわたる HMAC-SHA256（`plan_approval.algorithm` を `Ed25519` にすると Ed25519）の `signature` を要求します。署名のない、改変された、期限切れの、または別のロボット向けの承認では何も解放されません。`sign-approval` がこれらのフィールドを生成します。鍵（16 バイト以上）はインストール先のファイルに置き、リポジトリには決して置きません（`plan_approval.require_signed` を `false` にするのは開発専用のスイッチです）。
+承認は既定で署名されます。`serve` には `plan_approval.key_file` と `plan_approval.robot_id`（または `--approval-key-file FILE --robot-id ROBOT`）が必要で、`POST /release` は `robot_id`、`issued_at_ms`、`expires_at_ms`、そして計画のフィンガープリント・承認者・ロボット・最長 1 時間の有効時間にわたる HMAC-SHA256（`plan_approval.algorithm` を `Ed25519` にすると Ed25519）の `signature` を要求します。署名のない、改変された、期限切れの、または別のロボット向けの承認では何も解放されません。`sign-approval` がこれらのフィールドを生成します。鍵（16 バイト以上）はインストール先のファイルに置き、リポジトリには決して置きません（`plan_approval.require_signed` を `false` にするのは開発専用のスイッチです）。承認はサインイン済みの人も行います。HYDRA-UMC-SERVER の ID（`--identity-key-file`）を使うと、`POST /release` にはオペレーターまたは管理者の署名付きトークンが必要で、`approved_by` はその人でなければなりません。鍵がなければすべての解放が理由付きで拒否されます。`plan_approval.require_identity` を `false` にすると緩和されます（SERVER のないベンチ用）。
 
 ## ⚙️ 設定
 

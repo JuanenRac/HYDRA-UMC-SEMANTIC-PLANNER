@@ -143,7 +143,7 @@ def _run_serve(
             print(f"[semantic-planner] recovery memory: {added} failures read back from the data lake, {exporter.ignored_on_load} records ignored")
         memory.exporter = exporter
         exporter.start()
-    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed)
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed, require_identity=approval_policy.require_identity)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
     if simulation.enabled:
@@ -161,6 +161,10 @@ def _run_serve(
     else:
         print("[semantic-planner] warning: plan_approval.require_signed is false (development): the approval is the words of the request", file=sys.stderr)
     server.identity_key = identity_key
+    if approval_policy.require_identity:
+        print("[semantic-planner] POST /release needs the signed token of an operator of HYDRA-UMC-SERVER" + ("" if identity_key is not None else " (no --identity-key-file: every release is refused until it is given)"))
+    else:
+        print("[semantic-planner] warning: plan_approval.require_identity is false: the person who approves is the words of the request", file=sys.stderr)
     if identity_key is not None:
         print("[semantic-planner] tokens of HYDRA-UMC-SERVER accepted: every route needs an identity, and a viewer may read but not change")
     try:

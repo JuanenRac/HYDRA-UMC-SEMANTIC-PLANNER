@@ -20,7 +20,7 @@ from pathlib import Path
 from .approval_signing import ALGORITHMS, HMAC
 
 CONFIG_ENV = "HYDRA_UMC_SEMANTIC_PLANNER_CONFIG"
-_KNOWN_KEYS = {"require_signed", "algorithm", "key_file", "robot_id", "start_without_key"}
+_KNOWN_KEYS = {"require_signed", "require_identity", "algorithm", "key_file", "robot_id", "start_without_key"}
 
 
 class ApprovalConfigError(ValueError):
@@ -36,9 +36,12 @@ class ApprovalPolicy:
     robot_id: str = ""
     # When true, a key that cannot be read does not stop the planner from starting; every release is then refused with the reason.
     start_without_key: bool = False
+    # The approval is made by a person who is signed in: POST /release needs the signed token of HYDRA-UMC-SERVER of an operator or an administrator
+    # (the common identity of the family), and `approved_by` must be that person. Signed is the default; false is a switch for a bench without the SERVER.
+    require_identity: bool = True
 
     def __post_init__(self) -> None:
-        for name in ("require_signed", "start_without_key"):
+        for name in ("require_signed", "start_without_key", "require_identity"):
             if not isinstance(getattr(self, name), bool):
                 raise ApprovalConfigError(f"plan_approval.{name} must be true or false")
         for name in ("key_file", "robot_id"):

@@ -134,7 +134,7 @@ flowchart TB
 
 ## 🔒 安全与防护
 
-批准默认需要签名：`serve` 需要 `plan_approval.key_file` 和 `plan_approval.robot_id`（或 `--approval-key-file 文件 --robot-id ROBOT`），并让 `POST /release` 要求 `robot_id`、`issued_at_ms`、`expires_at_ms`，以及对计划指纹、批准人、机器人和最长一小时的时间窗口计算的 HMAC-SHA256（`plan_approval.algorithm` 设为 `Ed25519` 时为 Ed25519）`signature`；未签名、被篡改、已过期或属于其他机器人的批准不会放行任何内容；`sign-approval` 用于生成这些字段。密钥（至少 16 字节）放在安装目录中的文件里，绝不放进仓库（`plan_approval.require_signed` 设为 `false` 仅用于开发）。
+批准默认需要签名：`serve` 需要 `plan_approval.key_file` 和 `plan_approval.robot_id`（或 `--approval-key-file 文件 --robot-id ROBOT`），并让 `POST /release` 要求 `robot_id`、`issued_at_ms`、`expires_at_ms`，以及对计划指纹、批准人、机器人和最长一小时的时间窗口计算的 HMAC-SHA256（`plan_approval.algorithm` 设为 `Ed25519` 时为 Ed25519）`signature`；未签名、被篡改、已过期或属于其他机器人的批准不会放行任何内容；`sign-approval` 用于生成这些字段。密钥（至少 16 字节）放在安装目录中的文件里，绝不放进仓库（`plan_approval.require_signed` 设为 `false` 仅用于开发）。批准还须由已登录的人作出：使用 HYDRA-UMC-SERVER 的身份（`--identity-key-file`）时，`POST /release` 需要操作员或管理员的签名令牌，且 `approved_by` 必须是该人；没有密钥时所有放行都会被拒绝并给出原因。`plan_approval.require_identity` 设为 `false` 可放宽（用于没有 SERVER 的台架）。
 
 ## ⚙️ 配置
 
