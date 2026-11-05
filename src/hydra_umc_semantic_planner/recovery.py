@@ -23,9 +23,9 @@ from pathlib import Path
 from hydra_umc_sdk.mcu_errors import (
     ABORT,
     ESCALATE_TO_OPERATOR,
-    INCREASE_PRESSURE,
+    INCREASE_PRESSURE,  # noqa: F401 - re-exported for the callers and tests of this module
     MCU_ERROR_CODES,
-    RETRY,
+    RETRY,  # noqa: F401
     SWAP_TOOL,
     default_mcu_error_action,
 )
