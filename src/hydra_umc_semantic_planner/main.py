@@ -19,6 +19,7 @@ import sys
 
 from . import __version__
 from .health_route import health_open_requested
+from .server_identity import identity_key_from
 from .api import SemanticPlannerServer
 from .approval_policy import ApprovalConfigError, load_approval_policy
 from .approval_signing import ED25519, ApprovalKeyError, load_ed25519_key, load_key, sign_approval
@@ -90,9 +91,11 @@ def _run_recover(component: str, error_code: str, detail: str, config: str | Non
 
 
 def _run_serve(
-    addr: str, port: int, approval_key_file: str | None = None, robot_id: str = "", config: str | None = None, health_open: bool = False
+    addr: str, port: int, approval_key_file: str | None = None, robot_id: str = "", config: str | None = None, health_open: bool = False,
+    identity_key_file: str | None = None,
 ) -> int:
     try:
+        identity_key = identity_key_from(identity_key_file)
         policy = load_policy(config)
         simulation = load_simulation_policy(config)
         gate = SafetyGate.from_policy(load_gate_policy(config))
@@ -157,6 +160,9 @@ def _run_serve(
         print(f"[semantic-planner] POST /release needs an approval signed for robot {robot_id!r}")
     else:
         print("[semantic-planner] warning: plan_approval.require_signed is false (development): the approval is the words of the request", file=sys.stderr)
+    server.identity_key = identity_key
+    if identity_key is not None:
+        print("[semantic-planner] tokens of HYDRA-UMC-SERVER accepted: every route needs an identity, and a viewer may read but not change")
     try:
         server.health_open = health_open_requested(health_open)
         server.serve_forever()
@@ -194,6 +200,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     serve_parser.add_argument("--config", default=None, help="Configuration file with the recovery policy (default: the file named by HYDRA_UMC_SEMANTIC_PLANNER_CONFIG, else the safe defaults).")
     serve_parser.add_argument("--addr", default="127.0.0.1", help="address to bind the HTTP API to")
+    serve_parser.add_argument("--identity-key-file", default=None, help="file with the signing key of HYDRA-UMC-SERVER (its JWT_SECRET): a valid token of the SERVER is then accepted, every route (GET /health and GET /stats too) demands an identity and a viewer may read but not change (off by default; or set HYDRA_UMC_SEMANTIC_PLANNER_IDENTITY_KEY_FILE)")
     serve_parser.add_argument("--health-open", action="store_true", help="answer GET /health (open to loopback, to other callers only with the bearer token); closed by default, or set HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1")
     serve_parser.add_argument("--port", type=int, default=8109, help="port for the HTTP API")
 
@@ -250,7 +257,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "recover":
         return _run_recover(args.component, args.error_code, args.detail, args.config)
     if args.command == "serve":
-        return _run_serve(args.addr, args.port, args.approval_key_file, args.robot_id, args.config, health_open=args.health_open)
+        return _run_serve(args.addr, args.port, args.approval_key_file, args.robot_id, args.config, health_open=args.health_open, identity_key_file=args.identity_key_file)
     if args.command == "sign-approval":
         return _run_sign(args)
 

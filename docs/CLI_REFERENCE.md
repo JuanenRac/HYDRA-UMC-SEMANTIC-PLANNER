@@ -293,4 +293,6 @@ replace at the CLI surface.
 
 A uniform health route, the same in every service of the family. It is closed unless the operator opens it with `serve --health-open` or `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`: closed, it answers `404 {"error": "not found"}` like any route that does not exist.
 
+`serve --identity-key-file FILE` (or `HYDRA_UMC_SEMANTIC_PLANNER_IDENTITY_KEY_FILE`; off by default) accepts the signed token of HYDRA-UMC-SERVER next to the token of the service: a viewer may read but not change, and a request with no credential is refused even on loopback, `GET /health` and `GET /stats` included. A container health check then runs `python -m hydra_umc_semantic_planner.server_identity probe --port PORT --key-file FILE`, which presents a short-lived token signed with the same key file.
+
 Open, it answers `200` with `{"status": "ok", "service": "hydra-umc-semantic-planner", "version": "<version>"}` to a caller on loopback. This service has no bearer token, so it answers only a caller on loopback. The body never carries a path, a setting or a secret. The health path of the project manifest (`health_path`) is unchanged.

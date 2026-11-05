@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from . import __version__
 from .health_route import HealthRouteMixin
+from .server_identity import accepts
 from .service_metrics import MetricsHandlerMixin
 from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
@@ -92,10 +93,17 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: object) -> None:  # noqa: A002
         pass  # quiet by default, same reasoning as this family's other api.py files
 
+    def _identity_ok(self) -> bool:
+        """With the identity of HYDRA-UMC-SERVER on (server_identity.py) nothing is open: the request needs a valid signed token (a viewer may only read). Off: as before, no token at all."""
+        return self.server.identity_key is None or accepts(self, "", self.server.identity_key)
+
     def do_GET(self) -> None:  # noqa: N802
         if self.serve_health():
             return
-        if self.serve_metrics():
+        if self.serve_metrics(authorized=self._identity_ok()):
+            return
+        if not self._identity_ok():
+            _write_error(self, 401, "a valid identity is required")
             return
         if urlparse(self.path).path == "/stats":
             _write_json(self, 200, {"role": self.server.role})
@@ -104,6 +112,9 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802
         path = urlparse(self.path).path
+        if not self._identity_ok():
+            _write_error(self, 401, "a valid identity is required")
+            return
         try:
             body = _read_json_body(self)
         except (json.JSONDecodeError, ValueError) as e:
@@ -322,6 +333,7 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
 
 class SemanticPlannerServer(ThreadingHTTPServer):
     health_open: bool = False  # GET /health answers only when the operator opens it (health_route.py)
+    identity_key: bytes | None = None  # the signing key of HYDRA-UMC-SERVER, when the operator turned its identity on (server_identity.py)
     def __init__(
         self,
         address: tuple[str, int],

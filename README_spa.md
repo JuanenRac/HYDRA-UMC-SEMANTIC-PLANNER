@@ -88,6 +88,7 @@ Maneja la ambigüedad de alto nivel y proporciona recuperación semántica de er
   propias.
 * 📦 **Versionado Cuentakilómetros:** La versión de `pyproject.toml` solo la sube el comando `bump` explícito (`python tools/hydra_project_tool.py bump`, que ejecuta `bump_version.py`) - compilar nunca la cambia.
 * 🩺 **Un `GET /health` uniforme, cerrado por defecto:** `serve --health-open` (o `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`) hace que el servicio responda a `GET /health` con `{"status": "ok", "service": ..., "version": ...}`, el mismo cuerpo en todos los servicios de la familia; sin el interruptor la ruta responde `404` como una ruta que no existe. Quien no esté en loopback debe presentar el token bearer del servicio, y el cuerpo no contiene rutas, configuración ni secretos.
+* 🪪 **La identidad de HYDRA-UMC-SERVER, desactivada por defecto:** `serve --identity-key-file FICHERO` (o `HYDRA_UMC_SEMANTIC_PLANNER_IDENTITY_KEY_FILE=FICHERO`) hace que el servicio acepte el token firmado que el servidor emite al iniciar sesión, junto a su propio token: un visor puede leer pero no cambiar, y una petición sin credencial se rechaza incluso en loopback. Sin el interruptor no cambia nada.
 
 ## 🧩 Papel en HYDRA-UMC
 

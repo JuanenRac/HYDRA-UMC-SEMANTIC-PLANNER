@@ -89,6 +89,7 @@ GPL-3.0-or-later - see LICENSE
 * 👨‍👩‍👧 **認知 AI ノードの子プロジェクト：**
   [HYDRA-UMC-COGNITIVE-NODE](https://github.com/JuanenRac/HYDRA-UMC-COGNITIVE-NODE) の下で 4 つの兄弟サービスの 1 つとして動作します（VLA-Engine、Voice-UI、Docs-QA と並んで）。独自のコピーを保持するのではなく、親プロジェクトの HydraOS イメージとモデルの重みを共有します。
 * 🩺 **統一された `GET /health`（既定では閉じています）：** `serve --health-open`（または `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`）を指定すると、サービスは `GET /health` に `{"status": "ok", "service": ..., "version": ...}` で応答します。ファミリーのすべてのサービスで同じ本文です。スイッチがなければ、ルートは存在しないルートと同じく `404` を返します。ループバック以外の呼び出し元はサービスのベアラートークンが必要で、本文にはパス・設定・秘密情報は含まれません。
+* 🪪 **HYDRA-UMC-SERVER の ID（既定ではオフ）:** `serve --identity-key-file FILE`（または `HYDRA_UMC_SEMANTIC_PLANNER_IDENTITY_KEY_FILE=FILE`）を指定すると、サービスは自身のトークンに加えて、サーバーがログイン時に発行する署名付きトークンを受け付けます。閲覧者は読み取りだけで変更はできず、資格情報のないリクエストはループバックでも拒否されます。スイッチがなければ何も変わりません。
 
 ## 🧩 HYDRA-UMC での役割
 

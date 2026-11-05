@@ -86,6 +86,7 @@ It handles high-level ambiguity and provides semantic error recovery: if a task 
   (alongside VLA-Engine, Voice-UI and Docs-QA), sharing its parent's
   HydraOS image and model weights instead of keeping its own copies.
 * 🩺 **A uniform `GET /health`, closed by default:** `serve --health-open` (or `HYDRA_UMC_SEMANTIC_PLANNER_HEALTH_OPEN=1`) makes the service answer `GET /health` with `{"status": "ok", "service": ..., "version": ...}`, the same body in every service of the family; without the switch the route answers `404` like a route that does not exist. A caller that is not on loopback must present the bearer token of the service, and the body carries no path, configuration or secret.
+* 🪪 **The identity of HYDRA-UMC-SERVER, off by default:** `serve --identity-key-file FILE` (or `HYDRA_UMC_SEMANTIC_PLANNER_IDENTITY_KEY_FILE=FILE`) makes the service accept the signed token that the server issues at login, next to its own token: a viewer may read but not change, and a request with no credential is refused even on loopback. Without the switch nothing changes.
 
 ## 🧩 Role in HYDRA-UMC
 
