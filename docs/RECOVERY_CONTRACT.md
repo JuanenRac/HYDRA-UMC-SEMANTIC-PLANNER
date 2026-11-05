@@ -30,7 +30,7 @@ or sends motion directly.
 
 ## Shared vocabulary
 
-The seven codes and their default actions are defined once in the SDK (`hydra_umc_sdk.mcu_errors`). The planner keeps its own table so that it runs without any dependency, and `tests/test_recovery_sdk_vocabulary.py` fails when the table and the SDK vocabulary differ (the `dev` extra installs the SDK client; the test is skipped where it is not installed).
+The seven codes and their default actions are defined once in the SDK (`hydra_umc_sdk.mcu_errors`). The planner IMPORTS them when it starts: the action of each code is the one of the SDK, and the planner only keeps the wording of the reason of each code (a code the SDK adds without a reason here stops the module from loading). The SDK is therefore a required dependency, pinned in `pyproject.toml` to its published tag `v0.5.2` and installed from the archive of that tag (no git needed, also inside the container), and `tests/test_recovery_sdk_vocabulary.py` checks that the table and the vocabulary agree.
 
 ## Configuration
 

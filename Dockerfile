@@ -4,8 +4,9 @@
 # GPL-3.0 - see LICENSE
 # =============================================================================
 # Real, minimal image for the goal-decomposition/recovery HTTP API
-# (api.py's own SemanticPlannerServer, stdlib http.server -
-# pyproject.toml's own dependencies is deliberately []). Same
+# (api.py's own SemanticPlannerServer, stdlib http.server; the only
+# dependency is the SDK, pinned in pyproject.toml to its published tag and
+# installed from the archive of that tag, so the image needs no git). Same
 # --addr/--port CLI the real CM5 systemd unit
 # (systemd/hydra-umc-semantic-planner.service) already runs, just bound
 # to 0.0.0.0 instead of 127.0.0.1 here - a container's own network

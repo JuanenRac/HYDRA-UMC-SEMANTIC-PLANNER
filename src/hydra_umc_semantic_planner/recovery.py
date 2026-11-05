@@ -5,9 +5,10 @@
 # =============================================================================
 """Real, rule-based semantic error recovery over structured failure codes.
 
-The error codes here (INVALID_STATE, OUT_OF_RANGE, ESTOP_ACTIVE,
-TOOL_INCOMPATIBLE, TIMEOUT, UNSUPPORTED) are the MCU adapter error
-vocabulary. This module's job is the "reasons about the cause
+The error codes and their default actions (INVALID_STATE, OUT_OF_RANGE, ESTOP_ACTIVE,
+TOOL_INCOMPATIBLE, TIMEOUT, UNSUPPORTED, GRIP_LOST_SEAL) are the MCU adapter error
+vocabulary, IMPORTED from the SDK (`hydra_umc_sdk.mcu_errors`) when this module loads: the planner keeps
+only the wording of the reason for each code. This module's job is the "reasons about the cause
 and decides whether to increase pressure, try again, or swap tools" the
 README's own Key Features describe, expressed as a real, explicit lookup
 table rather than a local LLM (which isn't wired to anything yet).
@@ -19,14 +20,17 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-RETRY = "RETRY"
-INCREASE_PRESSURE = "INCREASE_PRESSURE"
-SWAP_TOOL = "SWAP_TOOL"
-ABORT = "ABORT"
-ESCALATE_TO_OPERATOR = "ESCALATE_TO_OPERATOR"
+from hydra_umc_sdk.mcu_errors import (
+    ABORT,
+    ESCALATE_TO_OPERATOR,
+    INCREASE_PRESSURE,
+    MCU_ERROR_CODES,
+    RETRY,
+    SWAP_TOOL,
+    default_mcu_error_action,
+)
 
-# Public recovery-contract error codes plus one domain-specific gripper failure
-# mode. See docs/RECOVERY_CONTRACT.md; no private design document is required.
+# The codes are the ones of the SDK vocabulary; the names exist so the rest of the planner can refer to them.
 INVALID_STATE = "INVALID_STATE"
 OUT_OF_RANGE = "OUT_OF_RANGE"
 ESTOP_ACTIVE = "ESTOP_ACTIVE"
@@ -99,26 +103,20 @@ def load_policy(path: str | os.PathLike[str] | None = None) -> RecoveryPolicy:
 # A real, explicit lookup - ESTOP_ACTIVE and UNSUPPORTED always escalate to
 # a human rather than being retried automatically, matching the ecosystem's
 # own safety rule that IA/UI never overrides a physical safety condition.
+_REASONS: dict[str, str] = {
+    GRIP_LOST_SEAL: "vacuum seal lost - increasing gripper pressure before a retry",
+    TIMEOUT: "no response within the deadline - a single retry is safe",
+    OUT_OF_RANGE: "requested motion exceeds this tool's real limits - the action is aborted, not retried",
+    TOOL_INCOMPATIBLE: "the mounted tool cannot perform this action - swap for a compatible one",
+    INVALID_STATE: "the component reported a state this plan didn't account for",
+    ESTOP_ACTIVE: "a physical E-STOP is active - never auto-cleared by this planner",
+    UNSUPPORTED: "the firmware doesn't recognize this command at all",
+}
+
+# The action of each code is the one of the SDK vocabulary (a code the SDK adds and this table has no reason for
+# is refused when the module loads, so the two can never silently differ).
 _RULES: dict[str, RecoveryStrategy] = {
-    GRIP_LOST_SEAL: RecoveryStrategy(
-        INCREASE_PRESSURE, "vacuum seal lost - increasing gripper pressure before a retry"
-    ),
-    TIMEOUT: RecoveryStrategy(RETRY, "no response within the deadline - a single retry is safe"),
-    OUT_OF_RANGE: RecoveryStrategy(
-        ABORT, "requested motion exceeds this tool's real limits - the action is aborted, not retried"
-    ),
-    TOOL_INCOMPATIBLE: RecoveryStrategy(
-        SWAP_TOOL, "the mounted tool cannot perform this action - swap for a compatible one"
-    ),
-    INVALID_STATE: RecoveryStrategy(
-        ABORT, "the component reported a state this plan didn't account for"
-    ),
-    ESTOP_ACTIVE: RecoveryStrategy(
-        ESCALATE_TO_OPERATOR, "a physical E-STOP is active - never auto-cleared by this planner"
-    ),
-    UNSUPPORTED: RecoveryStrategy(
-        ESCALATE_TO_OPERATOR, "the firmware doesn't recognize this command at all"
-    ),
+    entry.code: RecoveryStrategy(default_mcu_error_action(entry.code), _REASONS[entry.code]) for entry in MCU_ERROR_CODES
 }
 
 
