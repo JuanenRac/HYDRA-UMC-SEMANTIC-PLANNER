@@ -15,7 +15,7 @@ authors = [
 keywords = ["hydra-umc", "hailo-10", "llm", "planner", "robotics", "edge-ai"]
 
 # The vocabulary of the MCU errors comes from the SDK at run time (pinned to its published tag, installed from the archive of the tag so no git is needed).
-dependencies = ["hydra-umc-sdk @ https://github.com/JuanenRac/HYDRA-UMC-SDK/archive/refs/tags/v0.5.7.tar.gz#subdirectory=clients/python"]
+dependencies = ["hydra-umc-sdk @ https://github.com/JuanenRac/HYDRA-UMC-SDK/archive/refs/tags/v0.5.8.tar.gz#subdirectory=clients/python"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
