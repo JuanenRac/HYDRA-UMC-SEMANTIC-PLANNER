@@ -11,7 +11,12 @@ executed**. It never executes, queues or releases anything: every answer says `"
 4. The joint positions are joined by straight lines in joint space and sampled `samples_per_segment` times per move; a move lasts its `duration_s`, or the distance over `speed_mm_s`.
 5. The samples go to `POST /check-trajectory` of the replica.
 
-Assumptions, also written in every answer: only the position of the tool is solved (not its orientation), and the path between two poses is a straight line in joint space, not in Cartesian space.
+Assumptions, also written in every answer: only the position of the tool is solved (not its orientation, which the replica cannot solve), and the path between two poses is a straight line in joint space, not in Cartesian space.
+
+## Orientation
+
+The body may carry `"orientations": {"<location>": [w, x, y, z]}` (a rotation for a location of the catalogue). The replica solves the position only, so the planner asks `POST /fk` for the rotation of the `target` frame at the joints that were reached and compares it with the one asked for (the angle between the two, `plan_trajectory.orientation_tolerance_rad`, 0.05 by default).
+A match counts in `orientations_verified`. A mismatch does not prove the orientation is impossible, only that it is not shown: the goal goes to `unchecked` (rule `orientation_unchecked`, with the angle and the tolerance) and the verdict is `unchecked`, **never `accepted`**. A broken limit or an unreachable goal still gives `rejected`.
 
 ## Switch
 
@@ -26,6 +31,6 @@ The replica must run with `serve --urdf ROBOT.urdf` and `"ik": {"enabled": true}
 
 ## Verdict
 
-`accepted` only when every goal was reached **and** the replica says `ok` **and** `complete`. Otherwise `rejected` with one violation per problem:
+`accepted` only when no orientation is left unchecked, every goal was reached **and** the replica says `ok` **and** `complete`. Otherwise `unchecked` (only orientations not shown, see above) or `rejected` with one violation per problem:
 `goal_unreachable`, `location_unknown`, `trajectory_limit` (with the value and the limit of the replica) or `check_incomplete` (a check was switched off or could not run: an unchecked trajectory is never read as a clear one).
 A request that cannot be understood is a `400`; the replica not answering, refusing or answering something else is a `502`.

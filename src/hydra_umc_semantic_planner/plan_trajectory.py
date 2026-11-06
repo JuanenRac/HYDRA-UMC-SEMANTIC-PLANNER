@@ -17,6 +17,12 @@ error (never a verdict). The answer always says `executable: false`: it only inf
 stays with `POST /release`. Only the position of the tool is solved (the replica does not solve the orientation), and the path between two
 poses is a joint-space line, not a Cartesian one: both are said in the answer.
 
+A request may also ask for an orientation of a location (`orientations`, name -> quaternion `[w, x, y, z]`). The replica cannot solve it, so
+the planner asks `POST /fk` for the pose of the tool frame at the joints that were reached for the position and compares the rotation with
+the one asked for (`orientation_tolerance_rad`). If it matches, the goal is counted in `orientations_verified`; if it does not, the goal
+is NOT shown to be reachable with that orientation: it goes to `unchecked` and the verdict is `unchecked` (never `accepted`), unless
+something else is broken, which is `rejected`.
+
 The switch is `plan_trajectory.enabled` in the configuration file and is OFF by default (the route then does not exist). Address, token
 file, tool frame, starting joints, sampling and timeout are configuration values, not code.
 """
@@ -41,9 +47,10 @@ RULE_UNREACHABLE = "goal_unreachable"
 RULE_LOCATION = "location_unknown"
 RULE_LIMIT = "trajectory_limit"
 RULE_INCOMPLETE = "check_incomplete"
+RULE_ORIENTATION = "orientation_unchecked"
 MAX_RESPONSE_BYTES = 1024 * 1024
-_KNOWN_KEYS = {"enabled", "url", "token_file", "timeout_s", "robot", "target", "start_joints", "samples_per_segment", "max_moves", "mm_to_m"}
-_BODY_KEYS = {"steps", "constraints", "start_joints"}
+_KNOWN_KEYS = {"enabled", "url", "token_file", "timeout_s", "robot", "target", "start_joints", "samples_per_segment", "max_moves", "mm_to_m", "orientation_tolerance_rad"}
+_BODY_KEYS = {"steps", "constraints", "start_joints", "orientations"}
 
 
 class TrajectoryConfigError(ValueError):
@@ -81,6 +88,7 @@ class TrajectoryPolicy:
     samples_per_segment: int = 10
     max_moves: int = 100
     mm_to_m: float = 0.001
+    orientation_tolerance_rad: float = 0.05
 
     def __post_init__(self) -> None:
         if not isinstance(self.enabled, bool):
@@ -100,6 +108,9 @@ class TrajectoryPolicy:
         scale = self.mm_to_m
         if isinstance(scale, bool) or not isinstance(scale, (int, float)) or not math.isfinite(scale) or scale <= 0:
             raise TrajectoryConfigError("plan_trajectory.mm_to_m must be a number above 0")
+        tolerance = self.orientation_tolerance_rad
+        if isinstance(tolerance, bool) or not isinstance(tolerance, (int, float)) or not 0 < tolerance <= math.pi:
+            raise TrajectoryConfigError("plan_trajectory.orientation_tolerance_rad must be a number above 0 and at most pi")
         if self.start_joints:
             _joints(self.start_joints, "plan_trajectory.start_joints")
         if self.enabled:
@@ -182,6 +193,46 @@ class ReplicaClient:
         return status, answer
 
 
+def _quaternion(value: object, what: str) -> tuple[float, float, float, float]:
+    """A rotation as [w, x, y, z], normalised; anything else is a bad request."""
+    if not isinstance(value, list) or len(value) != 4 or any(isinstance(n, bool) or not isinstance(n, (int, float)) or not math.isfinite(n) for n in value):
+        raise PlanRequestError(f"{what} must be a quaternion [w, x, y, z] of four finite numbers")
+    norm = math.sqrt(sum(float(n) ** 2 for n in value))
+    if norm < 1e-9:
+        raise PlanRequestError(f"{what} must not be the zero quaternion")
+    w, x, y, z = (float(n) / norm for n in value)
+    return w, x, y, z
+
+
+def _parse_orientations(raw: object, locations: dict[str, Any]) -> dict[str, tuple[float, float, float, float]]:
+    if not isinstance(raw, dict):
+        raise PlanRequestError("orientations must be an object of location name -> [w, x, y, z]")
+    out: dict[str, tuple[float, float, float, float]] = {}
+    for name, value in raw.items():
+        if name not in locations:
+            raise PlanRequestError(f"orientations names the location {name!r}, which is not in the catalogue of locations")
+        out[name] = _quaternion(value, f"orientation of {name!r}")
+    return out
+
+
+def _rotation_error(a: tuple[float, float, float, float], b: tuple[float, float, float, float]) -> float:
+    """The angle in radians between two unit quaternions (q and -q are the same rotation)."""
+    dot = abs(sum(p * q for p, q in zip(a, b, strict=True)))
+    return 2.0 * math.acos(min(1.0, dot))
+
+
+def _tool_quaternion(answer: dict[str, Any], target: str) -> tuple[float, float, float, float]:
+    poses = answer.get("poses")
+    for pose in poses if isinstance(poses, list) else []:
+        if isinstance(pose, dict) and pose.get("joint") == target and isinstance(pose.get("quaternion"), dict):
+            quaternion = pose["quaternion"]
+            try:
+                return _quaternion([quaternion["w"], quaternion["x"], quaternion["y"], quaternion["z"]], "the quaternion of the replica")
+            except (KeyError, PlanRequestError) as error:
+                raise TrajectoryServiceError("the physics replica sent a pose without a usable rotation") from error
+    raise TrajectoryServiceError("the physics replica did not send the pose of the tool frame")
+
+
 def _violation(rule: str, index: int, step_id: str, message: str, value: Any = None, limit: Any = None) -> dict[str, Any]:
     return {"rule": rule, "step_index": index, "step_id": step_id, "message": message, "value": value, "limit": limit}
 
@@ -204,8 +255,11 @@ def check_plan_trajectory(body: object, policy: TrajectoryPolicy, transport: Tra
         raise PlanRequestError(f"{error}: give start_joints in the request or in plan_trajectory.start_joints") from error
     speed = constraints.speed_mm_s if constraints.speed_mm_s is not None else (sim_policy.speed_mm_s if sim_policy else 100.0)
     default_ms = _ms(sim_policy.default_step_s if sim_policy else 1.0)
+    orientations = _parse_orientations(body["orientations"], constraints.locations) if "orientations" in body else {}
 
     violations: list[dict[str, Any]] = []
+    unchecked: list[dict[str, Any]] = []
+    verified = 0
     skipped: list[str] = []
     waypoints: list[tuple[str, int, dict[str, float], int]] = []  # (step id, index, joints reached, segment ms)
     current = dict(start)
@@ -236,6 +290,17 @@ def check_plan_trajectory(body: object, policy: TrajectoryPolicy, transport: Tra
         reached = {name: float(value) for name, value in answer["joints"].items() if isinstance(value, (int, float)) and not isinstance(value, bool)}
         if set(reached) != set(current):
             raise TrajectoryServiceError("the inverse kinematics answered other joints than the ones given")
+        wanted = orientations.get(location) if isinstance(location, str) else None
+        if wanted is not None:
+            # The replica solves the position only: read the rotation it ended with and compare; a mismatch is "not shown", not "impossible".
+            status, fk = transport("/fk", {"joints": reached})
+            if status != 200:
+                raise TrajectoryServiceError(f"the physics replica refused the forward kinematics (HTTP {status}, {fk.get('code', 'no code')})")
+            angle = _rotation_error(wanted, _tool_quaternion(fk, policy.target))
+            if angle <= policy.orientation_tolerance_rad:
+                verified += 1
+            else:
+                unchecked.append(_violation(RULE_ORIENTATION, parsed.index, parsed.step_id, f"the orientation asked for at {location!r} is not shown to be reachable: the replica solves only the position", angle, policy.orientation_tolerance_rad))
         duration = parsed.duration_ms
         if duration is None:
             duration = _ms(math.dist(position, point) / speed) if position is not None else default_ms
@@ -268,8 +333,12 @@ def check_plan_trajectory(body: object, policy: TrajectoryPolicy, transport: Tra
             violations.append(_violation(RULE_INCOMPLETE, waypoints[-1][1], waypoints[-1][0], "a check of the replica was switched off or could not run: the trajectory is not shown to be clear", check.get("notes")))
 
     violations.sort(key=lambda found: (found["step_index"], found["rule"]))
+    unchecked.sort(key=lambda found: found["step_index"])
     return {
-        "verdict": "rejected" if violations else "accepted",
+        "verdict": "rejected" if violations else ("unchecked" if unchecked else "accepted"),
+        "unchecked": unchecked,
+        "orientations_requested": len(orientations),
+        "orientations_verified": verified,
         "executable": False,
         "executed": False,
         "violations": violations,
@@ -277,7 +346,7 @@ def check_plan_trajectory(body: object, policy: TrajectoryPolicy, transport: Tra
         "samples": len(samples),
         "complete": bool(check.get("complete")) if waypoints else False,
         "skipped_robots": skipped,
-        "assumptions": ["only the position of the tool is solved, not its orientation", "the path between two poses is a straight line in joint space"],
+        "assumptions": ["only the position of the tool is solved, not its orientation (an orientation asked for is only compared with the one reached)", "the path between two poses is a straight line in joint space"],
     }
 
 

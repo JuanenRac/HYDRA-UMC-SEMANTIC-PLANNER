@@ -43,6 +43,7 @@ class FakeReplica:
         self.calls: list[tuple[str, dict[str, Any]]] = []
         self.check = check if check is not None else {"ok": True, "complete": True, "violations": []}
         self.ik_status = ik_status
+        self.tool_quaternion = (1.0, 0.0, 0.0, 0.0)
 
     def __call__(self, path: str, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         self.calls.append((path, payload))
@@ -53,6 +54,10 @@ class FakeReplica:
             if x > 1.0:
                 return 200, {"reached": False, "residual": x - 1.0, "iterations": 200, "timed_out": False}
             return 200, {"reached": True, "residual": 0.0, "iterations": 3, "timed_out": False, "joints": {"j1": x * 10, "j2": 0.0}}
+        if path == "/fk":
+            q = self.tool_quaternion
+            return 200, {"poses": [{"joint": "base", "position": {"x": 0, "y": 0, "z": 0}, "quaternion": {"w": 1, "x": 0, "y": 0, "z": 0}},
+                                   {"joint": "tool", "position": {"x": 0, "y": 0, "z": 0}, "quaternion": {"w": q[0], "x": q[1], "y": q[2], "z": q[3]}}]}
         return 200, self.check
 
 
@@ -205,3 +210,59 @@ def test_route_is_404_when_off_and_502_when_the_replica_is_down() -> None:
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_orientation_reached_by_chance_is_verified_and_accepted() -> None:
+    fake = FakeReplica()
+    verdict = check_plan_trajectory({**plan("a"), "orientations": {"a": [1, 0, 0, 0]}}, POLICY, fake)
+    assert verdict["verdict"] == "accepted" and verdict["unchecked"] == []
+    assert verdict["orientations_requested"] == 1 and verdict["orientations_verified"] == 1
+    assert [path for path, _ in fake.calls] == ["/ik", "/fk", "/check-trajectory"]
+    assert fake.calls[1][1] == {"joints": {"j1": pytest.approx(1.0), "j2": 0.0}}
+
+
+def test_an_orientation_asked_for_and_not_reached_is_unchecked_never_accepted() -> None:
+    fake = FakeReplica()
+    fake.tool_quaternion = (1.0, 0.0, 0.0, 0.0)
+    verdict = check_plan_trajectory({**plan("a", "b"), "orientations": {"b": [0.7071068, 0.7071068, 0, 0]}}, POLICY, fake)
+    assert verdict["verdict"] == "unchecked" and verdict["violations"] == []
+    assert [u["rule"] for u in verdict["unchecked"]] == ["orientation_unchecked"] and verdict["unchecked"][0]["step_index"] == 1
+    assert verdict["unchecked"][0]["value"] == pytest.approx(1.5708, abs=1e-3)
+    assert verdict["orientations_verified"] == 0 and verdict["executable"] is False
+
+
+def test_a_broken_limit_beats_an_unchecked_orientation() -> None:
+    check = {"ok": False, "complete": True, "violations": [{"kind": "velocity", "joint": "j1", "sample": 2, "t": 1.0, "value": 3.0, "limit": 2.0}]}
+    verdict = check_plan_trajectory({**plan("a"), "orientations": {"a": [0, 1, 0, 0]}}, POLICY, FakeReplica(check))
+    assert verdict["verdict"] == "rejected" and len(verdict["unchecked"]) == 1
+
+
+def test_q_and_minus_q_are_the_same_rotation_and_the_tolerance_is_configurable() -> None:
+    fake = FakeReplica()
+    fake.tool_quaternion = (-1.0, 0.0, 0.0, 0.0)
+    assert check_plan_trajectory({**plan("a"), "orientations": {"a": [1, 0, 0, 0]}}, POLICY, fake)["verdict"] == "accepted"
+    near = {**plan("a"), "orientations": {"a": [1, 0.1, 0, 0]}}  # about 0.2 rad away
+    assert check_plan_trajectory(near, POLICY, fake)["verdict"] == "unchecked"
+    loose = TrajectoryPolicy(enabled=True, robot="r1", target="tool", start_joints=START, samples_per_segment=4, orientation_tolerance_rad=0.5)
+    assert check_plan_trajectory(near, loose, fake)["verdict"] == "accepted"
+
+
+def test_bad_orientations_are_bad_requests() -> None:
+    for bad in ({"a": [1, 0, 0]}, {"a": [0, 0, 0, 0]}, {"zz": [1, 0, 0, 0]}, {"a": [True, 0, 0, 0]}, [1, 0, 0, 0]):
+        with pytest.raises(PlanRequestError):
+            check_plan_trajectory({**plan("a"), "orientations": bad}, POLICY, FakeReplica())
+
+
+def test_the_replica_not_sending_the_tool_pose_is_an_error() -> None:
+    def odd(path: str, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        return FakeReplica()(path, payload) if path != "/fk" else (200, {"poses": []})
+    with pytest.raises(TrajectoryServiceError):
+        check_plan_trajectory({**plan("a"), "orientations": {"a": [1, 0, 0, 0]}}, POLICY, odd)
+
+
+def test_orientation_tolerance_is_validated(tmp_path: Path) -> None:
+    for bad in (0, -1, 4, True, "x"):
+        path = tmp_path / "c.json"
+        path.write_text(json.dumps({"plan_trajectory": {"orientation_tolerance_rad": bad}}), encoding="utf-8")
+        with pytest.raises(TrajectoryConfigError):
+            load_trajectory_policy(path)

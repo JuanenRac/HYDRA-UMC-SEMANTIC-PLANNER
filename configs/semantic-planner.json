@@ -26,7 +26,8 @@
     "start_joints": {},
     "samples_per_segment": 10,
     "max_moves": 100,
-    "mm_to_m": 0.001
+    "mm_to_m": 0.001,
+    "orientation_tolerance_rad": 0.05
   },
   "safety_gate": {
     "enabled": false,
