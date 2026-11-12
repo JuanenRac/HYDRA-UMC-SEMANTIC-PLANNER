@@ -94,6 +94,8 @@ Maneja la ambigüedad de alto nivel y proporciona recuperación semántica de er
 
 **HYDRA-UMC-SEMANTIC-PLANNER** convierte un objetivo de alto nivel en un plan hecho con un vocabulario cerrado de primitivas del robot y propone una recuperación cuando falla un paso. Hoy se basa en reglas, no en un modelo de lenguaje; un plan es solo una propuesta hasta que una persona con nombre aprueba ese plan exacto.
 
+> **Plataforma:** donde este README dice CM5, se refiere al banco piloto que funciona hoy; la plataforma objetivo de HYDRA-UMC es una NVIDIA Jetson Orin NX de 16 GB, un diseño que no se ha construido ni probado.
+
 ## 🏛️ Arquitectura
 
 <p align="center">

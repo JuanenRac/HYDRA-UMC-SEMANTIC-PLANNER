@@ -93,6 +93,8 @@ Er handhabt hochgradige Ambiguität und bietet eine semantische Fehlerbehebung: 
 
 **HYDRA-UMC-SEMANTIC-PLANNER** macht aus einem übergeordneten Ziel einen Plan aus einem geschlossenen Vokabular von Roboter-Primitiven und schlägt eine Wiederherstellung vor, wenn ein Schritt scheitert. Heute arbeitet er regelbasiert, nicht mit einem Sprachmodell; ein Plan ist nur ein Vorschlag, bis eine benannte Person genau diesen Plan freigibt.
 
+> **Plattform:** Wo dieses README CM5 sagt, ist der Pilotprüfstand gemeint, der heute läuft; die Zielplattform von HYDRA-UMC ist ein NVIDIA Jetson Orin NX 16 GB, ein Entwurf, der weder gebaut noch getestet wurde.
+
 ## 🏛️ Architektur
 
 <p align="center">

@@ -92,6 +92,8 @@ It handles high-level ambiguity and provides semantic error recovery: if a task 
 
 **HYDRA-UMC-SEMANTIC-PLANNER** turns a high-level goal into a plan made of a closed vocabulary of robot primitives and proposes a recovery when a step fails. Today it is rule-based, not a language model; a plan is only a proposal until a named person approves that exact plan.
 
+> **Platform:** where this README says CM5, it means the pilot bench that runs today; the target platform of HYDRA-UMC is an NVIDIA Jetson Orin NX 16 GB, a design that has not been built or tested.
+
 ## 🏛️ Architecture
 
 <p align="center">
