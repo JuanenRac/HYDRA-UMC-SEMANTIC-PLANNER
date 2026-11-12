@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-315%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-353%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | 版本 | `0.2.0` |
 | 成熟度 | 可用 |
-| 测试 | 315 (`python -m pytest -q tests`) |
+| 测试 | 353 (`python -m pytest -q tests`) |
 | 技术栈 | Python / local LLM (Llama-3 class) |
 | 目标 | HYDRA-UMC 工作单元的 Raspberry Pi CM5 |
 | 真实硬件 | 不适用：这里的内容不在硬件上运行 |
@@ -55,7 +55,7 @@ GPL-3.0-or-later - see LICENSE
 | 领域 | 状态 | 在这里的含义 |
 |---|---|---|
 | 软件 | 🟡 | 主要用途可用；上面的诚实性检查列出了仍然缺少的内容 |
-| 测试 | 🟢 | 315 项自动测试，每次变更都会运行 |
+| 测试 | 🟢 | 353 项自动测试，每次变更都会运行 |
 | 真实硬件 | 🟢 | 不适用：这里的内容不在硬件上运行 |
 | 接口与协议 | 🟡 | 提供的路由或消息已有文档，并用客户端测试过；尚未被所有客户端使用 |
 | 集成 | 🟡 | 在 CM5 测试台上与其他服务一起运行，其消息遵循 SDK 的共享契约 |
@@ -146,6 +146,8 @@ flowchart TB
 
 部署配置与开发（安全闸门）：通用文件 `configs/semantic-planner.json` 将 `safety_gate.enabled` 保持为 `false`，因此为开发而手动启动的规划器行为一如既往。systemd 单元通过 `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG` 选用的配置 `configs/deploy-cm5.json` 会开启闸门：只有当 HYDRA-UMC-SAFETY-ZONES 返回新鲜、READY 且签名有效的裁决时才放行计划，验证密钥从仓库之外的文件读取（`/etc/hydra-umc/safety-state.key`，绝不打印）。将 `safety_gate.start_without_key` 设为 `true`（该配置如此设置）时，密钥文件缺失或无法使用不会阻止规划器启动：`/decompose` 和各项建议照常工作，`POST /release` 则带着原因拒绝。记忆导出（默认关闭）：将 `failure_memory.export.enabled` 设为 `true` 后，每条记录的结果由独立线程通过有界队列和有界重试发送到本机的 HYDRA-UMC-DATALAKE（`POST /ingest/batch`，类型 `recovery_outcome`，字段 `组件/错误码/动作`，值为 1 或 0；除此之外没有任何内容离开本机）；启动时，记忆会读回数据湖仍保存的失败记录（`load_on_start`），校验每条记录并忽略损坏的，因此重新载入只会让恢复更加谨慎。不在本机的数据湖需要 `token_file` 和 https，或有意设置的 `allow_plaintext`。
 
+错误码文档（默认关闭）：将 `docs_qa.enabled` 设为 `true` 后，`POST /recover` 还会返回一个 `documentation` 块，内含 HYDRA-UMC-DOCS-QA 对该错误码的说明（`GET /error?code=`）及其出处。它只是给阅读提案者的参考：动作和原因从不依赖它；当 DOCS-QA 不可用、太慢或不认识该错误码时，该块为 `unavailable` 或 `not_found`。只会连接已配置的地址（除非 `docs_qa.allow_remote` 为 `true`，否则必须是环回地址；地址中不含凭据；不跟随重定向），回答大小受限并清除控制字符，令牌从 `docs_qa.token_file` 读取。
+
 ## 🚀 快速开始
 
 需要 Python 3.10 或更高版本。
@@ -159,7 +161,7 @@ flowchart TB
 
 ## 🧪 测试
 
-运行 `python -m pytest -q tests` 会执行 315 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
+运行 `python -m pytest -q tests` 会执行 353 个自动测试。 不需要硬件，也不需要这台机器以外的任何东西。
 
 CI 运行 `HYDRA_UMC_CI=1 python tools/ci_validate.py`，检查清单、文档、八个 README 和图片。
 

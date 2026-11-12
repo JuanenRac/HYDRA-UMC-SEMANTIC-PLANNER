@@ -25,6 +25,7 @@ from .api import SemanticPlannerServer
 from .approval_policy import ApprovalConfigError, load_approval_policy
 from .approval_signing import ED25519, ApprovalKeyError, load_ed25519_key, load_key, sign_approval
 from .decompose import decompose_goal
+from .docs_qa import DocsQaClient, DocsQaConfigError, load_docs_qa_policy
 from .recovery_export import ExportConfigError, RecoveryExporter
 from .failure_memory import FailureMemory, FailureMemoryConfigError, load_memory_policy
 from .plan_simulation import SimulationConfigError, load_simulation_policy
@@ -107,9 +108,10 @@ def _run_serve(
         symbolic = load_symbolic_policy(config)
         memory_policy = load_memory_policy(config)
         approval_policy = load_approval_policy(config)
+        docs_qa = DocsQaClient.from_policy(load_docs_qa_policy(config))
     except (
         PolicyError, SimulationConfigError, TrajectoryConfigError, SafetyGateConfigError, VoiceIntentConfigError, SymbolicConfigError, FailureMemoryConfigError,
-        ExportConfigError, ApprovalConfigError,
+        ExportConfigError, ApprovalConfigError, DocsQaConfigError,
     ) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -147,11 +149,13 @@ def _run_serve(
             print(f"[semantic-planner] recovery memory: {added} failures read back from the data lake, {exporter.ignored_on_load} records ignored")
         memory.exporter = exporter
         exporter.start()
-    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed, require_identity=approval_policy.require_identity, settings_file=(config or os.environ.get("HYDRA_UMC_SEMANTIC_PLANNER_CONFIG") or None), trajectory=trajectory, replica=replica)
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed, require_identity=approval_policy.require_identity, settings_file=(config or os.environ.get("HYDRA_UMC_SEMANTIC_PLANNER_CONFIG") or None), trajectory=trajectory, replica=replica, docs_qa=docs_qa)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
     if simulation.enabled:
         print("[semantic-planner] POST /plan/simulate (dry run, executes nothing)")
+    if docs_qa is not None:
+        print(f"[semantic-planner] POST /recover also carries what the documentation says about the code ({docs_qa.policy.url}; advice only, it never changes the action)")
     if trajectory.enabled:
         print("[semantic-planner] POST /plan/trajectory-check (the plan as a trajectory, checked by the physics replica; executes nothing)")
     if voice.enabled:

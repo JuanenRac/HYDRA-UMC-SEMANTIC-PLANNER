@@ -16,7 +16,7 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-315%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-353%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versione | `0.2.0` |
 | Maturità | Funzionale |
-| Test | 315 (`python -m pytest -q tests`) |
+| Test | 353 (`python -m pytest -q tests`) |
 | Tecnologia | Python / local LLM (Llama-3 class) |
 | Destinazione | Il Raspberry Pi CM5 di una cella HYDRA-UMC |
 | Su hardware reale | Non applicabile: nulla qui gira su hardware |
@@ -55,7 +55,7 @@ Ogni riga è una parte di questo repository e il semaforo dice a che punto è og
 | Area | Stato | Cosa significa qui |
 |---|---|---|
 | Software | 🟡 | Funziona per il suo scopo principale; la verifica di onestà qui sopra elenca ciò che manca ancora |
-| Test | 🟢 | 315 test automatici, eseguiti a ogni modifica |
+| Test | 🟢 | 353 test automatici, eseguiti a ogni modifica |
 | Hardware reale | 🟢 | Non applicabile: nulla qui gira su hardware |
 | Interfaccia e protocolli | 🟡 | Le rotte o i messaggi offerti sono documentati e provati con un client; non tutti i client li hanno ancora usati |
 | Integrazione | 🟡 | Funziona insieme agli altri servizi sul banco prova CM5 e i suoi messaggi seguono i contratti condivisi dell'SDK |
@@ -203,6 +203,8 @@ Pianificazione simbolica (spenta per impostazione predefinita): con `symbolic_pl
 
 Profilo di distribuzione e sviluppo (porta di sicurezza): il file generale `configs/semantic-planner.json` mantiene `safety_gate.enabled` a `false`, quindi un pianificatore avviato a mano per sviluppare si comporta come sempre. Il profilo `configs/deploy-cm5.json`, scelto dall'unità systemd tramite `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG`, ATTIVA la porta: un piano viene rilasciato solo finché HYDRA-UMC-SAFETY-ZONES risponde con un verdetto fresco, READY e firmato in modo valido, e la chiave di verifica è letta da un file fuori dal repository (`/etc/hydra-umc/safety-state.key`, mai stampata). Con `safety_gate.start_without_key` a `true` (come fa il profilo), un file di chiave mancante o inutilizzabile non impedisce l'avvio: `/decompose` e le proposte continuano a funzionare e `POST /release` rifiuta indicando il motivo. Esportazione della memoria (spenta per impostazione predefinita): con `failure_memory.export.enabled` su `true`, ogni esito registrato viene inviato a un HYDRA-UMC-DATALAKE locale (`POST /ingest/batch`, tipo `recovery_outcome`, campo `componente/codice_errore/azione`, valore 1 o 0; nient'altro lascia la macchina) da un thread proprio con coda limitata e tentativi limitati; all'avvio la memoria rilegge i fallimenti che il data lake conserva (`load_on_start`), convalida ogni record e ignora quelli corrotti, così un ricaricamento può solo rendere un ripristino più prudente. Un data lake non presente su questa macchina richiede `token_file` e https, oppure `allow_plaintext` impostato di proposito.
 
+Documentazione di un codice di errore (spenta per impostazione predefinita): con `docs_qa.enabled` a `true`, `POST /recover` risponde anche con un blocco `documentation` con ciò che HYDRA-UMC-DOCS-QA dice del codice di errore (`GET /error?code=`), con la sua citazione. È un consiglio per chi legge la proposta: l'azione e il motivo non ne dipendono mai, e se DOCS-QA è fermo, lento o non conosce il codice il blocco dice `unavailable` o `not_found`. Si contatta solo l'indirizzo configurato (loopback salvo `docs_qa.allow_remote` a `true`, senza credenziali nell'indirizzo, senza seguire reindirizzamenti), la risposta ha dimensione limitata ed è ripulita dai caratteri di controllo, e il token si legge da `docs_qa.token_file`.
+
 ## 🚀 Avvio rapido
 
 Richiede Python 3.10 o successivo.
@@ -216,7 +218,7 @@ Richiede Python 3.10 o successivo.
 
 ## 🧪 Test
 
-315 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
+353 test automatici si eseguono con `python -m pytest -q tests`. Non richiedono hardware né nulla al di fuori di questa macchina.
 
 La CI esegue `HYDRA_UMC_CI=1 python tools/ci_validate.py`, che controlla il manifesto, i documenti, gli otto README e le immagini.
 

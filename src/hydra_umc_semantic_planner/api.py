@@ -23,6 +23,7 @@ from .approval_policy import ApprovalConfigError, write_require_identity
 from .approval import PlanApproval, propose, release_for_execution
 from .approval_signing import SignedApproval, verify_approval
 from .decompose import MAX_GOAL_CHARS, decompose_goal
+from .docs_qa import DocsQaClient
 from .failure_memory import OUTCOMES, FailureMemory, OutcomeError
 from .operation import plan_as_operation
 from .plan_simulation import PlanRequestError, SimulationPolicy, simulate_plan
@@ -379,7 +380,12 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
         failure = FailureContext(component=component, error_code=error_code, detail=detail, attempt=attempt)
         memory = self.server.memory
         strategy = memory.propose(failure, self.server.policy) if memory is not None else propose_recovery(failure, self.server.policy)
-        _write_json(self, 200, asdict(strategy))
+        answer = asdict(strategy)
+        docs = self.server.docs_qa
+        if docs is not None:
+            # Advice for the reader only: the action and the reason above never depend on it.
+            answer["documentation"] = docs.lookup(error_code)
+        _write_json(self, 200, answer)
 
     def _handle_outcome(self, body: dict) -> None:
         # How a proposed recovery ended. Only five short fields are kept (never the free text of a failure) and the memory can only make
@@ -419,6 +425,7 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         settings_file: str | None = None,
         trajectory: TrajectoryPolicy | None = None,
         replica: ReplicaClient | None = None,
+        docs_qa: DocsQaClient | None = None,
     ) -> None:
         super().__init__(address, Handler)
         # `serve` passes True unless the configuration relaxes it: POST /release then needs the token of the SERVER of an operator, and approved_by is that person.
@@ -437,6 +444,8 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         # Off by default: with the switch off POST /plan/trajectory-check does not exist (404).
         self.trajectory = trajectory if trajectory is not None else TrajectoryPolicy()
         self.replica = replica
+        # Off by default (None): without it a recovery proposal carries no documentation block.
+        self.docs_qa = docs_qa
         # Off by default: without a gate /release answers as before; with one, a plan is released only while the safety service says READY.
         self.safety_gate = safety_gate
         # Off by default: with the switch off POST /voice/intent does not exist (404).

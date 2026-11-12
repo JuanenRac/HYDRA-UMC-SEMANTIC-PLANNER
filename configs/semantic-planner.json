@@ -73,5 +73,13 @@
       "retry_delay_s": 2.0,
       "load_on_start": true
     }
+  },
+  "docs_qa": {
+    "enabled": false,
+    "url": "http://127.0.0.1:8110",
+    "allow_remote": false,
+    "timeout_s": 3.0,
+    "token_file": "",
+    "max_answer_chars": 400
   }
 }

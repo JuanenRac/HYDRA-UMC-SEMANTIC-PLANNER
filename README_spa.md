@@ -16,14 +16,14 @@ GPL-3.0-or-later - see LICENSE
 
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
-  <img src="https://img.shields.io/badge/Tests-315%20passing-2ea44f.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-353%20passing-2ea44f.svg" alt="Tests">
   <img src="https://img.shields.io/badge/Version-0.2.0-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
 ---
 
-**Verificación de honestidad - qué funciona de verdad hoy:** el vocabulario cerrado de primitivas (`primitives.py`), la descomposición de tareas basada en reglas (`decompose.py`), la recuperación semántica de errores basada en reglas sobre una tabla fija de códigos de error de MCU (`recovery.py`), el validador de precondiciones que rechaza un plan mal formado en vez de dejarlo pasar (`validation.py`), y la superficie JSON/HTTP con `http.server` de la stdlib sobre esa misma lógica (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) son reales y están probados (315 tests, `pytest`), incluyendo un test de fuzzing que ejecuta `decompose_goal()` contra cientos de objetivos aleatorios/inválidos con una semilla fija y comprueba que nunca falla ni devuelve un plan mal formado. Lo que todavía NO es real: no hay ningún LLM local en todo este código - `decompose.py` es coincidencia de patrones/plantillas regex sobre un vocabulario de objetivos pequeño y fijo (ensamblar/pick-and-place/inspeccionar), no comprensión del lenguaje, y nunca se ha ejecutado contra un módulo Hailo-10 real (este entorno no tiene ninguno). Las viñetas "Agentic Workflow" y "Hailo-10 Optimized" más abajo están marcadas explícitamente como `(planned)` en este mismo README - describen el reemplazo eventual del núcleo actual basado en reglas de `decompose_goal()`, no algo que exista hoy. Ver `CHANGELOG.md` para lo que ya se ha entregado exactamente, y la HOJA DE RUTA más abajo para lo que sigue abierto.
+**Verificación de honestidad - qué funciona de verdad hoy:** el vocabulario cerrado de primitivas (`primitives.py`), la descomposición de tareas basada en reglas (`decompose.py`), la recuperación semántica de errores basada en reglas sobre una tabla fija de códigos de error de MCU (`recovery.py`), el validador de precondiciones que rechaza un plan mal formado en vez de dejarlo pasar (`validation.py`), y la superficie JSON/HTTP con `http.server` de la stdlib sobre esa misma lógica (`api.py`: `POST /decompose`, `POST /recover`, `GET /stats`) son reales y están probados (353 tests, `pytest`), incluyendo un test de fuzzing que ejecuta `decompose_goal()` contra cientos de objetivos aleatorios/inválidos con una semilla fija y comprueba que nunca falla ni devuelve un plan mal formado. Lo que todavía NO es real: no hay ningún LLM local en todo este código - `decompose.py` es coincidencia de patrones/plantillas regex sobre un vocabulario de objetivos pequeño y fijo (ensamblar/pick-and-place/inspeccionar), no comprensión del lenguaje, y nunca se ha ejecutado contra un módulo Hailo-10 real (este entorno no tiene ninguno). Las viñetas "Agentic Workflow" y "Hailo-10 Optimized" más abajo están marcadas explícitamente como `(planned)` en este mismo README - describen el reemplazo eventual del núcleo actual basado en reglas de `decompose_goal()`, no algo que exista hoy. Ver `CHANGELOG.md` para lo que ya se ha entregado exactamente, y la HOJA DE RUTA más abajo para lo que sigue abierto.
 
 **Límites conocidos del planificador por reglas:** un objetivo negado o cancelado («no ...», «nunca ...»), que encaja en más de una plantilla, sin objeto o de más de 512 caracteres no produce plan. El objeto se lee de las palabras que siguen al verbo, no del final de la frase. Una descomposición es una propuesta, no una orden: `POST /decompose` responde `executable: false` con una huella, el coste estimado y una explicación legible, y `POST /release` (o `release_for_execution()`) recalcula el coste y la explicación a partir del plan y comprueba la huella de la aprobación antes de poder ejecutar nada. La aprobación aún no está firmada: nombra a una persona pero no es una credencial. `FailureContext.attempt` hace que las recuperaciones de `TIMEOUT` y `GRIP_LOST_SEAL` escalen a un operador tras 1 y 3 intentos automáticos.
 
@@ -39,7 +39,7 @@ GPL-3.0-or-later - see LICENSE
 |---|---|
 | Versión | `0.2.0` |
 | Madurez | Funcional |
-| Tests | 315 (`python -m pytest -q tests`) |
+| Tests | 353 (`python -m pytest -q tests`) |
 | Tecnología | Python / local LLM (Llama-3 class) |
 | Destino | La Raspberry Pi CM5 de una celda HYDRA-UMC |
 | En hardware real | No aplica: nada de esto se ejecuta en hardware |
@@ -55,7 +55,7 @@ Cada línea es una parte de este repositorio y la luz dice hasta dónde llega ho
 | Área | Estado | Qué significa aquí |
 |---|---|---|
 | Software | 🟡 | Funciona para su propósito principal; la comprobación de honestidad de arriba lista lo que aún falta |
-| Pruebas | 🟢 | 315 pruebas automáticas, ejecutadas en cada cambio |
+| Pruebas | 🟢 | 353 pruebas automáticas, ejecutadas en cada cambio |
 | Hardware real | 🟢 | No aplica: nada de esto se ejecuta en hardware |
 | Interfaz y protocolos | 🟡 | Las rutas o los mensajes que ofrece están documentados y probados con un cliente; aún no los han usado todos los clientes |
 | Integración | 🟡 | Funciona junto con los demás servicios en el banco de pruebas de la CM5 y sus mensajes siguen los contratos compartidos del SDK |
@@ -202,6 +202,8 @@ Planificación simbólica (apagada por defecto): con `symbolic_planner.enabled` 
 
 Perfil de despliegue frente a desarrollo (puerta de seguridad): el fichero general `configs/semantic-planner.json` mantiene `safety_gate.enabled` en `false`, así que un planificador lanzado a mano para desarrollar se comporta como siempre. El perfil `configs/deploy-cm5.json`, que la unidad de systemd elige mediante `HYDRA_UMC_SEMANTIC_PLANNER_CONFIG`, ACTIVA la puerta: un plan solo se libera mientras HYDRA-UMC-SAFETY-ZONES responda con un veredicto fresco, READY y con firma válida, y la clave de verificación se lee de un fichero fuera del repositorio (`/etc/hydra-umc/safety-state.key`, nunca se imprime). Con `safety_gate.start_without_key` en `true` (como hace el perfil), un fichero de clave ausente o inutilizable no impide arrancar al planificador: `/decompose` y las propuestas siguen funcionando y `POST /release` se niega con el motivo. Exportación de la memoria (apagada por defecto): con `failure_memory.export.enabled` en `true`, cada resultado registrado se envía a un HYDRA-UMC-DATALAKE local (`POST /ingest/batch`, tipo `recovery_outcome`, campo `componente/código_de_error/acción`, valor 1 o 0; nada más sale de la máquina) mediante un hilo propio con cola acotada y reintentos acotados; al arrancar, la memoria vuelve a leer los fallos que conserva el lago de datos (`load_on_start`), validando cada registro e ignorando los corruptos, de modo que una recarga solo puede hacer una recuperación más cautelosa. Un lago de datos que no esté en esta máquina exige `token_file` y https, o `allow_plaintext` indicado a propósito.
 
+Documentación de un código de error (apagada por defecto): con `docs_qa.enabled` en `true`, `POST /recover` responde además un bloque `documentation` con lo que HYDRA-UMC-DOCS-QA dice del código de error (`GET /error?code=`), con su cita. Es un consejo para quien lee la propuesta: la acción y el motivo nunca dependen de él, y si DOCS-QA está caído, lento o no conoce el código el bloque dice `unavailable` o `not_found`. Solo se contacta la dirección configurada (loopback salvo que `docs_qa.allow_remote` sea `true`, sin credenciales en la dirección, sin seguir redirecciones), la respuesta tiene tamaño limitado y se limpia de caracteres de control, y el token se lee de `docs_qa.token_file`.
+
 ## 🚀 Inicio rápido
 
 Requiere Python 3.10 o superior.
@@ -215,7 +217,7 @@ Requiere Python 3.10 o superior.
 
 ## 🧪 Pruebas
 
-315 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
+353 pruebas automáticas se ejecutan con `python -m pytest -q tests`. No necesitan hardware ni nada fuera de esta máquina.
 
 El CI ejecuta `HYDRA_UMC_CI=1 python tools/ci_validate.py`, que comprueba el manifiesto, los documentos, los ocho README y las imágenes.
 
