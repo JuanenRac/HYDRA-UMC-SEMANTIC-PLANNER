@@ -4,6 +4,9 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+
+## [0.2.1]
+
 - **Comments describe what the code does, not what it used to do:** the notes in the source and the tests say the present behaviour and the reason for it. Comments only: no behaviour changes.
 - **The SDK pin and the shared tools are up to date:** the SDK dependency names the newest release tag, and the shared tools are the canonical copies again.
 - **The unit finds the Python SDK it imports:** the unit had only its own `src` on the `PYTHONPATH`, so a service that imports `hydra_umc_sdk` started and died with `ModuleNotFoundError` when the SDK was not installed system-wide. It now also lists `/opt/hydra-umc/sdk-python`, the folder where the installer of the operating system package puts the SDK. `tests/test_unit_sdk_path.py` (4 tests) fails when the code imports the SDK and the unit does not list the folder. `tests/test_unit_configs.py` also checks that every file the unit names inside the folder of the service is in the repository (the unit points at `configs/deploy-cm5.json`).
@@ -16,6 +19,8 @@ All notable changes to this project are documented here.
 - **The documentation of an error code rides along with a recovery proposal (off by default, `docs_qa` in the configuration file):** with `docs_qa.enabled` set to `true`, `POST /recover` also answers a `documentation` block with what HYDRA-UMC-DOCS-QA says about the code (`GET /error?code=`) and its citation. It is advice for the person reading the proposal: the action and the reason are the ones of the fixed table with or without it, and a DOCS-QA that is down, slow, oversized, redirecting or odd gives `unavailable` instead of an error. Only the configured address is contacted (loopback unless `docs_qa.allow_remote`, no credentials in the address, no redirect followed), the text is cleaned and cut, and the token comes from a file. 38 tests, including a real local server, the failure modes and the proof that the proposal never changes.
 
 - **An orientation asked for is compared, never assumed, in the trajectory check:** `POST /plan/trajectory-check` accepts `orientations` (location name -> quaternion `[w, x, y, z]`). The replica solves only the position, so the planner reads the rotation of the tool frame at the reached joints with `POST /fk` and compares it with the one asked for (`plan_trajectory.orientation_tolerance_rad`, 0.05 by default). A match is counted in `orientations_verified`; a mismatch goes to `unchecked` and the verdict is `unchecked`, never `accepted` (a broken limit or an unreachable goal is still `rejected`). 7 tests.
+
+- Build version synchronized with `hydra-umc.project.json` and the repository-native version source.
 
 ## [0.2.0] - A plan as a trajectory, checked by the physics replica before anyone approves it (POST /plan/trajectory-check, off by default, plantrajectory in the configuration file): each MOVETO of the configured robot becomes a goal for... (and 7 more changes)
 
