@@ -151,10 +151,9 @@ def test_not_found() -> None:
 
 
 def test_oversized_json_request_is_rejected_before_parsing() -> None:
-    # Found while auditing the code: this
-    # endpoint used to read Content-Length bytes with no upper bound
-    # before parsing - an oversized/malformed header let a caller force
-    # unbounded memory buffering. Confirmed real against a live server,
+    # The endpoint must not read Content-Length bytes with no upper bound
+    # before parsing - an oversized/malformed header would let a caller force
+    # unbounded memory buffering. Checked against a live server,
     # not just the helper function in isolation.
     from hydra_umc_semantic_planner.api import MAX_BODY_BYTES
 
