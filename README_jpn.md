@@ -17,7 +17,7 @@ GPL-3.0-or-later - see LICENSE
 <p align="center">
   <img src="https://img.shields.io/badge/License-GPL%203.0--or--later-blue.svg" alt="GPL 3.0 or later">
   <img src="https://img.shields.io/badge/Tests-475%20passing-2ea44f.svg" alt="Tests">
-  <img src="https://img.shields.io/badge/Version-0.2.0-0f6cbd.svg" alt="Version">
+  <img src="https://img.shields.io/badge/Version-0.2.1-0f6cbd.svg" alt="Version">
   <img src="https://img.shields.io/badge/Maturity-functional-0F6CBD.svg" alt="Maturity">
 </p>
 
@@ -37,7 +37,7 @@ GPL-3.0-or-later - see LICENSE
 
 | | |
 |---|---|
-| バージョン | `0.2.0` |
+| バージョン | `0.2.1` |
 | 成熟度 | 機能する |
 | テスト | 475 (`python -m pytest -q tests`) |
 | 技術 | Python / local LLM (Llama-3 class) |
@@ -187,7 +187,7 @@ run.bat
 実行します（`pytest tests/`）。引数なしの `run.sh` の予期される出力：
 
 ```text
-HYDRA-UMC-SEMANTIC-PLANNER v0.2.0
+HYDRA-UMC-SEMANTIC-PLANNER v0.2.1
 Semantic Planner (Hailo-10) - decomposes high-level goals into robotic primitives and recovers from execution failures.
 ```
 
