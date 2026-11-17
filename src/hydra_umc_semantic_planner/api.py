@@ -31,6 +31,7 @@ from .plan_trajectory import ReplicaClient, TrajectoryPolicy, TrajectoryServiceE
 from .recovery import FailureContext, RecoveryPolicy, propose_recovery
 from .safety_gate import SafetyGate
 from .symbolic import SymbolicPolicy
+from .used_approvals import UsedApprovals
 from .validation import validate_plan
 from .voice_intents import VoiceIntentPolicy, goal_for_intent
 
@@ -310,6 +311,7 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
             # Signed approvals are required and no key is loaded: nothing is released, and the reason says why.
             _write_json(self, 200, {"released": False, "reason": "signed approvals are required and no approval key is loaded"})
             return
+        signed: SignedApproval | None = None
         if self.server.approval_key is not None:
             # The approval must be signed, current and for this plan and this robot: the words of the request are not enough.
             signed = self._signed_approval(body, fingerprint, approved_by)
@@ -322,6 +324,11 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
             if not ok:
                 _write_json(self, 200, {"released": False, "reason": why})
                 return
+            if self.server.single_use:
+                earlier = self.server.used_approvals.lookup(signed.signature)
+                if earlier is not None:
+                    _write_json(self, 200, earlier)
+                    return
         decision = release_for_execution(
             propose(plan), PlanApproval(fingerprint, approved_by), capabilities=capabilities
         )
@@ -335,6 +342,8 @@ class Handler(HealthRouteMixin, MetricsHandlerMixin, BaseHTTPRequestHandler):
                 payload = {"released": False, "reason": f"safety gate: {verdict.reason}", "safety_gate": {"allowed": False, "state": verdict.state}}
             else:
                 payload["safety_gate"] = {"allowed": True, "state": verdict.state}
+        if self.server.single_use and signed is not None and payload.get("released") is True:
+            self.server.used_approvals.remember(signed.signature, signed.expires_at_ms, payload)
         _write_json(self, 200, payload)
 
     def _signed_approval(self, body: dict, fingerprint: str, approved_by: str) -> SignedApproval | None:
@@ -426,8 +435,12 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         trajectory: TrajectoryPolicy | None = None,
         replica: ReplicaClient | None = None,
         docs_qa: DocsQaClient | None = None,
+        single_use: bool = False,
     ) -> None:
         super().__init__(address, Handler)
+        # `plan_approval.single_use` (off by default): a signed approval that released a plan is not taken a second time (used_approvals.py).
+        self.single_use = single_use
+        self.used_approvals = UsedApprovals()
         # `serve` passes True unless the configuration relaxes it: POST /release then needs the token of the SERVER of an operator, and approved_by is that person.
         self.require_identity = require_identity
         # The configuration file `POST /settings` writes to (None: the change lasts until the planner restarts).
