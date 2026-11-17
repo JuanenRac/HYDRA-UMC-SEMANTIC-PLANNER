@@ -4,6 +4,8 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **`GET /settings` tells the state of the safety gate:** the answer carries `safetyGate` with `configured`, `closedReason` (the reason when the gate exists but cannot verify verdicts, otherwise null) and `lastCounter` (the highest signature counter seen), without any key, token, path or address.
+
 
 ## [0.2.1]
 
