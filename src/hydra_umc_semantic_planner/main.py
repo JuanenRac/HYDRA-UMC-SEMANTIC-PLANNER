@@ -149,7 +149,7 @@ def _run_serve(
             print(f"[semantic-planner] recovery memory: {added} failures read back from the data lake, {exporter.ignored_on_load} records ignored")
         memory.exporter = exporter
         exporter.start()
-    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed, require_identity=approval_policy.require_identity, settings_file=(config or os.environ.get("HYDRA_UMC_SEMANTIC_PLANNER_CONFIG") or None), trajectory=trajectory, replica=replica, docs_qa=docs_qa)
+    server = SemanticPlannerServer((addr, port), ROLE, approval_key, robot_id, policy, simulation, gate, voice, symbolic, memory, require_signed=require_signed, require_identity=approval_policy.require_identity, single_use=approval_policy.single_use, settings_file=(config or os.environ.get("HYDRA_UMC_SEMANTIC_PLANNER_CONFIG") or None), trajectory=trajectory, replica=replica, docs_qa=docs_qa)
     print(f"[semantic-planner] HTTP API listening on {addr}:{port}")
     print("[semantic-planner] POST /decompose, POST /recover, POST /release, GET /stats")
     if simulation.enabled:
