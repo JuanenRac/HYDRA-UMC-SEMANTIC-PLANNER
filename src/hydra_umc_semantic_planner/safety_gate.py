@@ -217,6 +217,11 @@ class SafetyGate:
                 raise SafetyGateConfigError("cannot read the safety token file") from error
         return cls(policy, key=key, public_key=public_key, token=token)
 
+    def describe(self) -> dict:
+        """What the gate is, for the settings view: no key, token, path or address, only whether it can verify and the last counter."""
+        with self._lock:
+            return {"configured": True, "closedReason": None, "lastCounter": self._last_counter}
+
     def check(self) -> GateResult:
         try:
             return self._check()
@@ -287,6 +292,9 @@ class ClosedGate(SafetyGate):
     def __init__(self, policy: SafetyGatePolicy, why: str) -> None:
         super().__init__(policy)
         self.why = why
+
+    def describe(self) -> dict:
+        return dict(super().describe(), closedReason=self.why)
 
     def check(self) -> GateResult:
         return GateResult(False, f"the safety gate cannot verify verdicts: {self.why}")

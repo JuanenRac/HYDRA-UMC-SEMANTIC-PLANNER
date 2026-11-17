@@ -456,4 +456,6 @@ class SemanticPlannerServer(ThreadingHTTPServer):
         self.memory = memory
 
     def settings_view(self) -> dict:
-        return {"requireIdentity": self.require_identity, "verifiesTokens": self.identity_key is not None, "persisted": bool(self.settings_file)}
+        gate = self.safety_gate.describe() if self.safety_gate is not None else {"configured": False, "closedReason": None, "lastCounter": 0}
+        return {"requireIdentity": self.require_identity, "verifiesTokens": self.identity_key is not None, "persisted": bool(self.settings_file),
+                "safetyGate": gate}

@@ -56,7 +56,11 @@ def _config(tmp_path: Path) -> Path:
 def test_anyone_signed_in_reads_the_switch(tmp_path: Path) -> None:
     with _server(_config(tmp_path)) as (_, base):
         viewer = server_identity.sign_token(KEY, username="vic", role="viewer")
-        assert _call(f"{base}/settings", None, viewer) == (200, {"requireIdentity": True, "verifiesTokens": True, "persisted": True})
+        assert _call(f"{base}/settings", None, viewer) == (
+            200,
+            {"requireIdentity": True, "verifiesTokens": True, "persisted": True,
+             "safetyGate": {"configured": False, "closedReason": None, "lastCounter": 0}},
+        )
         assert _call(f"{base}/settings", None, None)[0] == 401
 
 
@@ -102,3 +106,16 @@ def test_without_the_identity_key_the_switch_cannot_be_changed(tmp_path: Path) -
     with _server(_config(tmp_path), key=None) as (server, base):
         assert _call(f"{base}/settings", {"requireIdentity": False, "confirm": True}, None)[0] == 403
         assert server.require_identity is True
+
+
+def test_the_view_says_whether_the_safety_gate_exists_and_why_it_is_closed(tmp_path: Path) -> None:
+    from hydra_umc_semantic_planner.safety_gate import ClosedGate, SafetyGate, SafetyGatePolicy
+
+    policy = SafetyGatePolicy(enabled=True, url="http://127.0.0.1:1", require_signature=False)
+    viewer = server_identity.sign_token(KEY, username="vic", role="viewer")
+    with _server(_config(tmp_path)) as (server, base):
+        server.safety_gate = SafetyGate(policy)
+        assert _call(f"{base}/settings", None, viewer)[1]["safetyGate"] == {"configured": True, "closedReason": None, "lastCounter": 0}
+        server.safety_gate = ClosedGate(policy, "cannot read the safety token file")
+        view = _call(f"{base}/settings", None, viewer)[1]["safetyGate"]
+        assert view["configured"] is True and view["closedReason"] == "cannot read the safety token file"
