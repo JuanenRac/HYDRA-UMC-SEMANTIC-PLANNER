@@ -162,8 +162,8 @@ class ReplicaClient:
         token = ""
         if policy.token_file:
             try:
-                token = Path(policy.token_file).read_text(encoding="utf-8").splitlines()[0].strip()
-            except (OSError, IndexError) as error:
+                token = Path(policy.token_file).read_text(encoding="utf-8-sig").splitlines()[0].strip()
+            except (OSError, UnicodeDecodeError, IndexError) as error:
                 raise TrajectoryConfigError("cannot read the token file of plan_trajectory") from error
         return cls(policy, token)
 

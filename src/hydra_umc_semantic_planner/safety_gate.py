@@ -212,8 +212,8 @@ class SafetyGate:
         token = ""
         if policy.token_file:
             try:
-                token = Path(policy.token_file).read_text(encoding="utf-8").splitlines()[0].strip()
-            except (OSError, IndexError) as error:
+                token = Path(policy.token_file).read_text(encoding="utf-8-sig").splitlines()[0].strip()
+            except (OSError, UnicodeDecodeError, IndexError) as error:
                 raise SafetyGateConfigError("cannot read the safety token file") from error
         return cls(policy, key=key, public_key=public_key, token=token)
 
