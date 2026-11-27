@@ -130,7 +130,7 @@ class DocsQaClient:
         token = ""
         if policy.token_file:
             try:
-                token = Path(policy.token_file).read_text(encoding="utf-8").splitlines()[0].strip()
+                token = Path(policy.token_file).read_text(encoding="utf-8-sig").splitlines()[0].strip()
             except (OSError, UnicodeDecodeError, IndexError) as error:
                 raise DocsQaConfigError("cannot read the token file of docs_qa") from error
         return cls(policy, token)

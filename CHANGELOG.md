@@ -4,6 +4,7 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+- **Token and password files saved with a byte order mark are read:** a file written by an editor of Windows as "UTF-8 with BOM" kept the mark in front of the secret, so the credential was refused or could not be sent in a header. The mark is dropped now; a file in another encoding (UTF-16) is refused with a clear message. The same holds for the identity key file of the server (shared module of the SDK).
 - **A signed approval can be made good for one release (`plan_approval.single_use`):** off by default. With it on, the approval that released a plan is remembered until it would have expired and a second presentation answers `released: false` (`the approval was already used`); a repeat within two seconds of the first gets the first answer again, so a reply lost on the network can be asked for once more. The list is in memory and bounded.
 
 - **`GET /settings` tells the state of the safety gate:** the answer carries `safetyGate` with `configured`, `closedReason` (the reason when the gate exists but cannot verify verdicts, otherwise null) and `lastCounter` (the highest signature counter seen), without any key, token, path or address.
